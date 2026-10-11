@@ -1439,14 +1439,14 @@ async function repairImages(statusEl,outEl){
  const out=$("#rp-out");if(out)out.textContent=summary;const st=$("#bank-admin-status");if(st)st.textContent="Reparación terminada.";
 }
 function nav(a){const n=$("#nav");document.body.classList.toggle("hasnav",a!=null);if(a==null){n.style.display="none";return}n.style.display="flex";
- n.innerHTML=[["i","🏠","Inicio"],["p","🎯","Practicar"],["e","🔁","Errores"],["b","🏆","Ranking"]].map(([k,emoji,l])=>`<button data-k="${k}" class="${k===a?"on":""}" ${k===a?'aria-current="page"':""}><i class="nav-emoji" aria-hidden="true">${emoji}</i>${l}</button>`).join("");
- $$("#nav button").forEach(b=>b.onclick=()=>({i:home,p:()=>cfgView(Object.keys(T),1),e:errView,b:rankView}[b.dataset.k])())}
+ n.innerHTML=[["i","🏠","Inicio"],["p","🎯","Practicar"],["e","🔁","Errores"],["b","🏆","Ranking"],["s","💬","Social"]].map(([k,emoji,l])=>`<button data-k="${k}" class="${k===a?"on":""}" ${k===a?'aria-current="page"':""}><i class="nav-emoji" aria-hidden="true">${emoji}</i>${l}</button>`).join("");
+ $$("#nav button").forEach(b=>b.onclick=()=>({i:home,p:()=>cfgView(Object.keys(T),1),e:errView,b:rankView,s:socialView}[b.dataset.k])())}
 const dark=()=>document.documentElement.dataset.theme==="dark",tgi=()=>`<span aria-hidden="true">${dark()?"🌙":"☀️"}</span><b>${dark()?"Oscuro":"Claro"}</b>`,tg=()=>`<button class="tgl" aria-label="Cambiar entre modo claro y oscuro">${tgi()}</button>`;
 const themePref=()=>{try{const t=localStorage.getItem("hp_theme");return t==="dark"||t==="light"?t:"auto"}catch(e){return"auto"}};
 const setTheme=p=>{const h=document.documentElement;try{p==="auto"?localStorage.removeItem("hp_theme"):localStorage.setItem("hp_theme",p)}catch(e){}h.classList.add("tr");h.dataset.theme=p==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p;$$(".tgl").forEach(b=>b.innerHTML=tgi());$$("[data-th]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.th===themePref())));setTimeout(()=>h.classList.remove("tr"),400)};
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themePref()==="auto")setTheme("auto")});
 document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
-new MutationObserver(()=>window.scrollTo(0,0)).observe(app,{childList:true});
+new MutationObserver(()=>{window.scrollTo(0,0);app.classList.remove("hp-pop");void app.offsetWidth;app.classList.add("hp-pop")}).observe(app,{childList:true});
 const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
 const qc=e=>(e.subtipo?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
@@ -1621,7 +1621,7 @@ function run(c,forced){
  const ex=forced||buildExam(c,BANK);
  if(!ex.items.length){const t="No hay preguntas para esa combinación. Añade imágenes o cambia la selección.",m=$("#msg");return m?m.innerHTML=`<p class="r">${t}</p>`:alert(t)}
  if(ex.short&&!forced){nav("i");return app.innerHTML=`<div class="card"><b>Preguntas insuficientes</b><p>Hay ${ex.avail} preguntas posibles y pediste ${c.n}.</p><button class="btn" id="red">Hacer ${ex.avail}</button><br><button class="btn s" id="bk">Volver</button></div>`,$("#red").onclick=()=>run(c,ex),$("#bk").onclick=home}
- S={c,q:ex.items.map(it=>({it,question:null})),spare:ex.spare,i:0,ans:[],streak:0,best:0,attemptId:crypto.randomUUID(),startedAt:new Date().toISOString(),startTimeMs:Date.now(),finished:false};IMGS.clear();warm(S,0);{const go=$("#go");if(go)go.disabled=true}show()}
+ S={c,q:ex.items.map(it=>({it,question:null})),spare:ex.spare,i:0,ans:[],streak:0,best:0,attemptId:crypto.randomUUID(),startedAt:new Date().toISOString(),startTimeMs:Date.now(),finished:false,rankBefore:typeof hpRankSnapshot==="function"?hpRankSnapshot():Promise.resolve(null)};IMGS.clear();warm(S,0);{const go=$("#go");if(go)go.disabled=true}show()}
 
 async function prepareQuestionRemote(item){
  const {data,error}=await SUPA.auth.getSession();if(error)throw error;
@@ -1886,7 +1886,7 @@ async function saveFinishedExam(){
   const details=S.ans.map(x=>({question_id:x.q.it.e.id,mode:x.q.it.m,theme:x.q.it.e.tema,target:x.q.it.t||null,selected:x.pick,prompt:x.q.txt}));
   const response=await fetch("/api/finish-exam",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({attemptId:S.attemptId,title:"Práctica de histología",mode:"practice",themes:S.c?.temas||[],startedAt:S.startedAt,durationSeconds:Math.floor((Date.now()-S.startTimeMs)/1000),details})});
   const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo guardar el examen.");
-  await syncProgress();if(payload.emailSent)setMessage("Resultado guardado y correo de notificación enviado.");else setMessage("Resultado guardado, pero el correo no se pudo confirmar. Puedes reintentar.",true);
+  await syncProgress();if(typeof hpCheckOvertakes==="function")await hpCheckOvertakes();if(payload.emailSent)setMessage("Resultado guardado y correo de notificación enviado.");else setMessage("Resultado guardado, pero el correo no se pudo confirmar. Puedes reintentar.",true);
  }catch(error){setMessage("No se pudo confirmar el guardado del examen: "+(error.message||"error de conexión"),true)}
 }
 async function adminView(){
@@ -1910,4 +1910,126 @@ async function adminView(){
 
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 initDB().then(()=>bootAuth()).catch(error=>{console.error(error);authView("login","No se pudo iniciar la aplicación. Revisa la configuración y la conexión.")}).finally(()=>app.removeAttribute("aria-busy"));
-</script></body></html>
+</script>
+<style id="hp-pro-layer">
+/* HistoPráctica Pro · polish layer */
+:root{--hp-ease:cubic-bezier(.2,.75,.25,1)}
+.btn,.ib,.tgl,.tc,.opt,#nav button,.av,.x{transition:transform .16s var(--hp-ease),filter .18s,border-color .18s,background-color .18s,box-shadow .18s}
+.btn:hover:not(:disabled),.ib:hover,.tgl:hover,.av:hover{filter:saturate(1.08)}
+.card{transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:color-mix(in srgb,var(--b) 28%,var(--ln))}
+button:focus-visible{outline-offset:3px}
+.hp-pop{animation:hp-pop .28s var(--hp-ease)}
+@keyframes hp-pop{0%{transform:scale(.97);opacity:.7}70%{transform:scale(1.012)}100%{transform:scale(1);opacity:1}}
+.hp-confetti{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden}
+.hp-confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:hp-fall var(--dur,2.4s) linear forwards;transform:rotate(var(--rot,0deg))}
+@keyframes hp-fall{to{transform:translate3d(var(--drift,30px),110vh,0) rotate(760deg);opacity:.85}}
+.hp-fail{animation:hp-shake .42s ease-in-out}
+@keyframes hp-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+.hp-social-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.hp-person{display:flex;align-items:center;gap:10px;min-width:0}
+.hp-person .rank-avatar{width:42px;height:42px;flex:none}
+.hp-message-list{display:flex;flex-direction:column;gap:8px;max-height:48vh;overflow:auto;padding:8px 2px}
+.hp-msg{max-width:88%;padding:10px 13px;border-radius:15px;background:var(--sf);border:1px solid var(--ln);overflow-wrap:anywhere}
+.hp-msg.mine{align-self:flex-end;background:var(--bl);border-color:var(--b)}
+.hp-msg small{display:block;color:var(--mu);font-size:.72rem;margin-top:3px}
+.hp-status{font-size:.8rem;color:var(--mu);min-height:1.2em}
+.hp-pill{display:inline-flex;align-items:center;border-radius:99px;padding:3px 9px;background:var(--bl);color:var(--bt);font-size:.75rem;font-weight:800}
+@media(min-width:640px){.hp-social-grid{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){.hp-confetti,.hp-pop,.hp-fail{animation:none!important}}
+</style>
+<div id="hp-effects" aria-hidden="true"></div>
+<script id="hp-pro-upgrades">
+/* Discreet, low-volume UI plup. Audio only starts after a user gesture. */
+let HP_UI_AUDIO=null,HP_SOUND_ON=true;
+function hpPlup(){
+ if(!HP_SOUND_ON||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;HP_UI_AUDIO=HP_UI_AUDIO||new AC();if(HP_UI_AUDIO.state==='suspended')HP_UI_AUDIO.resume();const c=HP_UI_AUDIO,t=c.currentTime+.005,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(360,t+.055);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.035,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.075);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.08)}catch(e){}
+}
+document.addEventListener('click',e=>{const b=e.target.closest('button,[role="button"],#nav button,summary');if(b&&!b.disabled&&!b.dataset.noPlup)hpPlup()});
+function hpConfetti(){
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const root=document.createElement('div');root.className='hp-confetti';root.setAttribute('aria-hidden','true');
+ const colors=['#58cc02','#1cb0f6','#ffc800','#ff9600','#c084fc','#ff6b8a'];
+ for(let i=0;i<76;i++){const bit=document.createElement('i');bit.style.left=(Math.random()*100)+'%';bit.style.background=colors[i%colors.length];bit.style.setProperty('--dur',(1.8+Math.random()*1.8)+'s');bit.style.setProperty('--drift',((Math.random()-.5)*180)+'px');bit.style.setProperty('--rot',(Math.random()*180)+'deg');bit.style.animationDelay=(Math.random()*.45)+'s';root.appendChild(bit)}
+ document.body.appendChild(root);setTimeout(()=>root.remove(),4300)
+}
+function hpCelebrate(pass){if(pass)hpConfetti();else{const big=document.querySelector('.big');if(big){big.classList.remove('hp-fail');void big.offsetWidth;big.classList.add('hp-fail')}try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){const c=prepareFeedbackAudio();if(c){const t=c.currentTime+.02,o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.setValueAtTime(180,t);o.frequency.exponentialRampToValueAtTime(95,t+.24);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.28);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.3)}}}catch(e){}}}
+function hpToast(message,icon='✨'){let root=document.querySelector('#toasts');if(!root){root=document.createElement('div');root.id='toasts';document.body.appendChild(root)}const t=document.createElement('div');t.className='toast';const i=document.createElement('span');i.className='toast-emoji';i.textContent=icon;const tx=document.createElement('span');tx.textContent=message;t.append(i,tx);root.appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350)},3400)}
+function hpSafe(s){return typeof esc==='function'?esc(String(s??'')):String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* Social layer uses Supabase tables + RLS; it never exposes service-role keys. */
+let HP_FRIENDS=[],HP_ACTIVE_CHAT=null,HP_SOCIAL_CHANNEL=null;
+async function hpLoadFriends(){
+ const [incoming,outgoing,accepted]=await Promise.all([
+  SUPA.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').eq('receiver_id',CURRENT_USER.id).eq('status','pending'),
+  SUPA.from('friend_requests').select('id,sender_id,receiver_id,status,created_at').eq('sender_id',CURRENT_USER.id).eq('status','pending'),
+  SUPA.from('friendships').select('user_id,friend_id,created_at').or(`user_id.eq.${CURRENT_USER.id},friend_id.eq.${CURRENT_USER.id}`)
+ ]);
+ if(incoming.error||outgoing.error||accepted.error)throw (incoming.error||outgoing.error||accepted.error);
+ const ids=[...new Set([...(incoming.data||[]).map(x=>x.sender_id),...(outgoing.data||[]).map(x=>x.receiver_id),...(accepted.data||[]).map(x=>x.user_id===CURRENT_USER.id?x.friend_id:x.user_id)])].filter(x=>x!==CURRENT_USER.id);
+ let profiles=[];if(ids.length){const r=await SUPA.from('profiles').select('id,display_name').in('id',ids);if(r.error)throw r.error;profiles=r.data||[]}
+ const names=new Map(profiles.map(p=>[p.id,p.display_name||'Estudiante']));
+ HP_FRIENDS=(accepted.data||[]).map(x=>{const id=x.user_id===CURRENT_USER.id?x.friend_id:x.user_id;return{id,name:names.get(id)||'Estudiante',state:'friend'}})
+ .concat((incoming.data||[]).map(x=>({id:x.sender_id,name:names.get(x.sender_id)||'Estudiante',state:'incoming',requestId:x.id})))
+ .concat((outgoing.data||[]).map(x=>({id:x.receiver_id,name:names.get(x.receiver_id)||'Estudiante',state:'outgoing',requestId:x.id})));
+ return HP_FRIENDS;
+}
+function socialView(){
+ nav('s');app.innerHTML=head('Conecta con otros estudiantes')+`<h1 class="hero">Comunidad</h1><p class="mu">Añade compañeros, conversa por privado y celebra el progreso juntos.</p>
+ <div class="card"><h2 style="margin-top:0">Buscar estudiantes</h2><div class="row"><input id="hp-friend-search" type="search" placeholder="Nombre del estudiante" maxlength="80" aria-label="Buscar estudiantes"><button class="btn sm" id="hp-search-btn" style="flex:0 0 auto">Buscar</button></div><p id="hp-search-status" class="hp-status" role="status"></p><div id="hp-search-results"></div></div>
+ <div class="hp-social-grid"><section class="card"><h2 style="margin-top:0">Amigos y solicitudes</h2><div id="hp-friends">Cargando…</div></section><section class="card"><h2 style="margin-top:0">Mensajes directos</h2><div id="hp-chat-empty" class="empty"><span style="font-size:2rem">💬</span><b>Tu bandeja privada</b><span>Selecciona un amigo para abrir la conversación.</span></div><div id="hp-chat" hidden></div></section></div>`;
+ $("#hp-search-btn").onclick=hpSearchPeople;$("#hp-friend-search").onkeydown=e=>{if(e.key==='Enter')hpSearchPeople()};
+ hpRenderFriends();
+}
+async function hpSearchPeople(){
+ const q=$('#hp-friend-search').value.trim(),status=$('#hp-search-status'),box=$('#hp-search-results');if(q.length<2){status.textContent='Escribe al menos 2 caracteres.';return}
+ status.textContent='Buscando…';box.innerHTML='';
+ try{const r=await SUPA.from('profiles').select('id,display_name').ilike('display_name','%'+q.replace(/[%_]/g,'')+'%').neq('id',CURRENT_USER.id).limit(12);if(r.error)throw r.error;
+ const existing=new Set(HP_FRIENDS.map(x=>x.id));box.innerHTML=(r.data||[]).map(p=>`<div class="tl"><div class="hp-person"><span class="rank-avatar">👤</span><b>${hpSafe(p.display_name||'Estudiante')}</b></div><button class="btn sm s" data-hp-add="${hpSafe(p.id)}" ${existing.has(p.id)?'disabled':''}>${existing.has(p.id)?(HP_FRIENDS.find(f=>f.id===p.id)?.state==='friend'?'Amigo':HP_FRIENDS.find(f=>f.id===p.id)?.state==='outgoing'?'Enviada':'Responder en solicitudes'):'Añadir'}</button></div>`).join('')||'<p class="mu">No encontramos estudiantes con ese nombre.</p>';box.querySelectorAll('[data-hp-add]').forEach(b=>b.onclick=()=>hpSendFriend(b.dataset.hpAdd,b));
+ status.textContent=`${(r.data||[]).length} resultado(s).`;
+ }catch(e){status.textContent='No se pudo buscar. Ejecuta la migración social de Supabase y revisa las políticas RLS.'}
+}
+async function hpSendFriend(id,b){b.disabled=true;try{const r=await SUPA.from('friend_requests').insert({sender_id:CURRENT_USER.id,receiver_id:id,status:'pending'});if(r.error)throw r.error;hpToast('Solicitud de amistad enviada','🤝');await hpRenderFriends();await hpSearchPeople()}catch(e){hpToast(e.code==='23505'?'Ya existe una solicitud entre ustedes.':'No se pudo enviar la solicitud.','⚠️');b.disabled=false}}
+async function hpAcceptFriend(f){try{const a=await SUPA.rpc('accept_friend_request',{request_id:f.requestId});if(a.error)throw a.error;hpToast('¡Ahora son amigos!','🤝');hpRenderFriends()}catch(e){hpToast('No se pudo aceptar. Comprueba la migración SQL.','⚠️')}}
+async function hpRenderFriends(){
+ const box=$('#hp-friends');if(!box)return;box.textContent='Cargando…';
+ try{await hpLoadFriends();box.innerHTML=HP_FRIENDS.length?HP_FRIENDS.map(f=>`<div class="tl"><div class="hp-person"><span class="rank-avatar">👤</span><span><b>${hpSafe(f.name)}</b><small class="mu" style="display:block">${f.state==='friend'?'Amigo':f.state==='incoming'?'Solicitud recibida':'Solicitud enviada'}</small></span></div><div class="row">${f.state==='friend'?`<button class="btn sm" data-hp-chat="${hpSafe(f.id)}">Mensaje</button>`:f.state==='incoming'?`<button class="btn sm" data-hp-accept="${hpSafe(f.id)}">Aceptar</button>`:'<span class="hp-pill">Pendiente</span>'}</div></div>`).join(''):'<div class="empty"><span style="font-size:2rem">🤝</span><b>Aún no hay amigos</b><span>Busca estudiantes por su nombre para enviar una solicitud.</span></div>';
+ box.querySelectorAll('[data-hp-chat]').forEach(b=>b.onclick=()=>hpOpenChat(b.dataset.hpChat));box.querySelectorAll('[data-hp-accept]').forEach(b=>b.onclick=()=>hpAcceptFriend(HP_FRIENDS.find(f=>f.id===b.dataset.hpAccept)));
+ }catch(e){box.innerHTML='<p class="mu">No se pudo cargar la comunidad. Abre la migración <b>supabase-social.sql</b> y ejecútala en Supabase SQL Editor.</p>'}
+}
+async function hpOpenChat(id){
+ const friend=HP_FRIENDS.find(f=>f.id===id);if(!friend||friend.state!=='friend')return;
+ HP_ACTIVE_CHAT=id;$('#hp-chat-empty').hidden=true;const box=$('#hp-chat');box.hidden=false;box.innerHTML=`<div class="hp-person"><span class="rank-avatar">👤</span><b>${hpSafe(friend.name)}</b></div><div id="hp-msg-list" class="hp-message-list" aria-live="polite">Cargando mensajes…</div><form id="hp-msg-form" class="row"><input id="hp-msg-input" maxlength="2000" required placeholder="Escribe un mensaje…" aria-label="Mensaje" style="flex:1;min-width:0"><button class="btn sm" type="submit">Enviar</button></form><p id="hp-msg-status" class="hp-status"></p>`;
+ await hpLoadMessages(id);$('#hp-msg-form').onsubmit=async e=>{e.preventDefault();const input=$('#hp-msg-input'),body=input.value.trim();if(!body)return;const send=e.submitter;send.disabled=true;try{const r=await SUPA.from('direct_messages').insert({sender_id:CURRENT_USER.id,receiver_id:id,body});if(r.error)throw r.error;input.value='';await hpLoadMessages(id)}catch(err){$('#hp-msg-status').textContent='No se pudo enviar. Comprueba la migración y las políticas RLS.'}finally{send.disabled=false;input.focus()}};
+ try{if(HP_SOCIAL_CHANNEL)SUPA.removeChannel(HP_SOCIAL_CHANNEL);HP_SOCIAL_CHANNEL=SUPA.channel('hp-dm-'+[CURRENT_USER.id,id].sort().join('-')).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},payload=>{if(HP_ACTIVE_CHAT===id&&(payload.new.sender_id===id||payload.new.sender_id===CURRENT_USER.id))hpLoadMessages(id)}).subscribe()}catch(e){}
+}
+async function hpLoadMessages(id){
+ const list=$('#hp-msg-list');if(!list)return;
+ try{const r=await SUPA.from('direct_messages').select('id,sender_id,receiver_id,body,created_at').or(`and(sender_id.eq.${CURRENT_USER.id},receiver_id.eq.${id}),and(sender_id.eq.${id},receiver_id.eq.${CURRENT_USER.id})`).order('created_at',{ascending:true}).limit(100);if(r.error)throw r.error;
+ list.innerHTML=(r.data||[]).map(m=>`<div class="hp-msg ${m.sender_id===CURRENT_USER.id?'mine':''}">${hpSafe(m.body)}<small>${new Date(m.created_at).toLocaleString('es-MX',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</small></div>`).join('')||'<p class="mu">Empieza la conversación 👋</p>';list.scrollTop=list.scrollHeight;
+ }catch(e){list.innerHTML='<p class="mu">No se pudieron cargar mensajes. Revisa la configuración SQL/RLS.</p>'}
+}
+/* Store previous rank points to detect a genuine overtake on the next result screen. */
+async function hpRankSnapshot(){
+ try{const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return null;return r.data.map(x=>({id:x.user_id||x.userId||x.uid||x.id,alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0})).filter(x=>x.id)}catch(e){return null}
+}
+async function hpCheckOvertakes(){
+ try{
+  const before=await S?.rankBefore;if(!before?.length)return;
+  const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return;
+  const after=r.data.map(x=>({id:x.user_id||x.userId||x.uid||x.id,alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0})).filter(x=>x.id);
+  const oldMe=before.find(x=>x.id===CURRENT_USER.id),newMe=after.find(x=>x.id===CURRENT_USER.id);if(!oldMe||!newMe)return;
+  const oldMap=new Map(before.map(x=>[x.id,x.points]));
+  const passed=after.filter(x=>x.id!==CURRENT_USER.id&&oldMap.has(x.id)&&oldMap.get(x.id)>=oldMe.points&&x.points<newMe.points);
+  if(!passed.length)return;
+  const names=passed.slice(0,3).map(x=>x.alias),more=passed.length>3?` y ${passed.length-3} más`:'';
+  const panel=document.createElement('div');panel.className='card hp-pop';panel.innerHTML=`<h2 style="margin-top:0">🚀 ¡Subiste en el ranking!</h2><p>Con este resultado superaste a <b>${names.map(hpSafe).join(', ')}${hpSafe(more)}</b>.</p><div class="row"><button class="btn sm" id="hp-overtake-social">Contactar</button><button class="btn sm s" id="hp-overtake-dismiss">Genial</button></div>`;
+  const status=$('#finish-status');if(status?.parentElement)status.parentElement.insertBefore(panel,status);
+  $('#hp-overtake-social').onclick=()=>{const target=passed[0];const friend=HP_FRIENDS.find(f=>f.id===target.id&&f.state==='friend');if(friend){socialView();setTimeout(()=>hpOpenChat(target.id),80)}else{socialView();setTimeout(()=>{const input=$('#hp-friend-search');if(input){input.value=target.alias;hpSearchPeople()}hpToast('Envía una solicitud para habilitar el mensaje directo','💬')},80)}};
+  $('#hp-overtake-dismiss').onclick=()=>panel.remove();
+  hpToast(`¡Superaste a ${names[0]} en el ranking!`,'🏆');
+ }catch(e){console.warn('No se pudo comprobar el cambio de ranking',e)}
+}
+</script>
+</body></html>
