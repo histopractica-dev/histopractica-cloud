@@ -1197,6 +1197,92 @@ body.mo { overflow: hidden; }
 .rr .rank-person{flex:1;text-align:left;}
 .rr .rank-person .pnm{display:inline;overflow-wrap:anywhere;}
 @media(max-width:420px){.rank-avatar{width:36px;height:36px}.pc .rank-avatar{width:48px;height:48px}.rr{gap:8px;padding:9px}.rp{min-width:1.5em}}
+
+
+/* Adaptación móvil integral: evitar desbordamientos laterales y mantener los controles accesibles. */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+main,#app,.card,.top,.row,.xt,.wrong-q{min-width:0;max-width:100%}
+img,video,canvas,svg{max-width:100%}
+button,input,select,textarea{max-width:100%;touch-action:manipulation}
+.wrong-list{display:grid;gap:10px;margin:12px 0 18px}
+.wrong-q{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:0;padding:12px;overflow:hidden}
+.wrong-thumb{display:block;width:100%;height:auto;max-height:300px;min-height:100px;object-fit:contain;background:#080a0d;border:1px solid var(--ln);border-radius:var(--r-md)}
+.wrong-details{min-width:0;overflow-wrap:anywhere}
+.wrong-details h3{margin:4px 0 8px;font-size:1rem;line-height:1.35}
+.wrong-meta{margin:0;font-size:.78rem;font-weight:800}
+.wrong-picked,.wrong-answer{margin:6px 0;font-size:.92rem;overflow-wrap:anywhere}
+@media(max-width:640px){
+ main{padding:calc(8px + env(safe-area-inset-top,0px)) 12px calc(98px + env(safe-area-inset-bottom,0px))}
+ .top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-bottom:8px}
+ .top>.logo{grid-column:1;grid-row:1;min-width:0;font-size:1.05rem;gap:5px}
+ .top>.av{grid-column:2;grid-row:1;order:0!important;margin:0;width:42px;height:42px;min-width:42px;min-height:42px}
+ .top>.row{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:7px;width:100%;min-width:0}
+ .top .row .ib{display:flex;justify-content:center;align-items:center;gap:5px;width:100%;min-width:0;min-height:42px;padding:0 5px;font-size:.76rem;letter-spacing:0;white-space:nowrap}
+ .top .row .ib b{display:inline!important;overflow:hidden;text-overflow:ellipsis}
+ .top .row .ib span{display:inline-flex;flex:none}
+ .header-meta{margin:0 0 8px;overflow-wrap:anywhere;font-size:.75rem}
+ .hero{font-size:clamp(1.55rem,7vw,2rem);line-height:1.16;overflow-wrap:anywhere}
+ h2{font-size:1.08rem;line-height:1.3}
+ .card{padding:12px;margin:10px 0;border-radius:16px}
+ .grid{grid-template-columns:minmax(0,1fr);gap:10px}
+ .tgrid{grid-template-columns:minmax(0,1fr);gap:8px}
+ .pod{gap:8px;margin-bottom:10px}
+ .pc{padding:12px 6px;gap:5px}
+ .pc.p1{width:min(250px,100%);padding:14px 8px}
+ .md{width:38px;height:38px}
+ .pc.p1 .md{width:48px;height:48px}
+ .rank-avatar{width:36px;height:36px}
+ .pc .rank-avatar{width:44px;height:44px}
+ .rr{gap:7px;padding:8px}
+ .rr .rank-person{gap:7px}
+ .rr>b{font-size:.8rem;white-space:nowrap}
+ .rp{min-width:1.5em}
+ .opt{min-height:48px;padding:10px;gap:8px;font-size:.94rem;line-height:1.3}
+ .opt kbd{flex:none;min-width:25px}
+ .opt .ot{white-space:normal;text-align:right;font-size:.7rem;max-width:44%;}
+ .img{min-height:120px}
+ .img img{max-height:42vh;max-width:100%;height:auto;object-fit:contain}
+ #vp{max-height:38vh}
+ .sheet{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
+ .sheet h3{font-size:1.08rem}
+ .sheet .fbt{max-height:17vh}
+ .sheet .btn{min-height:48px}
+ #nav{gap:2px;padding:5px 4px calc(5px + env(safe-area-inset-bottom,0px));justify-content:space-around}
+ #nav button{flex:1 1 0;min-width:0;max-width:none;min-height:52px;font-size:clamp(.58rem,2.55vw,.7rem);letter-spacing:0;padding:3px 1px;line-height:1.15;overflow-wrap:anywhere}
+ #nav .nav-emoji{font-size:1.12rem;line-height:1.3}
+ .row{gap:7px}
+ .row>.btn{flex:1 1 135px;width:auto;min-width:0;white-space:normal}
+ .admin-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+ .admin-table{min-width:620px}
+ .auth-wrap{margin:2vh auto 0}
+ .auth-brand{font-size:1.45rem}
+ .dlg{padding:16px;max-height:calc(100dvh - 24px)}
+ .ag{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ab{min-width:0;overflow-wrap:anywhere}
+ .foot{gap:2px 8px}
+ .lnk{font-size:.82rem}
+ pre{max-width:100%;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+ main{padding-left:10px;padding-right:10px}
+ .top>.logo{font-size:.98rem}
+ .top .row .ib{font-size:.69rem;gap:3px}
+ .top .row .ib .ic{width:1em;height:1em}
+ .top .row{grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:5px}
+ #nav button{font-size:.57rem}
+ .pc .pnm{font-size:.82rem}
+ .pp{font-size:.75rem}
+ .wrong-thumb{max-height:230px}
+}
+@media(min-width:641px) and (max-width:899px){
+ main{padding-left:18px;padding-right:18px;padding-bottom:110px}
+ .top{flex-wrap:wrap}
+ .top .row{gap:7px}
+ .top .row .ib{padding:0 9px}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:640px){.wrong-q{grid-template-columns:minmax(180px,38%) minmax(0,1fr);align-items:center}.wrong-thumb{max-height:210px}}
+
 </style></head><body><main id="app" aria-busy="true"><div class="startup-loading" role="status" aria-label="Cargando HistoPráctica"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
@@ -1361,7 +1447,7 @@ const setTheme=p=>{const h=document.documentElement;try{p==="auto"?localStorage.
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themePref()==="auto")setTheme("auto")});
 document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
 new MutationObserver(()=>window.scrollTo(0,0)).observe(app,{childList:true});
-const head=t=>`<div class="top"><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><div class="row">${isAdmin()?'<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>':''}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
+const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
 const qc=e=>(e.subtipo?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
 const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
@@ -1445,9 +1531,18 @@ function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
  $$("[data-n]").forEach(button=>button.onclick=()=>{desired=+button.dataset.n;useAll=false;upd()});$("#all-questions").onclick=()=>{useAll=true;upd()};
  if(custom){$("#select-all").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=true);upd()};$("#select-none").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=false);upd()}}upd();syncUI();if($("#bk"))$("#bk").onclick=home;
  $("#go").onclick=()=>{const c=cfg(),a=questionItems(c,BANK).length;if(!c.temas.length||!Number.isInteger(c.n)||c.n<1||c.n>a||c.scope==="pending"&&!SYNC_READY)return upd();CFG=c;run(c)}}
+function wrongQuestionCard(item){
+ const q=item?.q||null,it=q?.it||item?.it||item;
+ if(!it?.e)return "";
+ const prompt=q?.txt||(it.m==="A"?"¿Qué tipo de tejido observas?":it.m==="B"?"¿Qué célula está señalada?":"¿Qué estructura está señalada?");
+ const answer=q?.ans||(it.m==="A"?it.e.subtipo:it.t?.n)||"Respuesta no disponible";
+ const picked=item?.pick;
+ return `<article class="card wrong-q"><img class="wrong-thumb" src="${esc(it.e.url||"")}" alt="Microfotografía de ${esc(T[it.e.tema]||"histología")}" loading="lazy" decoding="async"><div class="wrong-details"><p class="mu wrong-meta">${esc(T[it.e.tema]||"Histología")} · ${esc(MN[it.m]||"Pregunta")}</p><h3>${esc(prompt)}</h3>${picked!==undefined?`<p class="wrong-picked">Tu respuesta: <span class="r">${esc(picked)}</span></p>`:""}<p class="wrong-answer">Respuesta correcta: <b class="g">${esc(answer)}</b></p></div></article>`;
+}
 function errView(){nav("e");const keys=new Set(ERR()),items=balancedItems(questionItems({temas:Object.keys(T),mod:"M"},BANK).filter(it=>keys.has(itKey(it))));
- app.innerHTML=head()+`<h1 class="hero">Errores</h1>`+(items.length?`<p class="mu">${items.length} pregunta(s) por repasar. Si aciertas una, sale de la lista.</p><button class="btn" id="go">Repasar errores</button>`:`<div class="card big"><div style="font-size:3rem">🎉</div><b style="font-size:1.4rem">Sin errores pendientes</b><span class="mu">Los fallos de tus prácticas aparecerán aquí.</span></div>`);
- if(items.length)$("#go").onclick=()=>run({temas:Object.keys(T),mod:"M",n:items.length,cor:"i"},{items,spare:[],short:false,avail:items.length})}
+ app.innerHTML=head()+`<h1 class="hero">Errores</h1>`+(items.length?`<p class="mu">${items.length} pregunta(s) por repasar. Aquí tienes las imágenes y sus respuestas correctas.</p><button class="btn" id="go">Repasar errores</button><div class="wrong-list">${items.map(wrongQuestionCard).join("")}</div><button class="btn" id="go-bottom">Repasar errores</button>`:`<div class="card big"><div style="font-size:3rem">🎉</div><b style="font-size:1.4rem">Sin errores pendientes</b><span class="mu">Los fallos de tus prácticas aparecerán aquí.</span></div>`);
+ const startReview=()=>run({temas:Object.keys(T),mod:"M",n:items.length,cor:"i"},{items,spare:[],short:false,avail:items.length});
+ if(items.length){$("#go").onclick=startReview;$("#go-bottom").onclick=startReview}}
 const avKey=()=>"hp_av_"+(CURRENT_USER?.id||""),avGet=()=>{
  const remote=CURRENT_USER?.user_metadata?.avatar_url;
  if(typeof remote==="string"&&/^https:\/\//i.test(remote))return remote;
@@ -1510,6 +1605,18 @@ function reportModal(id,ctx={}){const m=modal(`<h2 style="margin-top:0">Reportar
  $("#rp-go").onclick=async()=>{const r=$("#rp-r").value,c=$("#rp-c").value.trim().slice(0,500),msg=$("#rp-m"),g=$("#rp-go"),k=id+"|"+r;if(!r)return msg.textContent="Elige un motivo.";if(RPT.has(k)){msg.className="mu";return msg.textContent="Ya enviaste este reporte."}g.disabled=true;msg.className="mu";msg.textContent="Enviando…";
   try{const {data}=await SUPA.auth.getSession();const t=data.session?.access_token;if(!t)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");const res=await fetch("/api/report-question",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${t}`},body:JSON.stringify({questionId:String(id),reason:r,comment:c,tema:ctx.tema||"",modo:ctx.modo||""})}),p=await res.json().catch(()=>({}));if(!res.ok)throw new Error(p.error||"No se pudo enviar el reporte.");RPT.add(k);msg.className="g";msg.textContent="Reporte enviado. ¡Gracias!";setTimeout(()=>m.remove(),1200)}
   catch(x){msg.className="r";msg.textContent=x.message||"No se pudo enviar el reporte.";g.disabled=false}}}
+/* Sonidos breves para respuestas. El contexto se activa desde el toque en «Comprobar», compatible con navegadores móviles. */
+let HP_AUDIO=null;
+function prepareFeedbackAudio(){
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;if(!HP_AUDIO)HP_AUDIO=new AC();if(HP_AUDIO.state==="suspended")HP_AUDIO.resume().catch(()=>{});return HP_AUDIO}catch(e){return null}
+}
+function feedbackSound(correct){
+ const ctx=prepareFeedbackAudio();if(!ctx)return;
+ const start=ctx.currentTime+.025;
+ const notes=correct?[{f:660,t:0,d:.11},{f:880,t:.12,d:.16}]:[{f:245,t:0,d:.16},{f:185,t:.17,d:.19}];
+ for(const n of notes){try{const osc=ctx.createOscillator(),gain=ctx.createGain(),at=start+n.t;osc.type=correct?"sine":"triangle";osc.frequency.setValueAtTime(n.f,at);gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(correct?.12:.085,at+.018);gain.gain.exponentialRampToValueAtTime(.0001,at+n.d);osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+n.d+.01)}catch(e){}}
+}
+
 function run(c,forced){
  const ex=forced||buildExam(c,BANK);
  if(!ex.items.length){const t="No hay preguntas para esa combinación. Añade imágenes o cambia la selección.",m=$("#msg");return m?m.innerHTML=`<p class="r">${t}</p>`:alert(t)}
@@ -1582,7 +1689,7 @@ async function show(){
 function pick(i){const q=S?.q?.[S.i]?.question;if(S.done||!q?.opts[i]||!$("#ph")||!$("#ph").naturalWidth)return;SEL=i;$$(".opt").forEach((b,k)=>b.classList.toggle("sel",k===i));$("#ck").disabled=false}
 async function check(){
  if(S.done||SEL===null||!$("#ph")||!$("#ph").naturalWidth)return;
- const q=S.q[S.i].question,pk=q.opts[SEL];let ok;S.done=1;const button=$("#ck");if(button){button.disabled=true;button.textContent="Verificando…"}
+ const q=S.q[S.i].question,pk=q.opts[SEL];let ok;prepareFeedbackAudio();S.done=1;const button=$("#ck");if(button){button.disabled=true;button.textContent="Verificando…"}
  try{
   const record={answerId:q.answerId||(q.answerId=crypto.randomUUID()),key:itKey(q.it),questionId:q.it.e.id,mode:q.it.m,selected:String(pk),theme:q.it.e.tema,target:q.it.t?{x:q.it.t.x,y:q.it.t.y,w:q.it.t.w,h:q.it.t.h}:null};
   let verification;
@@ -1593,6 +1700,7 @@ async function check(){
   if(q.it.m==="A")q.it.e.subtipo=verification.expected;else if(q.it.t)q.it.t.n=verification.expected;
   S.ans.push({q,pick:pk,ok});S.streak=ok?S.streak+1:0;S.best=Math.max(S.best,S.streak);rec(q,ok);
  }catch(error){S.done=0;if(button){button.disabled=false;button.textContent="Reintentar verificación"}const status=$("#sync-status");if(status)status.innerHTML=`<p class="r" role="alert">${esc(error.message||"No se pudo verificar la respuesta")}. Comprueba tu conexión e inténtalo otra vez.</p>`;return}
+ feedbackSound(ok);
  if(S.c.cor==="f"){S.i++;return show()}
  $$(".opt").forEach((b,k)=>{b.disabled=true;b.classList.remove("sel");if(q.opts[k]===q.ans){b.classList.add("ok");b.insertAdjacentHTML("beforeend",`<span class="ot">✅ Respuesta correcta</span>`)}else if(k===SEL){b.classList.add("no");b.insertAdjacentHTML("beforeend",`<span class="ot">❌ Respuesta incorrecta</span>`)}});
  {const c=$(".opt.ok");if(c)c.scrollIntoView({block:"nearest",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
@@ -1610,7 +1718,7 @@ async function fin(){
  const by=f=>{const m={};a.forEach(x=>{const k=f(x);(m[k]=m[k]||[0,0])[1]++;if(x.ok)m[k][0]++});return Object.entries(m).map(([k,v])=>`<div class="tl"><span>${k}</span><b>${v[0]}/${v[1]} · ${acc(v[0],v[1])}%</b></div>`).join("")};
  app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><b>${acc(ok,a.length)}%</b><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
  <div class="card"><div class="sub" style="margin-top:0">Por tema</div>${by(x=>T[x.q.it.e.tema])}<div class="sub">Por modalidad</div>${by(x=>MN[x.q.it.m])}</div>
- ${bad.length?`<div class="card"><div class="sub" style="margin-top:0">Falladas</div>${bad.map(x=>`<p><b>${x.q.txt}</b><br>Elegiste: <span class="r">${esc(x.pick)}</span> · Correcta: <b class="g">${esc(x.q.ans)}</b></p>`).join("")}</div><button class="btn" id="rv">Repasar errores</button><br>`:""}<p class="mu" id="finish-status" role="status">Guardando el resultado y enviando notificación…</p><div id="sync-status">${syncStatus()}</div><button class="btn s" id="hm">Inicio</button>`;
+ ${bad.length?`<div class="sub">Preguntas falladas (${bad.length})</div><div class="wrong-list">${bad.map(wrongQuestionCard).join("")}</div><button class="btn" id="rv">Repasar errores</button><br>`:""}<p class="mu" id="finish-status" role="status">Guardando el resultado y enviando notificación…</p><div id="sync-status">${syncStatus()}</div><button class="btn s" id="hm">Inicio</button>`;
  syncUI();
  $("#hm").onclick=home;if(bad.length)$("#rv").onclick=()=>run(Object.assign({},S.c,{cor:"i"}),{items:bad.map(x=>x.q.it),spare:[],short:false,avail:bad.length});saveFinishedExam()}
 
