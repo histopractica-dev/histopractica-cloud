@@ -266,7 +266,8 @@ function balancedItems(items,r=Math.random,level=0){
  const groups=new Map();for(const it of items){const key=groupers[level](it);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(it)}
  const queues=[...groups.values()].map(group=>balancedItems(group,r,level+1)),out=[];let active=queues;
  while(active.length){for(const queue of shuf(active,r))out.push(queue.shift());active=active.filter(queue=>queue.length)}return out}
-function buildExam(c,bank,r=Math.random){const it=balancedItems(questionItems(c,bank),r),count=Math.min(it.length,Math.max(0,Math.floor(c.n)||0));return{avail:it.length,short:it.length<c.n,items:it.slice(0,count),spare:it.slice(count)}}
+/* balancedItems no se toca: aquí solo se pasa el resultado por un filtro. Primero van las preguntas cuya imagen aún no ha salido; las repetidas de una misma imagen quedan al final y solo entran si no alcanzan imágenes distintas. */
+function buildExam(c,bank,r=Math.random){const all=balancedItems(questionItems(c,bank),r),seen=new Set(),first=[],rest=[];for(const x of all)(seen.has(x.e.id)?rest:(seen.add(x.e.id),first)).push(x);const it=first.concat(rest),count=Math.min(it.length,Math.max(0,Math.floor(c.n)||0));return{avail:it.length,short:it.length<c.n,items:it.slice(0,count),spare:it.slice(count)}}
 function distract(ans,tiers,r=Math.random){
  const k=x=>String(x).trim().toLowerCase(),seen=new Set([k(ans)]),out=[];
  for(const t of tiers)for(const x of shuf(t,r))if(out.length<3&&!seen.has(k(x))){seen.add(k(x));out.push(x)}
