@@ -127,6 +127,26 @@ async function refreshRemoteBank(){
  })));
  loadBank();
 }
+/* ---------- Seguridad de imágenes: copia en la base de datos + restauración automática ---------- */
+async function guardRequest(body){
+ const {data}=await SUPA.auth.getSession();const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+ const r=await fetch("/api/image-guard",{method:"POST",credentials:"same-origin",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+ const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"Error en la seguridad de imágenes");return p
+}
+const blobToB64=blob=>new Promise((res,rej)=>{const f=new FileReader();f.onload=()=>res(String(f.result).split(",")[1]||"");f.onerror=rej;f.readAsDataURL(blob)});
+async function backupImage(id,blob){try{await guardRequest({action:"store",questionId:String(id),contentType:blob.type||"image/jpeg",data:await blobToB64(blob)})}catch(err){console.warn("No se pudo guardar la copia de seguridad de la imagen",id,err)}}
+/* Si una foto no carga, pide al servidor que la restaure desde la copia (una vez por imagen) y la vuelve a pedir. */
+async function healImage(img,id){
+ try{const r=await guardRequest({action:"heal",questionId:String(id)});
+  if(r.restored||r.exists){const u=img.getAttribute("src")||"";img.src=u.replace(/([?&])r=\d+$/,"")+(u.includes("?")?"&":"?")+"r="+Date.now();return true}
+ }catch(err){console.warn("No se pudo restaurar la imagen",id,err)}
+ return false
+}
+document.addEventListener("error",ev=>{const t=ev.target;if(t&&t.tagName==="IMG"&&t.dataset&&t.dataset.qid&&!t.dataset.healed){t.dataset.healed="1";healImage(t,t.dataset.qid)}},true);
+function guardSummary(r){
+ const l=a=>a&&a.length?"\n  "+a.map(x=>typeof x==="string"?x:x.id+": "+x.error).join("\n  "):"";
+ return `Revisadas: ${r.total}\nBien: ${r.ok}\nRestauradas desde la copia: ${r.restored.length}${l(r.restored)}\nCopias nuevas creadas: ${r.backedUp}\nSin archivo y SIN copia (hay que volver a subirlas): ${r.missing.length}${l(r.missing)}\nExisten pero no se sirven (¿bucket público?): ${r.unserved.length}${l(r.unserved)}\nCon error: ${r.failed.length}${l(r.failed)}`+(r.notChecked||r.backupPending?`\n\nQuedaron ${r.notChecked+r.backupPending} sin revisar por tiempo. Vuelve a pulsar el botón.`:"")
+}
 /* ---------- Imágenes: siempre una copia propia en Supabase Storage ---------- */
 /* Descarga una imagen (con reintentos). Lanza error si no es una imagen o el sitio la bloquea. */
 async function fetchImageBlob(url,tries=3){
@@ -154,23 +174,23 @@ async function freshCommonsUrl(id){
 }
 async function storeQuestionOnSupabase(e){
  if(!isAdmin())throw new Error("Solo el administrador puede modificar el banco.");
- let imagePath=e._image_path||null,externalUrl=null;
+ let imagePath=e._image_path||null,externalUrl=null,freshBlob=null;
  if(String(e.url||"").startsWith("data:image/")){
-   const response=await fetch(e.url);const blob=await response.blob();const ext=blob.type.split("/")[1]?.replace("jpeg","jpg")||"jpg";imagePath=`${String(e.id).replace(/[^a-zA-Z0-9_-]/g,"_")}.${ext}`;
+   const response=await fetch(e.url);const blob=freshBlob=await response.blob();const ext=blob.type.split("/")[1]?.replace("jpeg","jpg")||"jpg";imagePath=`${String(e.id).replace(/[^a-zA-Z0-9_-]/g,"_")}.${ext}`;
    const {error:upError}=await SUPA.storage.from("histology-images").upload(imagePath,blob,{upsert:true,contentType:blob.type||"image/jpeg",cacheControl:"3600"});if(upError)throw upError;
  }else if(!imagePath){
    /* Enlace externo (Commons, JSON importado…): se copia a Supabase para que no caduque ni dependa del navegador. */
-   try{imagePath=await putImage(e.id,await fetchImageBlob(e.url))}
+   try{const fb=await fetchImageBlob(e.url);imagePath=await putImage(e.id,fb);freshBlob=fb}
    catch(err){console.warn("No se pudo copiar a Supabase; se conserva el enlace externo:",e.id,err);imagePath=null;externalUrl=e.url}
  }
  const row={id:String(e.id),theme:e.tema,subtype:e.subtipo||null,image_path:imagePath,external_image_url:externalUrl,source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||"Sin especificar",traits:e.rasgos||null,verified:e.verificada===true,published:e.published!==false,cells:e.celulas||[],structures:e.estructuras||[],guides:e.guias||[],created_by:CURRENT_USER.id,updated_at:new Date().toISOString()};
  const {error}=await SUPA.from("questions").upsert(row,{onConflict:"id"});if(error)throw error;
- return imagePath?"storage":"external";
+ if(freshBlob&&imagePath)await backupImage(e.id,freshBlob);return imagePath?"storage":"external";
 }
 function saveBank(list,del){
  if(!isAdmin()){alert("Solo el administrador puede modificar el banco.");return false;}
  LOCAL=LOCAL.filter(x=>x.id!==del).concat(list);persist();
- (async()=>{if(del){const old=REMOTE_BANK.find(x=>x.id===del);const {error}=await SUPA.from("questions").delete().eq("id",del);if(error)throw error;if(old?._image_path)await SUPA.storage.from("histology-images").remove([old._image_path]);}
+ (async()=>{if(del&&!list.some(x=>x&&x.id===del)){const old=REMOTE_BANK.find(x=>x.id===del);const {error}=await SUPA.from("questions").delete().eq("id",del);if(error)throw error;if(old?._image_path)await SUPA.storage.from("histology-images").remove([old._image_path]);}
   for(const item of list)await storeQuestionOnSupabase(item);await refreshRemoteBank();
  })().then(()=>{if($("#bank-admin-status")){$("#bank-admin-status").textContent="Cambios sincronizados con Supabase.";bankView()}}).catch(err=>{console.error("bank sync error",err);alert("No se pudo guardar en Supabase: "+(err.message||"error"));});
  return true;
@@ -192,7 +212,7 @@ async function repairImages(statusEl,outEl){
    if(!blob){res.bad.push(e.id+(e._image_path?" · archivo faltante en Supabase":" · enlace roto o bloqueado por el sitio de origen"));continue}
    const path=await putImage(e.id,blob);
    const {error}=await SUPA.from("questions").update({image_path:path,external_image_url:null,updated_at:new Date().toISOString()}).eq("id",e.id);if(error)throw error;
-   if(recovered||e._image_path)res.rec++;else res.mig++;
+   await backupImage(e.id,blob);if(recovered||e._image_path)res.rec++;else res.mig++;
   }catch(err){res.bad.push(e.id+" · "+(err.message||"error"))}
  }
  await refreshRemoteBank();bankView();
@@ -363,7 +383,7 @@ async function show(){
  requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=$(".bar i");if(b)b.style.width=100*S.i/n+"%"}));warm(session,index+1);
  let z=0;$("#im").onclick=e=>{const r=$("#zw").getBoundingClientRect();z=!z;$("#zw").style.transformOrigin=`${100*(e.clientX-r.left)/r.width}% ${100*(e.clientY-r.top)/r.height}%`;$("#zw").style.transform=z?"scale(2.4)":"none"};
  $("#xx").onclick=()=>{if(confirm("¿Salir de este examen? Las respuestas ya registradas se conservan."))home()};
- $("#ph").onerror=()=>{ready();$("#im").onclick=null;$("#im").style.cursor="default";$$(".opt").forEach(button=>button.disabled=true);SEL=null;$("#ck").disabled=true;$("#im").innerHTML='<div style="padding:20px;text-align:center;color:#fff"><p>La imagen no cargó. Esta pregunta no cuenta.</p><button class="btn sm s" id="rt">Reintentar</button> <button class="btn sm s" id="sb">Sustituir</button></div>';
+ $("#ph").onerror=async()=>{if(!photo.dataset.healed){photo.dataset.healed="1";if(await healImage(photo,q.it.e.id))return}ready();$("#im").onclick=null;$("#im").style.cursor="default";$$(".opt").forEach(button=>button.disabled=true);SEL=null;$("#ck").disabled=true;$("#im").innerHTML='<div style="padding:20px;text-align:center;color:#fff"><p>La imagen no cargó. Esta pregunta no cuenta.</p><button class="btn sm s" id="rt">Reintentar</button> <button class="btn sm s" id="sb">Sustituir</button></div>';
   $("#rt").onclick=show;$("#sb").onclick=()=>{const m=S.spare.shift();if(m)S.q[S.i]={it:m,question:null};else S.q.splice(S.i,1);show()}};
  $$(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.i));$("#ck").onclick=check}
 function pick(i){const q=S?.q?.[S.i]?.question;if(S.done||!q?.opts[i]||!$("#ph")||!$("#ph").naturalWidth)return;SEL=i;$$(".opt").forEach((b,k)=>b.classList.toggle("sel",k===i));$("#ck").disabled=false}
@@ -405,14 +425,17 @@ async function fin(){
 let BF="all";
 function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k),extN=BANK.filter(e=>!e._image_path).length;
  const card=e=>{const mk=(e.celulas||[]).map(m=>({...m,k:"Célula"})).concat((e.estructuras||[]).map(m=>({...m,k:"Estructura"})));
-  return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
+  return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" data-qid="${esc(e.id)}" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
   <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc(e.subtipo||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>esc(m.n)).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}${e._image_path?"":" · ⚠️ enlace externo"}</p>
   <div class="row"><button class="btn sm s" data-e="${esc(e.id)}">✏️ Editar</button><button class="btn sm s" data-pub="${esc(e.id)}">${e.published===false?"Publicar":"Ocultar"}</button><button class="btn sm w" data-d="${esc(e.id)}">🗑</button></div></div>`};
  app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><button class="btn s" id="rp" style="margin-top:10px">🛠 Reparar imágenes${extN?` (${extN} con enlace externo)`:""}</button><pre id="rp-out"></pre><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
  ${BANK.length?vis.map(k=>cnt(k).length?`<h2>${EM[k]} ${T[k]} <span class="mu">· ${cnt(k).length} img · ${cnt(k).reduce((s,e)=>s+qc(e),0)} preg.</span></h2><div class="grid">${cnt(k).map(card).join("")}</div>`:"").join(""):'<p class="mu">Aún no hay imágenes. Ve a Añadir.</p>'}
+ <div class="sub">Seguridad de imágenes</div><div class="card"><p class="mu" style="margin:0 0 10px">Cada foto tiene una copia dentro de la base de datos de Supabase. Si falta el archivo, se restaura desde esa copia (también una vez al día, con aviso por correo).</p><button class="btn" id="gk">🛡 Revisar y restaurar ahora</button><label class="btn s" style="display:block;margin-top:8px;cursor:pointer;text-align:center">Cargar copias desde un respaldo JSON<input id="gj" type="file" accept=".json,application/json" hidden></label><pre id="gk-out"></pre></div>
  <div class="sub">Copia de seguridad</div><div class="card"><p class="mu" style="margin:0 0 10px">Guarda un respaldo JSON del banco de imágenes y sus marcas. <b id="lb" class="${lb&&Date.now()-lb<6048e5||!LOCAL.length?"":"r"}">Última copia: ${lb?new Date(lb).toLocaleDateString("es"):"nunca"}.</b></p><div class="row"><button class="btn" id="ex" style="flex:1">Guardar copia</button><label class="btn s" style="flex:1;cursor:pointer">Restaurar copia<input id="rf" type="file" accept=".json,application/json" hidden></label></div><pre id="out"></pre><button class="btn sm w" id="clr" style="margin-top:8px">Vaciar mis imágenes</button></div>
  <div class="sub">Importar JSON</div><div class="card"><p class="mu" style="margin:0 0 10px">Pega un JSON con muchas imágenes a la vez: <b>{"bank":[…]}</b> o una lista <b>[…]</b>.</p><textarea id="pj" rows="6" placeholder='{"bank":[{"id":"…","tema":"epi","subtipo":"…","url":"https://…","fuente":"…","licencia":"…","verificada":true}]}' spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.8rem;resize:vertical"></textarea><br><br><button class="btn" id="pi">📋 Importar imágenes</button><pre id="po"></pre></div>`;
  $("#ad").onclick=()=>sview();$$("[name=bf]").forEach(r=>r.onchange=()=>{BF=r.value;bankView()});
+ $("#gk").onclick=async()=>{const b=$("#gk"),o=$("#gk-out");b.disabled=true;o.textContent="Revisando… puede tardar unos segundos.";try{o.textContent=guardSummary(await guardRequest({action:"check"}))}catch(err){o.textContent="Error: "+(err.message||err)}finally{b.disabled=false}};
+ $("#gj").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;const o=$("#gk-out");try{const j=JSON.parse(await f.text()),list=(Array.isArray(j)?j:j&&j.bank||[]).filter(x=>x&&x.id&&String(x.url||"").startsWith("data:image/")),bad=[];let ok=0;for(let i=0;i<list.length;i++){o.textContent=`Guardando copias ${i+1}/${list.length}…`;const x=list[i];try{const blob=await (await fetch(x.url)).blob();await guardRequest({action:"store",questionId:String(x.id),contentType:blob.type||"image/jpeg",data:await blobToB64(blob)});ok++}catch(err){bad.push(x.id+": "+(err.message||err))}}o.textContent=`Copias guardadas: ${ok}/${list.length}.`+(bad.length?"\nNo se guardaron:\n"+bad.join("\n"):"")+"\nAhora pulsa «Revisar y restaurar ahora».";}catch(err){o.textContent="Error: "+(err.message||err)}finally{ev.target.value=""}};
  $("#rp").onclick=async()=>{const b=$("#rp");b.disabled=true;try{await repairImages($("#bank-admin-status"),$("#rp-out"))}catch(err){b.disabled=false;$("#rp-out").textContent="Error: "+(err.message||err)}};
  $$("[data-e]").forEach(b=>b.onclick=()=>{const e=BANK.find(x=>x.id===b.dataset.e);validate({pid:e.id,thumb:e.url,page:e.fuenteUrl||"",autor:e.autor||"",lic:e.licencia},e.tema,e)});
  $$("[data-pub]").forEach(b=>b.onclick=()=>{const q=BANK.find(x=>x.id===b.dataset.pub);if(q)setPublished(q.id,q.published===false)});
