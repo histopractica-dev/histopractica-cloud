@@ -1,15 +1,534 @@
-/* ...existing code... */
-async function imageUrlForRow(row){
-  if(row.image_path){
-    const clean=String(row.image_path).replace(/^\/+/, "");
-    const base=SUPA?.supabaseUrl || window.HP_CONFIG?.supabaseUrl || "";
-    if(base){
-      const url=new URL(`/storage/v1/object/public/histology-images/${encodeURIComponent(clean)}`, base.endsWith("/")?base.slice(0,-1):base);
-      return url.toString();
-    }
-    const {data}=SUPA.storage.from("histology-images").getPublicUrl(clean);
-    return data.publicUrl||"";
-  }
-  return row.external_image_url||"";
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HistoPráctica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("hp_theme")==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
+<style>
+:root{--bg:#fff;--pn:#fff;--sf:#f7f7f7;--ln:#e5e5e5;--tx:#4b4b4b;--mu:#777;--g:#58cc02;--gd:#58a700;--gt:#58a700;--ok:#d7ffb8;--b:#1cb0f6;--bt:#1899d6;--bl:#ddf4ff;--y:#ffc800;--o:#ff9600;--nd:#ff4b4b;--ndd:#ea2b2b;--no:#ffdfe0;box-sizing:border-box}
+html[data-theme=dark]{color-scheme:dark;--bg:#131820;--pn:#1d2632;--sf:#273343;--ln:#374454;--tx:#f3f6fa;--mu:#b3becc;--gd:#3f9400;--gt:#7ddc3c;--ok:#20381a;--b:#55bfff;--bt:#55bfff;--bl:#1a3550;--nd:#ff6464;--ndd:#c93a3a;--no:#432229}
+*{box-sizing:inherit}html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 Nunito,"DIN Rounded",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif}
+html.tr *{transition:background-color .3s,color .3s,border-color .3s,box-shadow .3s}
+main{max-width:960px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 120px}
+.startup-loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);z-index:100}
+.startup-loading svg{width:clamp(52px,16vw,76px);height:auto;color:var(--gt);animation:startup-pulse 1.8s ease-in-out infinite}
+@keyframes startup-pulse{0%,100%{opacity:.55;transform:scale(.96)}50%{opacity:1;transform:scale(1)}}
+@media(min-width:900px){body.hasnav{padding-left:112px}main{padding-bottom:40px}}
+h2{font-size:1.25rem;font-weight:900;margin:18px 0 10px}.hero{font-size:2rem;font-weight:900;margin:.3em 0 .1em}.sub{font-size:.8rem;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin:22px 0 8px}
+.mu{color:var(--mu);font-size:.9rem}.g{color:var(--gt)}.r{color:var(--nd)}a{color:var(--bt)}small.xp{color:var(--o);font-weight:900}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:13px 16px;min-height:50px;font:inherit;font-weight:900;letter-spacing:.05em;text-transform:uppercase;background:var(--g);color:#fff;box-shadow:0 4px 0 var(--gd);cursor:pointer;text-align:center;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--gd)}.btn:disabled{background:var(--ln);color:var(--mu);box-shadow:none;cursor:default}
+.btn.s{background:var(--pn);color:var(--tx);border:2px solid var(--ln);box-shadow:0 4px 0 var(--ln)}.btn.s:active{box-shadow:none}.btn.sm{display:inline-block;width:auto;min-height:44px;padding:8px 14px;font-size:.8rem}.btn.w{background:var(--nd);box-shadow:0 4px 0 var(--ndd)}
+.btn.s[aria-pressed=true]{background:var(--bl);border-color:var(--b);color:var(--bt);box-shadow:0 4px 0 var(--b)}
+.btn.s:disabled{background:var(--sf);color:var(--mu);box-shadow:none;opacity:.55}
+button:focus-visible,input:focus-visible,select:focus-visible,.ch input:focus-visible+span{outline:3px solid var(--b);outline-offset:2px}
+input[type=number]{width:100%;font:inherit;color:var(--tx);background:var(--pn);border:2px solid var(--ln);border-radius:14px;padding:12px;min-height:46px}
+.ch input:disabled+span{opacity:.5;box-shadow:none}.img.loading{background:var(--sf)}.loading img{opacity:0}.hint{font-size:.8rem;margin:12px 0;color:var(--mu)}
+@media(prefers-reduced-motion:reduce){*,html.tr *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row{display:flex;flex-wrap:wrap;gap:10px}.tgrid{display:grid;gap:12px;grid-template-columns:1fr}@media(min-width:640px){.tgrid{grid-template-columns:1fr 1fr}}
+.ch{cursor:pointer;display:block}.ch input{position:absolute;opacity:0;pointer-events:none}
+.ch span{display:block;border:2px solid var(--ln);border-radius:16px;padding:11px 16px;min-height:48px;font-weight:800;box-shadow:0 4px 0 var(--ln);background:var(--pn);text-align:center}.ch span small{display:block;font-size:.75rem;font-weight:700;color:var(--mu)}
+.ch input:checked+span{border-color:var(--b);background:var(--bl);color:var(--bt);box-shadow:0 4px 0 var(--b)}.ch:active span{transform:translateY(3px);box-shadow:none}
+.card{border:2px solid var(--ln);border-radius:20px;padding:16px;margin:12px 0;background:var(--pn)}
+input[type=text],input:not([type]),select,textarea{width:100%;font:inherit;color:var(--tx);background:var(--pn);border:2px solid var(--ln);border-radius:14px;padding:12px;min-height:46px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.logo{font-size:1.3rem;font-weight:900}.logo span{color:var(--g)}.top .row{flex-wrap:nowrap;gap:8px}
+.ib,.tgl{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:2px solid var(--ln);border-radius:14px;background:var(--pn);color:var(--tx);font:inherit;font-weight:800;box-shadow:0 3px 0 var(--ln);cursor:pointer}.ib:active,.tgl:active{transform:translateY(3px);box-shadow:none}.tgl b,.ib b{display:none}@media(min-width:560px){.tgl b,.ib b{display:inline}}
+.tc{display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:14px;border:2px solid var(--ln);border-radius:20px;background:var(--pn);color:var(--tx);font:inherit;box-shadow:0 4px 0 var(--ln);cursor:pointer}.tc:active{transform:translateY(4px);box-shadow:none}
+.ti{flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:var(--sf);font-size:2rem}.tx{flex:1;min-width:0}.tx b{display:block;font-size:1.05rem;font-weight:900}.tx small{display:block;color:var(--mu);font-size:.8rem;font-weight:700;line-height:1.3}.tx .pb{margin:6px 0 4px}
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;gap:6px;background:var(--bg);border-top:2px solid var(--ln);padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px))}
+#nav button{flex:1;max-width:200px;min-height:54px;border:2px solid transparent;border-radius:14px;background:none;color:var(--mu);font:inherit;font-weight:800;font-size:.72rem;text-transform:uppercase;padding:4px;cursor:pointer}#nav button.on{background:var(--bl);border-color:var(--b);color:var(--bt)}#nav i{display:block;font-style:normal;font-size:1.3rem}
+@media(min-width:900px){#nav{top:0;right:auto;width:112px;flex-direction:column;justify-content:flex-start;border-top:0;border-right:2px solid var(--ln);padding:90px 8px}#nav button{flex:none;max-width:none;min-height:70px}}
+.xt{display:flex;align-items:center;gap:10px}.x{border:0;background:none;color:var(--mu);font-size:1.6rem;min-width:44px;min-height:44px;cursor:pointer}
+.bar{flex:1;height:16px;background:var(--ln);border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g);border-radius:8px;transition:width .3s}.sk{font-weight:900;color:var(--o)}
+.img{display:flex;justify-content:center;overflow:hidden;border-radius:20px;border:2px solid var(--ln);background:#000;min-height:160px;cursor:zoom-in}.img>div{position:relative;line-height:0;max-width:100%;transition:transform .2s;transform-origin:50% 50%}.img img{display:block;max-width:100%;max-height:56vh;width:auto;filter:none}
+.mk{position:absolute;width:34px;height:34px;border:3px solid #ffe14d;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px #000;pointer-events:none}
+.bx{position:absolute;border:3px solid #ffe14d;box-shadow:0 0 0 2px #000,inset 0 0 0 2px #000;touch-action:none;cursor:move}.bx.f{pointer-events:none}
+.hdl{position:absolute;right:-16px;bottom:-16px;width:30px;height:30px;background:#ffe14d;border:2px solid #000;border-radius:7px;cursor:nwse-resize;touch-action:none}.bs{position:absolute;border:2px dashed #5fcf9a;box-shadow:0 0 0 1px #000;pointer-events:none}
+.gz{position:absolute;border:3px dashed #4dc9ff;box-shadow:0 0 0 2px #000;pointer-events:none}
+.og{display:grid;grid-template-columns:1fr;gap:0 12px;margin-top:8px}@media(min-width:640px){.og{grid-template-columns:1fr 1fr}}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:left;margin:6px 0;padding:14px;min-height:58px;border:2px solid var(--ln);border-radius:16px;background:var(--pn);color:var(--tx);font:inherit;font-weight:800;box-shadow:0 4px 0 var(--ln);cursor:pointer}.opt:active:not(:disabled){transform:translateY(4px);box-shadow:none}
+.opt{scroll-margin-bottom:250px}.opt kbd{border:2px solid var(--ln);border-radius:8px;min-width:28px;text-align:center;font:inherit;font-size:.8rem;color:var(--mu)}
+.opt.sel{border-color:var(--b);background:var(--bl);box-shadow:0 4px 0 var(--b)}.opt.ok{border-color:var(--g);background:var(--ok);box-shadow:0 4px 0 var(--g)}.opt.no{border-color:var(--nd);background:var(--no);box-shadow:0 4px 0 var(--nd)}.opt:disabled{cursor:default}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:2px solid var(--ln);}.fbt{max-height:24vh;overflow:auto}.fbt p{margin:6px 0}.sheet>div{max-width:928px;margin:0 auto}
+@media(min-width:900px){body.hasnav .sheet{left:112px}}
+.sheet.ok{background:var(--ok);border-color:var(--g);animation:up .25s}.sheet.no{background:var(--no);border-color:var(--nd);animation:up .25s}.sheet h3{margin:0 0 4px;font-size:1.3rem;font-weight:900}
+@keyframes up{from{transform:translateY(100%)}}@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}.pop{animation:pop .45s}
+@keyframes qfade{from{opacity:0}}.qv{animation:qfade .25s ease-out}.startup-loading{animation:qfade .2s ease-out}
+.pb{display:block;height:12px;background:var(--ln);border-radius:6px;overflow:hidden}.pb i{display:block;height:100%;background:var(--g);border-radius:6px}
+.big{text-align:center;padding:20px 0}.big b{display:block;font-size:3rem;color:var(--gt)}
+.tl{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--ln)}
+.thumb{border:2px solid var(--ln);border-radius:16px;overflow:hidden;background:var(--pn);display:flex;flex-direction:column}.thumb img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#000}.thumb p{margin:6px 8px;font-size:.72rem;color:var(--mu);overflow:hidden;max-height:3.4em}.thumb button{margin:auto 8px 8px}
+.stk{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0}.vwrap{display:flex;justify-content:center;background:#000;border-radius:16px;border:2px solid var(--ln);overflow:hidden}#vw{position:relative;display:inline-block;line-height:0}#vp{display:block;max-height:38vh;max-width:100%;width:auto;touch-action:none;filter:none}
+.num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--b);color:#fff;font-weight:900;font-size:.85rem;margin-right:6px}
+pre{white-space:pre-wrap;font-size:.8rem}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.auth-wrap{max-width:470px;margin:6vh auto 0}.auth-brand{text-align:center;font-size:1.7rem;font-weight:900;margin:0 0 6px}.auth-brand span{color:var(--g)}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}.auth-error{color:var(--nd);font-weight:800}.auth-note{background:var(--sf);border-radius:12px;padding:12px;font-size:.9rem}.admin-table-wrap{overflow:auto}.admin-table{border-collapse:collapse;width:100%;font-size:.83rem}.admin-table th,.admin-table td{border-bottom:1px solid var(--ln);padding:9px;text-align:left;vertical-align:top}.admin-table th{background:var(--sf);position:sticky;top:0}.header-meta{margin:-4px 0 10px;font-size:.78rem;color:var(--mu)}
+#auth-form label{display:grid;gap:6px;font-weight:800}
+#auth-form label+label{margin-top:14px}
+#auth-form input{display:block;width:100%;min-width:0;font:inherit;color:var(--tx);background:var(--pn);border:2px solid var(--ln);border-radius:14px;padding:12px;min-height:46px}
+@media(max-width:560px){.top .row{gap:5px}.ib{padding:0 8px;font-size:.8rem}.logo{font-size:1.1rem}}
+</style></head><body><main id="app" aria-busy="true"><div class="startup-loading" role="status" aria-label="Cargando HistoPráctica"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div></main><nav id="nav"></nav>
+<!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
+<script type="application/json" id="bank">[]</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
+<script>
+const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
+const EM={epi:"🧫",con:"🧵",adi:"🧈",car:"👂",oseo:"🦴",san:"🩸",mus:"💪",ner:"🧠"};
+const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simple cilíndrico","Epitelio plano estratificado queratinizado","Epitelio plano estratificado no queratinizado","Epitelio plano estratificado paraqueratinizado","Epitelio cúbico estratificado","Epitelio cilíndrico estratificado","Epitelio pseudoestratificado","Urotelio (epitelio de transición)"],
+con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso","Tejido conjuntivo elástico","Tejido conjuntivo reticular"],
+adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
+oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
+ner:["Neuronas (tinción de Golgi)","Corteza cerebral (neuronas y neuroglia)","Epitelio ependimario"]};
+const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
+car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
+ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
+const ES={epi:["Membrana basal","Luz","Tejido conectivo subyacente","Cilios","Microvellosidades (borde en cepillo)","Estrato córneo"],con:["Fibras colágenas","Sustancia fundamental","Núcleo de fibroblasto"],adi:["Adipocito","Capilar","Núcleo del adipocito"],
+car:["Condrocito","Laguna","Grupo isógeno","Matriz territorial","Matriz interterritorial","Pericondrio"],oseo:["Osteona","Conducto de Havers","Sistemas intersticiales","Periostio","Endostio","Laguna"],
+san:["Núcleo multilobulado","Gránulos citoplasmáticos","Palidez central","Núcleo arriñonado","Núcleo excéntrico","Halo perinuclear (Golgi)","Citoplasma basófilo"],mus:["Disco intercalar","Endomisio","Perimisio","Núcleo periférico","Fascículo muscular"],ner:["Soma","Dendritas","Axón","Plexo coroideo","Epitelio ependimario","Neuropilo"]};
+/* Temas afines: de aquí salen distractores solo si el propio tema no da para 3 opciones */
+const REL={san:["con"],con:["san","adi"],adi:["con"],car:["oseo","con"],oseo:["car","con"],mus:["con"],ner:["epi"],epi:["con"]};
+const MN={A:"Identificar tejido",B:"Identificar célula",C:"Identificar estructura"};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],app=$("#app");
+let BANK=[],S=null,CFG=null,SEL=null,SR=[],DR=null,SMSG="",OFF=0,LQ="";
+let SUPA=null,CURRENT_USER=null,CURRENT_PROFILE=null,REMOTE_BANK=[],REMOTE_STATS=null,REMOTE_ERRORS=null;
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),acc=(a,n)=>n?Math.round(100*a/n):0;
+const shuf=(a,r=Math.random)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const validE=e=>e&&e.verificada===true&&e.id&&T[e.tema]&&/^(https:\/\/|data:image\/)/.test(e.url||"")&&e.fuente&&e.licencia;
+const gzh=k=>`<span class="gz" style="left:${k.x-k.w/2}%;top:${k.y-k.h/2}%;width:${k.w}%;height:${k.h}%"></span>`;
+let LOCAL=[],DB=null;
+const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open("histopractica",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const kv=(m,k,v)=>new Promise((res,rej)=>{const t=DB.transaction("kv",m==="r"?"readonly":"readwrite"),st=t.objectStore("kv"),q=m==="r"?st.get(k):st.put(v,k);t.oncomplete=()=>res(q.result);t.onerror=t.onabort=()=>rej(t.error)});
+async function initDB(){try{DB=await idb();let b=await kv("r","bank");if(!b){b=[];try{b=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(e){}if(b.length){await kv("w","bank",b);try{localStorage.removeItem("hp_bank")}catch(e){}}}LOCAL=b;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}catch(e){DB=null;try{LOCAL=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(x){}}}
+function persist(){const warn=()=>alert("No se pudo guardar en este navegador. Guarda una copia de seguridad desde el Banco.");if(!DB){try{localStorage.setItem("hp_bank",JSON.stringify(LOCAL))}catch(e){warn()}return}kv("w","bank",LOCAL).catch(warn)}
+function loadBank(){
+ if(CURRENT_USER){BANK=[...new Map(REMOTE_BANK.filter(validE).map(e=>[e.id,{...e,subtipo:e.subtipo==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":e.subtipo}])).values()];return}
+ let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,{...e,subtipo:e.subtipo==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":e.subtipo}])).values()]
 }
-/* ...existing code... */
+function isAdmin(){return CURRENT_PROFILE?.role==="admin"}
+async function imageUrlForRow(row){if(row.image_path){const {data}=SUPA.storage.from("histology-images").getPublicUrl(row.image_path);return data.publicUrl}return row.external_image_url||""}
+async function refreshRemoteBank(){
+ const {data:sessionData,error:sessionError}=await SUPA.auth.getSession();
+ if(sessionError)throw sessionError;
+ const token=sessionData.session?.access_token;
+ if(!token)throw new Error("Inicia sesión para consultar el banco.");
+ const response=await fetch("/api/bank",{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
+ const payload=await response.json().catch(()=>({}));
+ if(!response.ok)throw new Error(payload.error||"No se pudo cargar el banco.");
+ REMOTE_BANK=await Promise.all((payload.questions||[]).map(async row=>({
+  id:row.id,tema:row.theme,
+  // The student catalog deliberately omits answer labels. They are requested one question at a time from the server.
+  subtipo:isAdmin()?(row.subtype||undefined):(row.has_subtype?"Tipo de tejido":undefined),
+  url:await imageUrlForRow(row),_image_path:row.image_path||null,
+  fuente:row.source,fuenteUrl:row.source_url||undefined,autor:row.author||undefined,licencia:row.license,
+  rasgos:row.traits||"",verificada:row.verified===true,publicada:row.published===true,published:row.published===true,
+  celulas:row.cells||[],estructuras:row.structures||[],guias:row.guides||[]
+ })));
+ loadBank();
+}
+async function storeQuestionOnSupabase(e){
+ if(!isAdmin())throw new Error("Solo el administrador puede modificar el banco.");
+ let imagePath=e._image_path||null,externalUrl=null;
+ if(String(e.url||"").startsWith("data:image/")){
+   const response=await fetch(e.url);const blob=await response.blob();const ext=blob.type.split("/")[1]?.replace("jpeg","jpg")||"jpg";imagePath=`${String(e.id).replace(/[^a-zA-Z0-9_-]/g,"_")}.${ext}`;
+   const {error:upError}=await SUPA.storage.from("histology-images").upload(imagePath,blob,{upsert:true,contentType:blob.type||"image/jpeg",cacheControl:"3600"});if(upError)throw upError;
+ }else if(!imagePath){externalUrl=e.url;}
+ const row={id:String(e.id),theme:e.tema,subtype:e.subtipo||null,image_path:imagePath,external_image_url:externalUrl,source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||"Sin especificar",traits:e.rasgos||null,verified:e.verificada===true,published:e.published!==false,cells:e.celulas||[],structures:e.estructuras||[],guides:e.guias||[],created_by:CURRENT_USER.id,updated_at:new Date().toISOString()};
+ const {error}=await SUPA.from("questions").upsert(row,{onConflict:"id"});if(error)throw error;
+}
+function saveBank(list,del){
+ if(!isAdmin()){alert("Solo el administrador puede modificar el banco.");return false;}
+ LOCAL=LOCAL.filter(x=>x.id!==del).concat(list);persist();
+ (async()=>{if(del){const old=REMOTE_BANK.find(x=>x.id===del);const {error}=await SUPA.from("questions").delete().eq("id",del);if(error)throw error;if(old?._image_path)await SUPA.storage.from("histology-images").remove([old._image_path]);}
+  for(const item of list)await storeQuestionOnSupabase(item);await refreshRemoteBank();
+ })().then(()=>{if($("#bank-admin-status")){$("#bank-admin-status").textContent="Cambios sincronizados con Supabase.";bankView()}}).catch(err=>{console.error("bank sync error",err);alert("No se pudo guardar en Supabase: "+(err.message||"error"));});
+ return true;
+}
+async function setPublished(id,published){if(!isAdmin())return;const {error}=await SUPA.from("questions").update({published,updated_at:new Date().toISOString()}).eq("id",id);if(error){alert("No se pudo cambiar la publicación: "+error.message);return}await refreshRemoteBank();bankView()}
+function nav(a){const n=$("#nav");document.body.classList.toggle("hasnav",a!=null);if(a==null){n.style.display="none";return}n.style.display="flex";
+ n.innerHTML=[["i","🏠","Inicio"],["p","🎯","Practicar"],["e","🔁","Errores"],["g","📈","Progreso"]].map(([k,i,l])=>`<button data-k="${k}" class="${k===a?"on":""}" ${k===a?'aria-current="page"':""}><i>${i}</i>${l}</button>`).join("");
+ $$("#nav button").forEach(b=>b.onclick=()=>({i:home,p:()=>cfgView(Object.keys(T),1),e:errView,g:progView}[b.dataset.k])())}
+const dark=()=>document.documentElement.dataset.theme==="dark",tgi=()=>`<span>${dark()?"🌙":"☀️"}</span><b>${dark()?"Oscuro":"Claro"}</b>`,tg=()=>`<button class="tgl" aria-label="Cambiar entre modo claro y oscuro">${tgi()}</button>`;
+document.addEventListener("click",e=>{if(e.target.closest(".tgl")){const h=document.documentElement;h.classList.add("tr");const t=dark()?"light":"dark";h.dataset.theme=t;try{localStorage.setItem("hp_theme",t)}catch(x){}$$(".tgl").forEach(b=>b.innerHTML=tgi());setTimeout(()=>h.classList.remove("tr"),400)}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut()});
+new MutationObserver(()=>window.scrollTo(0,0)).observe(app,{childList:true});
+const head=t=>`<div class="top"><div class="logo">🔬 Histo<span>Práctica</span></div><div class="row">${isAdmin()?'<button class="ib" id="admin" aria-label="Panel administrativo"><span>📊</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>🗂️</span><b>Banco</b></button>':''}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>↪</span><b>Salir</b></button>${tg()}</div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
+const qc=e=>(e.subtipo?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
+const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
+let ANSWERED=new Set(),PENDING=new Map(),SYNC_READY=false,SYNC_ERROR=false,SYNC_BUSY=null;
+window.addEventListener("beforeunload",event=>{if(PENDING.size){event.preventDefault();event.returnValue=""}});
+async function progressRequest(method="GET",record){
+ const {data}=await SUPA.auth.getSession();const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+ const options={method,credentials:"same-origin",headers:{Authorization:`Bearer ${token}`}};
+ if(method==="POST"){options.headers["Content-Type"]="application/json";options.body=JSON.stringify(record)}
+ const response=await fetch("/api/progress",options);const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo sincronizar");
+ if(method==="GET"&&(!Array.isArray(payload.keys)||!payload.stats))throw new Error("Respuesta de progreso no válida");return payload;
+}
+function syncStatus(){return `<p class="mu" role="status">${SYNC_ERROR?"No se pudo sincronizar. Reintenta cuando tengas conexión.":!SYNC_READY?"Cargando progreso de tu cuenta…":PENDING.size?"Guardando respuestas en tu cuenta…":"Progreso sincronizado con tu cuenta."}</p>${SYNC_ERROR?'<button class="btn sm s" id="sync-retry">Reintentar sincronización</button>':""}`}
+function syncUI(){const box=$("#sync-status");if(box){box.innerHTML=syncStatus();const retry=$("#sync-retry");if(retry)retry.onclick=async()=>{retry.disabled=true;await syncProgress();if($("#go")&&$('[name="scope"]'))$('[name="scope"]').dispatchEvent(new Event("change"));if($("#rs"))progView()}}}
+async function syncProgress(){
+ if(!CURRENT_USER||!SUPA)return;if(SYNC_BUSY)return SYNC_BUSY;
+ SYNC_BUSY=(async()=>{try{
+   const first=await progressRequest();ANSWERED=new Set([...first.keys,...ANSWERED]);REMOTE_ERRORS=first.errors||[];REMOTE_STATS=first.stats;SYNC_READY=true;
+   for(const [answerId,record] of PENDING){await progressRequest("POST",record);PENDING.delete(answerId)}
+   if(PENDING.size===0){const refreshed=await progressRequest();ANSWERED=new Set([...refreshed.keys]);REMOTE_ERRORS=refreshed.errors||[];REMOTE_STATS=refreshed.stats}
+   SYNC_ERROR=false;
+  }catch(e){SYNC_ERROR=true;console.error("progress sync error",e)}finally{SYNC_BUSY=null;syncUI();if($("#go")&&$('[name="scope"]'))$('[name="scope"]').dispatchEvent(new Event("change"));if($("#rs")){}if(PENDING.size&&!SYNC_ERROR)setTimeout(()=>syncProgress(),80)}})();return SYNC_BUSY;
+}
+function rec(q,ok){const st=JSON.parse(JSON.stringify(ST()||{})),k=q.it.e.tema;st.xp=(st.xp||0)+(ok?10:0);st.n=(st.n||0)+1;st.a=(st.a||0)+(ok?1:0);st.best=Math.max(st.best||0,S.streak);st.t=st.t||{};const t=st.t[k]=st.t[k]||{a:0,n:0};t.n++;if(ok)t.a++;REMOTE_STATS=st;put("hp_st",st);const key=itKey(q.it);const localErrors=rd("hp_err",[]).filter(x=>x!==key).concat(ok?[]:[key]);put("hp_err",localErrors);REMOTE_ERRORS=localErrors;ANSWERED.add(key);syncUI();syncProgress()}
+
+
+/* ---------- Motor ---------- */
+function questionItems(c,bank){
+ const mods=c.mod==="M"?["A","B","C"]:[c.mod],o=[];
+ for(const e of bank.filter(e=>c.temas.includes(e.tema))){
+  if(mods.includes("A")&&e.subtipo)o.push({e,m:"A"});
+  if(mods.includes("B"))(e.celulas||[]).forEach(t=>o.push({e,m:"B",t}));
+  if(mods.includes("C"))(e.estructuras||[]).forEach(t=>o.push({e,m:"C",t}))}
+ return [...new Map(o.map(it=>[itKey(it),it])).values()].filter(it=>c.scope!=="pending"||!ANSWERED.has(itKey(it)))}
+function balancedItems(items,r=Math.random,level=0){
+ const groupers=[it=>it.e.tema,it=>it.m,it=>(it.m==="A"?it.e.subtipo:it.t.n).trim().toLocaleLowerCase("es")];
+ if(level===groupers.length)return shuf(items,r);
+ const groups=new Map();for(const it of items){const key=groupers[level](it);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(it)}
+ const queues=[...groups.values()].map(group=>balancedItems(group,r,level+1)),out=[];let active=queues;
+ while(active.length){for(const queue of shuf(active,r))out.push(queue.shift());active=active.filter(queue=>queue.length)}return out}
+function buildExam(c,bank,r=Math.random){const it=balancedItems(questionItems(c,bank),r),count=Math.min(it.length,Math.max(0,Math.floor(c.n)||0));return{avail:it.length,short:it.length<c.n,items:it.slice(0,count),spare:it.slice(count)}}
+function distract(ans,tiers,r=Math.random){
+ const k=x=>String(x).trim().toLowerCase(),seen=new Set([k(ans)]),out=[];
+ for(const t of tiers)for(const x of shuf(t,r))if(out.length<3&&!seen.has(k(x))){seen.add(k(x));out.push(x)}
+ return out}
+function question(it,r=Math.random){
+ const e=it.e,all=o=>[].concat(...Object.values(o));let ans,txt,pool,mk=null,gz=[];
+ if(it.m==="A"){ans=e.subtipo;gz=e.guias||[];txt=gz.length?"¿Qué tipo de tejido observas en la zona marcada?":"¿Qué tipo de tejido observas?";pool=LB}
+ else{const t=it.t;ans=t.n;pool=it.m==="B"?CE:ES;txt=it.m==="B"?"¿Qué célula queda dentro del recuadro?":"¿Qué estructura señala el recuadro?";if(t.x!=null)mk={x:t.x,y:t.y,w:t.w,h:t.h}}
+ const mine=it.m==="A"?[]:BANK.filter(x=>x.tema===e.tema).flatMap(x=>(it.m==="B"?x.celulas:x.estructuras)||[]).map(m=>m.n),same=(pool[e.tema]||[]).concat(mine),rel=(REL[e.tema]||[]).flatMap(k=>pool[k]||[]);
+ return{it,txt,ans,mk,gz,opts:shuf([ans,...distract(ans,[same,rel,all(pool)],r)],r)}}
+
+/* ---------- Inicio ---------- */
+const DESC={epi:"Revestimiento de superficies y cavidades, sin glándulas.",con:"Soporte: fibras, sustancia fundamental y células.",adi:"Reserva de energía: grasa blanca y parda.",car:"Hialino, elástico y fibrocartílago.",oseo:"Hueso compacto y esponjoso.",san:"Frotis sanguíneo y sus células.",mus:"Estriado esquelético, cardiaco y liso.",ner:"Neuronas, neuroglia y epéndimo."};
+function home(){nav("i");const tt=ST().t||{};
+ app.innerHTML=head()+`<h1 class="hero">¡Vamos a practicar!</h1><p class="mu" style="margin:0 0 16px">Entrena tu ojo clínico, una microfotografía a la vez.</p>
+ <div class="tgrid">${Object.entries(T).map(([k,v])=>{const z=tt[k]||{a:0,n:0},qn=questionItems({temas:[k],mod:"M"},BANK).length;return `<button class="tc" data-t="${k}"><span class="ti">${EM[k]}</span><span class="tx"><b>${v}</b><small>${DESC[k]}</small><span class="pb"><i style="width:${acc(z.a,z.n)}%"></i></span><small>${z.n?acc(z.a,z.n)+"% de acierto · ":""}${qn} preguntas</small></span></button>`}).join("")}</div><div id="sync-status">${syncStatus()}</div>
+`;
+ syncUI();
+ $$("[data-t]").forEach(b=>b.onclick=()=>cfgView([b.dataset.t]))}
+function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
+ if(custom&&lc.temas)pre=lc.temas;
+ const chips=(n,o,s)=>o.map(([v,l,d])=>`<label class="ch"><input type="radio" name="${n}" value="${v}" ${v==s?"checked":""}><span>${l}${d?`<small>${d}</small>`:""}</span></label>`).join("");
+ app.innerHTML=(custom?head():`<div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h2 style="margin:0;flex:1">${EM[pre[0]]} ${T[pre[0]]}</h2>${tg()}</div>`)+(custom?`<h1 class="hero">Practicar</h1><p class="mu" style="margin:0">Combina los temas que quieras. Con todos marcados, es práctica mixta.</p><div class="sub">Temas</div><div class="row" style="margin-bottom:14px"><button class="btn sm s" id="select-all">Seleccionar todos</button><button class="btn sm s" id="select-none">Deseleccionar todos</button></div><div class="row">${Object.entries(T).map(([k,v])=>`<label class="ch"><input type="checkbox" name="t" value="${k}" ${pre.includes(k)?"checked":""}><span>${EM[k]} ${v}<small data-count="${k}"></small></span></label>`).join("")}</div>`:"")+
+ `<div class="sub">Modalidad</div><div class="tgrid">${chips("mod",[["A","Tejido","¿Qué tejido es?"],["B","Célula","¿Qué célula marca el recuadro?"],["C","Estructura","¿Qué estructura señala?"],["M","Mixto","Todas las modalidades"]],lc.mod||"M")}</div>
+ <div class="sub">Qué practicar</div><div class="tgrid">${chips("scope",[["all","Todo el banco","Incluye preguntas ya respondidas"],["pending","Completar colección","Solo preguntas que aún no has respondido"]],lc.scope||"all")}</div>
+ <div class="sub">Preguntas</div><div class="row" id="quick-counts">${[10,20,30,40,50].map(n=>`<button class="btn sm s" data-n="${n}">${n}</button>`).join("")}<button class="btn sm s" id="all-questions">Todas las disponibles</button></div>
+ <label for="question-count" class="mu" style="display:block;margin:14px 0 6px">Cantidad de preguntas</label><input id="question-count" type="number" min="1" step="1" value="${lc.n||20}" inputmode="numeric" aria-describedby="av">
+ <div class="sub">Corrección</div><div class="row">${chips("cor",[["i","Inmediata"],["f","Al final"]],lc.cor||"i")}</div>
+ <p id="av" class="mu" style="margin-top:18px" role="status"></p><p class="hint">La selección reparte las preguntas entre temas, modalidades y categorías; solo repite más una categoría si las otras se agotan.</p><div id="sync-status">${syncStatus()}</div><div id="msg" role="alert"></div><button class="btn" id="go">Empezar a practicar</button>`;
+ const cfg=()=>({temas:custom?$$("[name=t]:checked").map(x=>x.value):pre,mod:$("[name=mod]:checked").value,scope:$("[name=scope]:checked").value,n:+$("#question-count").value,cor:$("[name=cor]:checked").value});
+ let desired=lc.n||20,useAll=false;
+ const upd=()=>{const c=cfg(),all=questionItems({...c,scope:"all"},BANK).length,available=questionItems(c,BANK).length,waiting=c.scope==="pending"&&!SYNC_READY,a=waiting?0:available,input=$("#question-count");input.max=a;input.min=a?1:0;input.disabled=!a;input.value=a?clamp(useAll?a:Math.floor(desired)||1,1,a):0;c.n=+input.value;CFG=c;
+ $("#go").disabled=!a||!c.temas.length;$("#select-all")&&($("#select-all").disabled=c.temas.length===Object.keys(T).length);$("#select-none")&&($("#select-none").disabled=!c.temas.length);
+ $$("[data-n]").forEach(button=>{button.disabled=+button.dataset.n>a;button.setAttribute("aria-pressed",String(+button.dataset.n===c.n))});$("#all-questions").disabled=!a;$("#all-questions").setAttribute("aria-pressed",String(a>0&&c.n===a));
+ $$("[data-count]").forEach(label=>{label.textContent=`${questionItems({...c,temas:[label.dataset.count]},BANK).length} ${c.scope==="pending"?"pendientes":"preguntas"}`});
+ $("#av").textContent=!c.temas.length?"Selecciona al menos un tejido para practicar.":waiting?"Sincroniza el progreso para consultar las preguntas pendientes.":c.scope==="pending"&&!a&&all?`Colección completada: ya respondiste las ${all} preguntas de esta selección.`:a?`${a} ${c.scope==="pending"?"preguntas pendientes":"preguntas disponibles"} · máximo ${a}${c.scope==="pending"?` de ${all} en la colección`:""}.`:"No hay preguntas de esta modalidad. Cambia la selección o añade imágenes con marcas.";
+ $("#go").textContent=c.scope==="pending"?"Completar colección":"Empezar a practicar";$("#msg").textContent=""};
+ $$("input[type=radio],input[type=checkbox]").forEach(input=>input.onchange=upd);$("#question-count").oninput=()=>{const input=$("#question-count"),a=+input.max,valid=input.value!==""&&Number.isInteger(+input.value)&&+input.value>=1&&+input.value<=a;$("#go").disabled=!valid;if(valid){desired=+input.value;useAll=false;CFG=cfg()}$$("[data-n]").forEach(button=>button.setAttribute("aria-pressed",String(valid&&+button.dataset.n===+input.value)));$("#all-questions").setAttribute("aria-pressed",String(valid&&+input.value===a));$("#msg").textContent=valid?"":`Escribe un número entero entre 1 y ${a}.`};$("#question-count").onchange=()=>{desired=+$("#question-count").value;useAll=false;upd()};
+ $$("[data-n]").forEach(button=>button.onclick=()=>{desired=+button.dataset.n;useAll=false;upd()});$("#all-questions").onclick=()=>{useAll=true;upd()};
+ if(custom){$("#select-all").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=true);upd()};$("#select-none").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=false);upd()}}upd();syncUI();if($("#bk"))$("#bk").onclick=home;
+ $("#go").onclick=()=>{const c=cfg(),a=questionItems(c,BANK).length;if(!c.temas.length||!Number.isInteger(c.n)||c.n<1||c.n>a||c.scope==="pending"&&!SYNC_READY)return upd();CFG=c;run(c)}}
+function errView(){nav("e");const keys=new Set(ERR()),items=balancedItems(questionItems({temas:Object.keys(T),mod:"M"},BANK).filter(it=>keys.has(itKey(it))));
+ app.innerHTML=head()+`<h1 class="hero">Errores</h1>`+(items.length?`<p class="mu">${items.length} pregunta(s) por repasar. Si aciertas una, sale de la lista.</p><button class="btn" id="go">Repasar errores</button>`:`<div class="card big"><div style="font-size:3rem">🎉</div><b style="font-size:1.4rem">Sin errores pendientes</b><span class="mu">Los fallos de tus prácticas aparecerán aquí.</span></div>`);
+ if(items.length)$("#go").onclick=()=>run({temas:Object.keys(T),mod:"M",n:items.length,cor:"i"},{items,spare:[],short:false,avail:items.length})}
+function progView(){nav("g");const st=ST(),tt=st.t||{},items=questionItems({temas:Object.keys(T),mod:"M"},BANK),completed=items.filter(it=>ANSWERED.has(itKey(it))).length;
+ app.innerHTML=head()+`<h1 class="hero">Mi progreso</h1><div class="tgrid" style="margin-top:12px">${[["⚡",st.xp||0,"XP"],["🎯",acc(st.a||0,st.n||0)+"%","Acierto"],["🔥",st.best||0,"Mejor racha"],["📝",st.s||0,"Prácticas"]].map(([i,v,l])=>`<div class="card" style="margin:0;text-align:center"><div style="font-size:1.6rem">${i}</div><b style="font-size:1.6rem">${v}</b><div class="mu">${l}</div></div>`).join("")}</div>
+ <div class="card"><h2 style="margin-top:0">Colecciones · ${completed}/${items.length} respondidas</h2><p class="mu">Cada pregunta cuenta una sola vez, aunque la repitas. Los aciertos y el XP conservan todos tus intentos.</p>${Object.entries(T).map(([k,v])=>{const z=tt[k]||{a:0,n:0},collection=items.filter(it=>it.e.tema===k),done=collection.filter(it=>ANSWERED.has(itKey(it))).length;return `<div style="margin:14px 0"><div class="tl" style="border:0;padding:0 0 4px"><span>${EM[k]} ${v}</span><b>${done}/${collection.length} respondidas</b></div><span class="pb"><i style="width:${acc(done,collection.length)}%"></i></span><p class="mu" style="margin:6px 0">${collection.length-done} pendientes${z.n?` · ${acc(z.a,z.n)}% de acierto (${z.a}/${z.n} intentos)`:""}</p>${collection.length>done?`<button class="btn sm s" data-complete="${k}">Completar colección</button>`:""}</div>`}).join("")}</div>
+ <div id="sync-status">${syncStatus()}</div><p class="hint">El progreso de esta versión se sincroniza con tu cuenta y se comparte entre dispositivos. El historial local de versiones anteriores no se migra automáticamente.</p><button class="btn s" id="rs">Reiniciar progreso</button>`;
+ syncUI();$$("[data-complete]").forEach(button=>button.onclick=()=>{CFG={...(CFG||{}),scope:"pending"};cfgView([button.dataset.complete])});
+ $("#rs").onclick=async()=>{if(!confirm("¿Borrar XP, rachas, errores y preguntas completadas? Las imágenes del banco no se tocan."))return;$("#rs").disabled=true;await syncProgress();if(SYNC_ERROR){$("#rs").disabled=false;return}try{await progressRequest("DELETE");ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;localStorage.removeItem("hp_st");localStorage.removeItem("hp_err");SYNC_READY=false;await syncProgress();progView()}catch(e){SYNC_ERROR=true;syncUI();$("#rs").disabled=false}}}
+function run(c,forced){
+ const ex=forced||buildExam(c,BANK);
+ if(!ex.items.length){const t="No hay preguntas para esa combinación. Añade imágenes o cambia la selección.",m=$("#msg");return m?m.innerHTML=`<p class="r">${t}</p>`:alert(t)}
+ if(ex.short&&!forced){nav("i");return app.innerHTML=`<div class="card"><b>Preguntas insuficientes</b><p>Hay ${ex.avail} preguntas posibles y pediste ${c.n}.</p><button class="btn" id="red">Hacer ${ex.avail}</button><br><button class="btn s" id="bk">Volver</button></div>`,$("#red").onclick=()=>run(c,ex),$("#bk").onclick=home}
+ S={c,q:ex.items.map(it=>({it,question:null})),spare:ex.spare,i:0,ans:[],streak:0,best:0,attemptId:crypto.randomUUID(),startedAt:new Date().toISOString(),startTimeMs:Date.now(),finished:false};IMGS.clear();warm(S,0);{const go=$("#go");if(go)go.disabled=true}show()}
+
+async function prepareQuestionRemote(item){
+ const {data,error}=await SUPA.auth.getSession();if(error)throw error;
+ const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
+ const target=item.t?{x:item.t.x,y:item.t.y,w:item.t.w,h:item.t.h}:null;
+ const response=await fetch("/api/question-detail",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({questionId:item.e.id,mode:item.m,target})});
+ const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo preparar la pregunta.");
+ const e={...item.e},t=item.t?{...item.t,n:""}:undefined;
+ const safeItem={...item,e,...(t?{t}:{})};
+ const generated=question(safeItem);
+ if(!Array.isArray(payload.options)||payload.options.length<2||payload.options.some(option=>typeof option!=="string"))throw new Error("El servidor no devolvió opciones válidas.");
+ generated.opts=payload.options;
+ generated.ans=null; // The correct label is returned only after the submitted choice is validated.
+ generated.src=item;
+ return generated;
+}
+/* Los administradores ven las respuestas en el catálogo: si el servidor rechaza la pregunta, se prepara y verifica en local. */
+async function prepareQuestion(item){
+ try{return await prepareQuestionRemote(item)}
+ catch(error){
+  if(isAdmin()){const g=question(item);if(typeof g.ans==="string"&&g.ans.trim()&&g.opts.includes(g.ans)){console.warn("Admin: pregunta preparada en local",error);g.src=item;return g}}
+  throw error}
+}
+const adminAnswer=q=>{if(!isAdmin()||!q.src)return null;const v=q.src.m==="A"?q.src.e.subtipo:q.src.t&&q.src.t.n;return typeof v==="string"&&v.trim()?v:null};
+
+/* ---------- Precarga: la siguiente pregunta (datos + imagen) se prepara mientras respondes la actual ---------- */
+const LOADER='<div class="startup-loading" role="status" aria-label="Cargando"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div>';
+const IMGS=new Map();
+function loadImg(url){if(!url)return Promise.resolve(false);let h=IMGS.get(url);if(!h){h={i:new Image()};h.p=new Promise(res=>{h.i.decoding="async";h.i.onload=()=>{(h.i.decode?h.i.decode().catch(()=>{}):Promise.resolve()).then(()=>res(true))};h.i.onerror=()=>{IMGS.delete(url);res(false)};h.i.src=url});IMGS.set(url,h)}return h.p}
+function prep(slot){if(slot.question)return Promise.resolve(slot.question);if(!slot.promise)slot.promise=prepareQuestion(slot.it).then(q=>{slot.question=q;return q},err=>{slot.promise=null;throw err});return slot.promise}
+function warm(session,from){if(!session)return;const lite=navigator.connection?.saveData;for(let k=from;k<Math.min(from+3,session.q.length);k++){const slot=session.q[k];prep(slot).catch(()=>{});if(!lite||k===from)loadImg(slot.it.e.url)}}
+
+/* ---------- Pregunta ---------- */
+async function show(){
+ const session=S,index=S?.i;if(!session)return;
+ const slot=session.q[index];if(!slot)return fin();
+ const my=session.tok=(session.tok||0)+1,stale=()=>S!==session||S.i!==index||session.tok!==my;
+ let q=slot.question;
+ if(!q){
+  /* Solo se muestra la pantalla de carga (la del inicio) si tarda más de 350 ms; casi nunca ocurre porque se precarga. */
+  const timer=setTimeout(()=>{if(!stale()&&!slot.question){nav(null);app.innerHTML=LOADER}},350);
+  try{q=await prep(slot)}
+  catch(error){clearTimeout(timer);if(stale())return;nav(null);app.innerHTML=`<div class="card"><h2>No se pudo preparar esta pregunta</h2><p class="mu">${esc(error.message||"Error de conexión")}</p><button class="btn" id="question-retry">Reintentar</button><br><button class="btn s" id="question-exit">Volver al inicio</button></div>`;$("#question-retry").onclick=show;$("#question-exit").onclick=home;return}
+  clearTimeout(timer);
+ }
+ if(stale())return;
+ /* Espera (máx. 2.5 s) a que la imagen esté decodificada para que aparezca ya lista, sin recuadro vacío. */
+ await Promise.race([loadImg(q.it.e.url),new Promise(r=>setTimeout(r,2500))]);
+ if(stale())return;
+ const n=S.q.length;SEL=null;S.done=0;nav(null);
+ app.innerHTML=`<div class="qv"><div class="xt"><button class="x" id="xx" aria-label="Salir">✕</button><div class="bar"><i style="width:${100*Math.max(0,S.i-1)/n}%"></i></div><span class="mu" style="font-weight:800">${S.i+1}/${n}</span><span class="sk">🔥 ${S.streak}</span>${tg()}</div>
+ <h2>${q.txt}</h2><div class="img loading" id="im" title="Toca para ampliar" aria-busy="true"><div id="zw"><img id="ph" decoding="async" alt="Microfotografía histológica" src="${esc(q.it.e.url)}">${q.mk?(q.mk.w?`<span class="bx f" style="left:${q.mk.x-q.mk.w/2}%;top:${q.mk.y-q.mk.h/2}%;width:${q.mk.w}%;height:${q.mk.h}%"></span>`:`<span class="mk" style="left:${q.mk.x}%;top:${q.mk.y}%"></span>`):""}${(q.gz||[]).map(gzh).join("")}</div></div>
+ <div id="ops" class="og">${q.opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd>${esc(o)}</button>`).join("")}</div>
+ <p class="hint">Teclado: 1–${q.opts.length} para elegir · Enter para comprobar o continuar. Toca la imagen para ampliar.</p>
+ <div id="sync-status">${syncStatus()}</div>
+ <div class="sheet" id="sh"><div><button class="btn" id="ck" disabled>Comprobar</button></div></div><div style="height:240px"></div></div>`;
+ syncUI();
+ const photo=$("#ph"),image=$("#im"),ready=()=>{image.classList.remove("loading");image.setAttribute("aria-busy","false")};photo.onload=ready;if(photo.complete&&photo.naturalWidth)ready();
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=$(".bar i");if(b)b.style.width=100*S.i/n+"%"}));warm(session,index+1);
+ let z=0;$("#im").onclick=e=>{const r=$("#zw").getBoundingClientRect();z=!z;$("#zw").style.transformOrigin=`${100*(e.clientX-r.left)/r.width}% ${100*(e.clientY-r.top)/r.height}%`;$("#zw").style.transform=z?"scale(2.4)":"none"};
+ $("#xx").onclick=()=>{if(confirm("¿Salir de este examen? Las respuestas ya registradas se conservan."))home()};
+ $("#ph").onerror=()=>{ready();$("#im").onclick=null;$("#im").style.cursor="default";$$(".opt").forEach(button=>button.disabled=true);SEL=null;$("#ck").disabled=true;$("#im").innerHTML='<div style="padding:20px;text-align:center;color:#fff"><p>La imagen no cargó. Esta pregunta no cuenta.</p><button class="btn sm s" id="rt">Reintentar</button> <button class="btn sm s" id="sb">Sustituir</button></div>';
+  $("#rt").onclick=show;$("#sb").onclick=()=>{const m=S.spare.shift();if(m)S.q[S.i]={it:m,question:null};else S.q.splice(S.i,1);show()}};
+ $$(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.i));$("#ck").onclick=check}
+function pick(i){const q=S?.q?.[S.i]?.question;if(S.done||!q?.opts[i]||!$("#ph")||!$("#ph").naturalWidth)return;SEL=i;$$(".opt").forEach((b,k)=>b.classList.toggle("sel",k===i));$("#ck").disabled=false}
+async function check(){
+ if(S.done||SEL===null||!$("#ph")||!$("#ph").naturalWidth)return;
+ const q=S.q[S.i].question,pk=q.opts[SEL];let ok;S.done=1;const button=$("#ck");if(button){button.disabled=true;button.textContent="Verificando…"}
+ try{
+  const record={answerId:q.answerId||(q.answerId=crypto.randomUUID()),key:itKey(q.it),questionId:q.it.e.id,mode:q.it.m,selected:String(pk),theme:q.it.e.tema,target:q.it.t?{x:q.it.t.x,y:q.it.t.y,w:q.it.t.w,h:q.it.t.h}:null};
+  let verification;
+  try{verification=await progressRequest("POST",record)}
+  catch(error){const known=adminAnswer(q);if(known==null)throw error;console.warn("Admin: verificación local (el servidor no la aceptó)",error);verification={isCorrect:String(pk).trim().toLowerCase()===known.trim().toLowerCase(),expected:known}}
+  if(typeof verification.isCorrect!=="boolean"||typeof verification.expected!=="string")throw new Error("La verificación del servidor no devolvió un resultado válido.");
+  ok=verification.isCorrect;q.ans=verification.expected;
+  if(q.it.m==="A")q.it.e.subtipo=verification.expected;else if(q.it.t)q.it.t.n=verification.expected;
+  S.ans.push({q,pick:pk,ok});S.streak=ok?S.streak+1:0;S.best=Math.max(S.best,S.streak);rec(q,ok);
+ }catch(error){S.done=0;if(button){button.disabled=false;button.textContent="Reintentar verificación"}const status=$("#sync-status");if(status)status.innerHTML=`<p class="r" role="alert">${esc(error.message||"No se pudo verificar la respuesta")}. Comprueba tu conexión e inténtalo otra vez.</p>`;return}
+ if(S.c.cor==="f"){S.i++;return show()}
+ $$(".opt").forEach((b,k)=>{b.disabled=true;b.classList.remove("sel");if(q.opts[k]===q.ans)b.classList.add("ok");else if(k===SEL)b.classList.add("no")});
+ {const c=$(".opt.ok");if(c)c.scrollIntoView({block:"nearest",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
+ const sh=$("#sh");sh.className="sheet "+(ok?"ok":"no");S.done=1;
+ sh.innerHTML=`<div><h3 class="${ok?"g":"r"}">${ok?'✅ ¡Correcto! <small class="xp">+10 XP</small>':"❌ Incorrecto"}</h3><div class="fbt">${ok?"":`<p style="margin:0">Respuesta: <b>${esc(q.ans)}</b></p>`}${fbx(q.it.e)}</div><button class="btn ${ok?"":"w"}" id="nx" style="margin-top:12px">Continuar</button></div>`;
+ $("#nx").onclick=()=>{$("#nx").disabled=true;S.done=0;S.i++;show()};$("#nx").focus()}
+function fbx(e){const u=e.fuenteUrl||(/^https/.test(e.url)?e.url:"");return `<p>${esc(e.rasgos||"")}</p><p class="mu">Fuente: ${u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(e.fuente)}</a>`:esc(e.fuente)}${e.autor?" · "+esc(e.autor):""} · ${esc(e.licencia)}</p>`}
+document.addEventListener("keydown",e=>{if(!S||!$("#ck")&&!$("#nx")||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(/^[1-4]$/.test(e.key)&&$("#ck")){e.preventDefault();pick(+e.key-1)}else if(e.key==="Enter"&&!e.target.closest("button")){const b=$("#nx")||($("#ck")&&!$("#ck").disabled&&$("#ck"));if(b){e.preventDefault();b.click()}}});
+
+/* ---------- Resultados ---------- */
+async function fin(){
+ if(S.finished)return;S.finished=true;
+ const a=S.ans,ok=a.filter(x=>x.ok).length,u=new Set(a.map(x=>x.q.it.e.id)).size,bad=a.filter(x=>!x.ok);nav("i");{const st=ST();st.s=(st.s||0)+1;put("hp_st",st)}
+ const by=f=>{const m={};a.forEach(x=>{const k=f(x);(m[k]=m[k]||[0,0])[1]++;if(x.ok)m[k][0]++});return Object.entries(m).map(([k,v])=>`<div class="tl"><span>${k}</span><b>${v[0]}/${v[1]} · ${acc(v[0],v[1])}%</b></div>`).join("")};
+ app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><b>${acc(ok,a.length)}%</b><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
+ <div class="card"><div class="sub" style="margin-top:0">Por tema</div>${by(x=>T[x.q.it.e.tema])}<div class="sub">Por modalidad</div>${by(x=>MN[x.q.it.m])}</div>
+ ${bad.length?`<div class="card"><div class="sub" style="margin-top:0">Falladas</div>${bad.map(x=>`<p><b>${x.q.txt}</b><br>Elegiste: <span class="r">${esc(x.pick)}</span> · Correcta: <b class="g">${esc(x.q.ans)}</b></p>`).join("")}</div><button class="btn" id="rv">Repasar errores</button><br>`:""}<p class="mu" id="finish-status" role="status">Guardando el resultado y enviando notificación…</p><div id="sync-status">${syncStatus()}</div><button class="btn s" id="hm">Inicio</button>`;
+ syncUI();
+ $("#hm").onclick=home;if(bad.length)$("#rv").onclick=()=>run(Object.assign({},S.c,{cor:"i"}),{items:bad.map(x=>x.q.it),spare:[],short:false,avail:bad.length});saveFinishedExam()}
+
+/* ---------- Banco ---------- */
+let BF="all";
+function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k);
+ const card=e=>{const mk=(e.celulas||[]).map(m=>({...m,k:"Célula"})).concat((e.estructuras||[]).map(m=>({...m,k:"Estructura"})));
+  return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
+  <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc(e.subtipo||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>esc(m.n)).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}</p>
+  <div class="row"><button class="btn sm s" data-e="${esc(e.id)}">✏️ Editar</button><button class="btn sm s" data-pub="${esc(e.id)}">${e.published===false?"Publicar":"Ocultar"}</button><button class="btn sm w" data-d="${esc(e.id)}">🗑</button></div></div>`};
+ app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
+ ${BANK.length?vis.map(k=>cnt(k).length?`<h2>${EM[k]} ${T[k]} <span class="mu">· ${cnt(k).length} img · ${cnt(k).reduce((s,e)=>s+qc(e),0)} preg.</span></h2><div class="grid">${cnt(k).map(card).join("")}</div>`:"").join(""):'<p class="mu">Aún no hay imágenes. Ve a Añadir.</p>'}
+ <div class="sub">Copia de seguridad</div><div class="card"><p class="mu" style="margin:0 0 10px">Guarda un respaldo JSON del banco de imágenes y sus marcas. <b id="lb" class="${lb&&Date.now()-lb<6048e5||!LOCAL.length?"":"r"}">Última copia: ${lb?new Date(lb).toLocaleDateString("es"):"nunca"}.</b></p><div class="row"><button class="btn" id="ex" style="flex:1">Guardar copia</button><label class="btn s" style="flex:1;cursor:pointer">Restaurar copia<input id="rf" type="file" accept=".json,application/json" hidden></label></div><pre id="out"></pre><button class="btn sm w" id="clr" style="margin-top:8px">Vaciar mis imágenes</button></div>
+ <div class="sub">Importar JSON</div><div class="card"><p class="mu" style="margin:0 0 10px">Pega un JSON con muchas imágenes a la vez: <b>{"bank":[…]}</b> o una lista <b>[…]</b>.</p><textarea id="pj" rows="6" placeholder='{"bank":[{"id":"…","tema":"epi","subtipo":"…","url":"https://…","fuente":"…","licencia":"…","verificada":true}]}' spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.8rem;resize:vertical"></textarea><br><br><button class="btn" id="pi">📋 Importar imágenes</button><pre id="po"></pre></div>`;
+ $("#ad").onclick=()=>sview();$$("[name=bf]").forEach(r=>r.onchange=()=>{BF=r.value;bankView()});
+ $$("[data-e]").forEach(b=>b.onclick=()=>{const e=BANK.find(x=>x.id===b.dataset.e);validate({pid:e.id,thumb:e.url,page:e.fuenteUrl||"",autor:e.autor||"",lic:e.licencia},e.tema,e)});
+ $$("[data-pub]").forEach(b=>b.onclick=()=>{const q=BANK.find(x=>x.id===b.dataset.pub);if(q)setPublished(q.id,q.published===false)});
+ $$("[data-d]").forEach(b=>b.onclick=()=>{if(!confirm("¿Eliminar esta imagen del banco para todos los usuarios?"))return;saveBank([],b.dataset.d);b.disabled=true;b.textContent="Eliminando…"});
+ $("#ex").onclick=async()=>{const button=$("#ex"),label=button.textContent;button.disabled=true;button.textContent="Preparando copia…";try{const bank=await Promise.all(BANK.map(async e=>{if(String(e.url).startsWith("data:image/"))return {...e};try{const response=await fetch(e.url);if(!response.ok)throw Error("fetch");const blob=await response.blob();const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});return {...e,url:dataUrl}}catch{return {...e}}}));const o={app:"HistoPráctica",v:2,fecha:new Date().toISOString(),bank,progress:{st:ST(),err:ERR()}},a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:"application/json"}));a.download="histopractica_copia_"+o.fecha.slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000);try{localStorage.setItem("hp_lastbk",Date.now())}catch(e){}$("#lb").className="";$("#lb").textContent="Última copia: hoy."}finally{button.disabled=false;button.textContent=label}};
+ $("#clr").onclick=()=>{if(confirm("¿Eliminar TODAS las imágenes del banco compartido? Esto afecta a todos los usuarios y no se puede deshacer. Guarda una copia antes.")){for(const q of [...BANK])saveBank([],q.id);setTimeout(()=>refreshRemoteBank().then(bankView).catch(e=>alert(e.message)),800)}};
+ const imp=async(j,o)=>{const a=Array.isArray(j)?j:j&&j.bank||[],ids=new Set(BANK.map(x=>x.id)),ok=[],bad=[];
+  if(!isAdmin()){const output=$(o);if(output)output.textContent="Se requiere una sesión administradora.";return}
+  for(const x of a){const w=!validE(x)?"datos incompletos":ids.has(x.id)?"ya existe":"";if(w)bad.push((x&&x.id||"?")+": "+w);else{ok.push(x);ids.add(x.id)}}
+  const output=$(o);if(output)output.textContent=`Validación completada. Se van a importar ${ok.length} imágenes; omitidas: ${bad.length}.\n`+(bad.length?bad.join("\n"):"");
+  let imported=0;const failures=[];
+  for(let i=0;i<ok.length;i++){const item=ok[i];const top=$("#bank-admin-status");if(top)top.textContent=`Importando ${i+1}/${ok.length}: ${item.id}`;if(output)output.textContent=`Subiendo ${i+1}/${ok.length}: ${item.id}\n`;try{await storeQuestionOnSupabase(item);imported++}catch(error){failures.push(`${item.id}: ${error.message||"error desconocido"}`)}}
+  try{await refreshRemoteBank();bankView()}catch(error){const message=`Se importaron ${imported}/${ok.length} registros, pero no se pudo actualizar la vista: ${error.message||"error"}`;const target=$(o);if(target)target.textContent=message;return}
+  const summary=`Importación terminada. Añadidas: ${imported}/${ok.length}. Omitidas: ${bad.length}. Errores: ${failures.length}. El progreso de usuarios no se importa; permanece separado por cuenta.`;
+  if($("#bank-admin-status"))$("#bank-admin-status").textContent=summary;
+  const finalOutput=$(o);if(finalOutput)finalOutput.textContent=summary+(bad.length?"\n\nOmitidas:\n"+bad.join("\n"):"")+(failures.length?"\n\nErrores:\n"+failures.join("\n"):"");
+ };
+ $("#rf").onchange=async e=>{const f=e.target.files[0];if(!f)return;let j;try{j=JSON.parse(await f.text())}catch(x){return $("#out").textContent="El archivo no es una copia válida."}await imp(j,"#out")};
+ $("#pi").onclick=async()=>{const t=$("#pj").value.trim();if(!t)return $("#po").textContent="Pega primero el JSON.";let j;try{j=JSON.parse(t)}catch(x){return $("#po").textContent="El texto no es un JSON válido: "+x.message}
+  if(!Array.isArray(j)&&!(j&&Array.isArray(j.bank)))return $("#po").textContent='No se encontró la lista de imágenes. Usa {"bank":[…]} o […].';await imp(j,"#po")}}
+
+/* ---------- Añadir: buscar y subir ---------- */
+function sview(msg){if(!isAdmin()){home();return}nav("i");app.className="";
+ app.innerHTML=head("Busca en Wikimedia Commons o sube tus propias fotos.")+`<div class="card"><select id="st">${Object.entries(T).map(([k,v])=>`<option value="${k}">${EM[k]} ${v}</option>`).join("")}</select><br><br><input id="sq" placeholder="Ej: peripheral blood smear" value="${esc(LQ)}"><br><br>
+ <button class="btn" id="sb">🔍 Buscar</button><br><label class="btn s" style="cursor:pointer">📁 Subir mis imágenes<input id="up" type="file" accept="image/*" multiple hidden></label></div><p id="sm" class="mu">${esc(msg||SMSG)}</p><div class="grid" id="sr"></div><div id="more"></div>`;
+ $("#sb").onclick=()=>doSearch(true);$("#sq").onkeydown=e=>{if(e.key==="Enter")doSearch(true)};$("#up").onchange=upload;showRes()}
+function showRes(){const o=$("#sr");if(!o)return;o.innerHTML=SR.map((x,i)=>`<div class="thumb"><img loading="lazy" src="${esc(x.thumb)}" alt=""><p>${esc(x.title)}<br>${esc(x.lic)}</p><button class="btn sm" data-i="${i}">Usar esta</button></div>`).join("");
+ $$("[data-i]").forEach(b=>b.onclick=()=>validate(SR[+b.dataset.i],$("#st").value));
+ $("#more").innerHTML=LQ&&SR.length&&OFF>=0?'<br><button class="btn s" id="mb">Cargar más resultados</button>':"";if($("#mb"))$("#mb").onclick=()=>doSearch(false)}
+function readImg(f){return new Promise(r=>{const u=URL.createObjectURL(f),i=new Image();i.onload=()=>{const k=Math.min(1,1600/Math.max(i.width,i.height)),c=document.createElement("canvas");c.width=i.width*k;c.height=i.height*k;c.getContext("2d").drawImage(i,0,0,c.width,c.height);URL.revokeObjectURL(u);r(c.toDataURL("image/jpeg",.82))};i.onerror=()=>r(null);i.src=u})}
+async function upload(e){const fs=[...e.target.files];$("#sm").textContent="Procesando…";let n=0;
+ for(const f of fs){const d=await readImg(f);if(d){SR.unshift({pid:"up"+Date.now()+n++,title:f.name,thumb:d,page:"",autor:"",lic:"Subida propia"})}}
+ SMSG=`${n} imagen(es) subida(s). Valídalas para guardarlas en el banco.`;$("#sm").textContent=SMSG;showRes()}
+async function doSearch(fresh){
+ const q=fresh?$("#sq").value.trim():LQ;if(!q)return $("#sm").textContent="Escribe un término (mejor en inglés).";
+ if(fresh){LQ=q;OFF=0;SR=SR.filter(x=>String(x.pid).startsWith("up"))}$("#sm").textContent="Buscando…";
+ try{const r=await fetch("https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch="+encodeURIComponent(q)+"&gsrnamespace=6&gsrlimit=50&gsroffset="+OFF+"&prop=imageinfo&iiprop=url|extmetadata|mime&iiurlwidth=1000&format=json&origin=*");
+  if(!r.ok)throw Error("HTTP "+r.status);const d=await r.json(),have=new Set(BANK.map(e=>e.id)),seen=new Set(SR.map(x=>x.pid));
+  const pg=Object.values((d.query||{}).pages||{}).sort((a,b)=>a.index-b.index);
+  OFF=d.continue?d.continue.gsroffset:-1;
+  pg.forEach(p=>{const i=(p.imageinfo||[])[0];if(!i||!i.thumburl||!/^image\/(jpeg|png|webp|gif|tiff)/.test(i.mime||"")||have.has("commons-"+p.pageid)||seen.has(p.pageid))return;
+   const m=i.extmetadata||{},v=k=>((m[k]||{}).value||"").replace(/<[^>]*>/g,"").trim();
+   SR.push({pid:p.pageid,title:p.title.replace(/^File:/,""),thumb:i.thumburl,page:i.descriptionurl,autor:v("Artist"),lic:v("LicenseShortName")||"Sin licencia indicada"})});
+  SMSG=SR.length+" resultados."+(OFF<0?" No hay más.":"");$("#sm").textContent=SMSG;showRes();if(OFF<0&&$("#mb"))$("#mb").remove()
+ }catch(e){$("#sm").textContent="No se pudo consultar Commons: "+e.message+". Abre el archivo con conexión a internet."}}
+
+/* ---------- Validar ---------- */
+const boxMove=(b,dx,dy)=>({...b,x:clamp(b.x+dx,b.w/2,100-b.w/2),y:clamp(b.y+dy,b.h/2,100-b.h/2)});
+function boxResize(b,px,py){const L=b.x-b.w/2,T=b.y-b.h/2,w=clamp(px-L,3,100-L),h=clamp(py-T,3,100-T);return{x:L+w/2,y:T+h/2,w,h}}
+const boxScale=(b,f)=>boxMove({x:b.x,y:b.y,w:clamp(b.w*f,3,100),h:clamp(b.h*f,3,100)},0,0);
+function validate(x,tema,edit){
+ if(!isAdmin()){home();return}
+ DR={x,t:tema,cel:edit?[...(edit.celulas||[])]:[],est:edit?[...(edit.estructuras||[])]:[],gui:edit?[...(edit.guias||[])]:[],box:null,mode:null};nav(null);
+ const r1=v=>+v.toFixed(1),up=edit?edit.fuente==="Imagen propia":String(x.pid).startsWith("up"),back=()=>edit?bankView():sview();
+ app.innerHTML=`<div class="xt"><button class="x" id="vb" aria-label="Cancelar">✕</button><h2 style="margin:0;flex:1">${edit?"Editar imagen":"Preparar imagen"}</h2>${tg()}</div>
+ <div class="stk"><div class="vwrap"><div id="vw"><img id="vp" src="${esc(x.thumb)}" alt=""><span id="dots"></span><div class="bx" id="bx" style="display:none"><i class="hdl" id="hd"></i></div></div></div></div>
+ <div class="card"><b><span class="num">1</span>¿Qué tejido es?</b><p class="mu" style="margin:4px 0 8px">Para la pregunta "¿Qué tipo de tejido observas?". Los recuadros guía del paso 2 solo señalan dónde mirar.</p><select id="vs"><option value="">No hacer pregunta de tejido</option>${LB[tema].map(o=>`<option ${(edit?edit.subtipo:LB[tema][0])===o?"selected":""}>${o}</option>`).join("")}</select></div>
+ <div class="card"><b><span class="num">2</span>Marcas con recuadro <span class="mu">(opcional)</span></b><p class="mu" style="margin:4px 0 8px">Célula y Estructura generan una pregunta cada una. Guía no lleva nombre ni genera pregunta: solo señala la zona en la pregunta de tejido. Si no quieres recuadros, salta este paso.</p><div id="ctl"></div><div id="vl"></div></div>
+ <div class="card"><b><span class="num">3</span>Guardar</b><br><br><input id="vr" placeholder="Pista de estudio (opcional)" value="${esc(edit?edit.rasgos:"")}"><p id="cn" class="mu"></p><p id="vm" class="r"></p><button class="btn" id="va">${edit?"Guardar cambios":"Guardar en el banco"}</button></div>`;
+ const bx=$("#bx"),wr=$("#vw"),im=$("#vp"),paint=()=>{const b=DR.box;if(b)bx.style.cssText=`left:${b.x-b.w/2}%;top:${b.y-b.h/2}%;width:${b.w}%;height:${b.h}%`};
+ const msg=t=>$("#vm").textContent=t||"";
+ const ui=()=>{const m=DR.mode,all=DR.cel.map(k=>({...k,k:"cel"})).concat(DR.est.map(k=>({...k,k:"est"})));
+  $("#ctl").innerHTML=m?`<div class="row" style="align-items:center"><b style="flex:1">${m==="crop"?"✂️ Mueve el recuadro y estira la esquina para recortar":"Mueve el recuadro y estira la esquina para encerrar "+(m==="B"?"la célula":m==="G"?"la zona que el usuario debe observar (sin nombre)":"la estructura")}</b></div>${m==="crop"||m==="G"?"":`<br><select id="vn">${((m==="B"?CE:ES)[tema]||[]).map(o=>`<option>${esc(o)}</option>`).join("")}<option value="__c">✏️ Otra (escribir)…</option></select><input id="vc" placeholder="Escribe el nombre ${m==="B"?"de la célula":"de la estructura"}" maxlength="60" style="display:none;margin-top:8px">`}<br><div class="row"><button class="btn sm" id="ok" style="flex:2;width:auto">${m==="crop"?"Aplicar recorte":m==="G"?"Guardar guía":"Guardar marca"}</button><button class="btn sm s" id="no" style="flex:1;width:auto">Cancelar</button></div>`
+   :`<div class="row"><button class="btn sm s" id="aB">＋ Célula</button><button class="btn sm s" id="aC">＋ Estructura</button><button class="btn sm s" id="aG">＋ Guía (sin nombre)</button><button class="btn sm s" id="cr">✂️ Recortar imagen</button></div>`;
+  bx.style.display=m?"block":"none";bx.style.borderColor=m==="crop"?"#58cc02":m==="G"?"#4dc9ff":"#ffe14d";
+  $("#dots").innerHTML=m==="crop"?"":all.map(k=>`<i class="bs" style="left:${k.x-k.w/2}%;top:${k.y-k.h/2}%;width:${k.w}%;height:${k.h}%"></i>`).join("")+DR.gui.map(gzh).join("");
+  $("#vl").innerHTML=all.map((k,i)=>`<div class="tl"><span>${k.k==="cel"?"🔬 Célula":"🧩 Estructura"}: <b>${esc(k.n)}</b></span><button class="btn sm s" data-r="${i}">Quitar</button></div>`).join("");
+  $("#vl").innerHTML+=DR.gui.map((k,i)=>`<div class="tl"><span>🧭 Guía sin nombre</span><button class="btn sm s" data-g="${i}">Quitar</button></div>`).join("");$$("[data-g]").forEach(b=>b.onclick=()=>{DR.gui.splice(+b.dataset.g,1);ui()});
+  $("#cn").textContent=`Esta imagen generará ${($("#vs").value?1:0)+all.length} pregunta(s).${DR.gui.length?` ${DR.gui.length} guía(s) sin pregunta propia${$("#vs").value?"":" (elige un tejido para que se usen)"}.`:""}`;
+  $$("[data-r]").forEach(b=>b.onclick=()=>{const i=+b.dataset.r;if(i<DR.cel.length)DR.cel.splice(i,1);else DR.est.splice(i-DR.cel.length,1);ui()});
+  const set=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
+  const start=k=>{DR.mode=k;DR.box=k==="crop"?{x:50,y:50,w:90,h:90}:{x:50,y:50,w:12,h:+(12*im.clientWidth/Math.max(1,im.clientHeight)).toFixed(2)};msg();ui();paint()};
+  set("aB",()=>start("B"));set("aC",()=>start("C"));set("cr",()=>start("crop"));set("aG",()=>start("G"));set("no",()=>{DR.mode=null;ui()});
+  
+  const vn=$("#vn"),vc=$("#vc");if(vn){const sync=()=>{vc.style.display=vn.value==="__c"?"block":"none";if(vn.value==="__c")vc.focus()};vn.onchange=sync;sync()}
+  set("ok",()=>{if(m==="crop")return crop();if(m==="G"){const g=DR.box;DR.gui.push({x:r1(g.x),y:r1(g.y),w:r1(g.w),h:r1(g.h)});DR.mode=null;msg();return ui()}const b=DR.box,n=vn.value==="__c"?vc.value.trim().replace(/\s+/g," "):vn.value;if(!n)return msg("Escribe el nombre de la marca personalizada.");msg();(m==="B"?DR.cel:DR.est).push({n,x:r1(b.x),y:r1(b.y),w:r1(b.w),h:r1(b.h)});DR.mode=null;ui()})};
+ const crop=()=>{if(DR.cel.length+DR.est.length+DR.gui.length&&!confirm("Al recortar se borrarán las marcas actuales. ¿Continuar?"))return;
+  const b=DR.box,i=new Image(),fail=()=>msg("No se pudo recortar esta imagen (el sitio no lo permite). Descárgala y súbela desde Añadir.");
+  if(!/^data:/.test(x.thumb))i.crossOrigin="anonymous";
+  i.onload=()=>{try{const c=document.createElement("canvas"),W=i.naturalWidth,H=i.naturalHeight,w=b.w/100*W,h=b.h/100*H;c.width=w;c.height=h;c.getContext("2d").drawImage(i,(b.x-b.w/2)/100*W,(b.y-b.h/2)/100*H,w,h,0,0,w,h);
+   x.thumb=c.toDataURL("image/jpeg",.85);DR.cel=[];DR.est=[];DR.gui=[];DR.mode=null;im.src=x.thumb;ui()}catch(e){fail()}};i.onerror=fail;i.src=x.thumb};
+ im.onerror=()=>msg("La imagen no carga. Cancela y elige otra.");
+ let drag=null;
+ bx.onpointerdown=e=>{e.preventDefault();e.stopPropagation();drag={hd:e.target.id==="hd",sx:e.clientX,sy:e.clientY,b:{...DR.box}};bx.setPointerCapture(e.pointerId)};
+ bx.onpointermove=e=>{if(!drag)return;const r=wr.getBoundingClientRect();DR.box=drag.hd?boxResize(drag.b,100*(e.clientX-r.left)/r.width,100*(e.clientY-r.top)/r.height):boxMove(drag.b,100*(e.clientX-drag.sx)/r.width,100*(e.clientY-drag.sy)/r.height);paint()};
+ bx.onpointerup=bx.onpointercancel=()=>{drag=null};
+ im.onclick=e=>{if(!DR.mode)return;const r=im.getBoundingClientRect();DR.box=boxMove({...DR.box,x:100*(e.clientX-r.left)/r.width,y:100*(e.clientY-r.top)/r.height},0,0);paint()};
+ $("#vs").onchange=ui;$("#vb").onclick=back;ui();
+ $("#va").onclick=()=>{const sub=$("#vs").value;
+  if(DR.mode)return msg("Termina o cancela la marca que estás haciendo.");
+  if(!sub&&!DR.cel.length&&!DR.est.length)return msg(DR.gui.length?"Las guías solo sirven con la pregunta de tejido: elige un tejido.":"Elige un tejido o añade al menos una marca.");
+  const e={id:edit?edit.id:(up?"":"commons-")+x.pid,tema,url:x.thumb,_image_path:edit?edit._image_path||null:null,published:edit?edit.published!==false:true,fuente:edit?edit.fuente:up?"Imagen propia":"Wikimedia Commons",fuenteUrl:x.page||undefined,autor:x.autor,licencia:x.lic,rasgos:$("#vr").value.trim(),verificada:true,celulas:DR.cel,estructuras:DR.est};if(DR.gui.length)e.guias=DR.gui;if(sub)e.subtipo=sub;
+  if(!saveBank([e],e.id))return msg("No se pudo guardar: se requiere una sesión de administrador.");
+  loadBank();if(edit)return bankView();SR=SR.filter(y=>y.pid!==x.pid);SMSG="✅ Guardada. Banco: "+BANK.length+" imágenes.";sview()}}
+
+/* ---------- Cuenta y seguridad ---------- */
+function authView(mode="login",message=""){
+ nav(null);const titles={login:"Inicia sesión",signup:"Crea tu cuenta",forgot:"Recuperar contraseña",update:"Crear nueva contraseña"};
+ const isSignup=mode==="signup",isForgot=mode==="forgot",isUpdate=mode==="update";
+ const fields=isUpdate?`<label>Nueva contraseña<input id="auth-password" type="password" minlength="8" autocomplete="new-password" required></label>`:
+  `<label>Correo electrónico<input id="auth-email" type="email" autocomplete="${isSignup?"email":"username"}" required></label>${isSignup?`<label>Nombre (opcional)<input id="auth-name" type="text" maxlength="80" autocomplete="name"></label>`:""}${isForgot?"":`<label>Contraseña<input id="auth-password" type="password" minlength="8" autocomplete="${isSignup?"new-password":"current-password"}" required></label>`}`;
+ app.innerHTML=`<section class="auth-wrap"><div class="auth-brand">🔬 Histo<span>Práctica</span></div><p class="mu" style="text-align:center">Entrena tu ojo histológico, en cualquier dispositivo.</p><div class="card"><h1 class="hero" style="font-size:1.6rem">${titles[mode]||titles.login}</h1>${mode==="login"||isSignup?`<div class="auth-tabs"><button class="btn ${!isSignup?"":"s"}" type="button" data-auth-mode="login">Entrar</button><button class="btn ${isSignup?"":"s"}" type="button" data-auth-mode="signup">Registrarme</button></div>`:""}<p id="auth-message" class="${message?"auth-note":"mu"}" role="status">${esc(message||"")}</p><form id="auth-form">${fields}<button class="btn" id="auth-submit" style="margin-top:16px">${isSignup?"Crear cuenta":isForgot?"Enviar enlace":isUpdate?"Guardar contraseña":"Iniciar sesión"}</button></form>${mode==="login"?`<p style="text-align:center"><button class="ib" id="forgot-link" type="button">Olvidé mi contraseña</button></p>`:""}${isForgot||isUpdate?`<p><button class="btn s" id="back-login" type="button">Volver a iniciar sesión</button></p>`:""}<p class="hint">${isSignup?"Te enviaremos un correo para verificar tu cuenta si la verificación está activada en Supabase.":"Tus datos y tu progreso se guardan de manera privada en tu cuenta."}</p></div></section>`;
+ $$('[data-auth-mode]').forEach(b=>b.onclick=()=>authView(b.dataset.authMode));if($("#forgot-link"))$("#forgot-link").onclick=()=>authView("forgot");if($("#back-login"))$("#back-login").onclick=()=>authView("login");
+ $("#auth-form").onsubmit=async event=>{event.preventDefault();const button=$("#auth-submit"),messageBox=$("#auth-message");button.disabled=true;messageBox.textContent="Procesando…";
+  try{
+   if(isUpdate){const password=$("#auth-password").value;const {error}=await SUPA.auth.updateUser({password});if(error)throw error;await SUPA.auth.signOut();authView("login","Contraseña actualizada. Ya puedes iniciar sesión.");return}
+   const email=$("#auth-email").value.trim(),password=$("#auth-password")?.value;
+   if(isForgot){const {error}=await SUPA.auth.resetPasswordForEmail(email,{redirectTo:location.origin});if(error)throw error;authView("login","Si existe una cuenta con ese correo, recibirás instrucciones para recuperar el acceso.");return}
+   if(isSignup){const displayName=$("#auth-name").value.trim();const {data,error}=await SUPA.auth.signUp({email,password,options:{emailRedirectTo:location.origin,data:{display_name:displayName}}});if(error)throw error;if(data.session){notifyLogin(data.session,"registro de cuenta");await enterApp(data.session)}else authView("login","Cuenta creada. Revisa tu correo para verificarla y luego inicia sesión.");return}
+   const {data,error}=await SUPA.auth.signInWithPassword({email,password});if(error)throw error;notifyLogin(data.session,"correo y contraseña");await enterApp(data.session);
+  }catch(error){messageBox.className="auth-error";messageBox.textContent=error?.message||"No se pudo completar la operación.";button.disabled=false}
+ };
+}
+async function enterApp(session){
+ if(!session?.user)throw new Error("No se encontró una sesión válida.");CURRENT_USER=session.user;
+ let profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle();
+ if(profileResult.error)throw new Error("No se pudo consultar tu perfil. Comprueba que ejecutaste la migración SQL de HistoPráctica.");
+ if(!profileResult.data){const {error}=await SUPA.from("profiles").insert({id:CURRENT_USER.id,email:CURRENT_USER.email||null,display_name:CURRENT_USER.user_metadata?.display_name||null});if(error&&error.code!=="23505")throw new Error("No se pudo crear tu perfil. Comprueba la migración y las políticas RLS.");profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle()}
+ if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;
+ try{await refreshRemoteBank()}catch(error){throw new Error("No se pudo cargar el banco de Supabase. Verifica la migración SQL, las políticas RLS y el bucket histology-images. Detalle: "+(error.message||"error"))}
+ ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();home();
+}
+async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
+async function bootAuth(){
+ const viaLink=/(^|[#&])access_token=/.test(location.hash)||new URLSearchParams(location.search).has("code");
+ let config=window.HP_CONFIG||{};
+ if(!config.supabaseUrl||config.supabaseUrl.includes("REEMPLAZA_")||!config.supabaseAnonKey||config.supabaseAnonKey.includes("REEMPLAZA_")){
+  try{const response=await fetch("/api/public-config",{cache:"no-store"});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo cargar la configuración pública de Supabase.");config=payload}
+  catch(error){authView("login",(error.message||"Falta configurar Supabase.")+" Añade SUPABASE_URL y SUPABASE_ANON_KEY en las variables de Vercel.");return}
+ }
+ if(!window.supabase?.createClient){authView("login","No se pudo cargar el cliente de Supabase. Comprueba tu conexión a internet e inténtalo de nuevo.");return}
+ SUPA=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ SUPA.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];authView("login")}if(event==="PASSWORD_RECOVERY")authView("update")});
+ if(new URLSearchParams(location.hash.slice(1)).get("type")==="recovery"){authView("update");return}
+ const {data,error}=await SUPA.auth.getSession();if(error)throw error;if(data.session){if(viaLink)notifyLogin(data.session,"enlace de correo");try{await enterApp(data.session)}catch(e){authView("login",e.message)}}else authView("login");
+}
+async function notifyLogin(session,method){
+ try{if(!session?.access_token)return;const r=await fetch("/api/login-notify",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({method})});if(!r.ok)console.warn("login-notify:",r.status,await r.text().catch(()=>""))}
+ catch(e){console.warn("No se pudo enviar la notificación de inicio de sesión",e)}
+}
+async function saveFinishedExam(){
+ const box=$("#finish-status");if(!box||!S||!S.attemptId||!CURRENT_USER)return;
+ const setMessage=(text,retry=false)=>{if(!$("#finish-status"))return;$("#finish-status").innerHTML=esc(text)+(retry?' <button class="btn sm s" id="retry-finish" type="button">Reintentar</button>':"");if(retry&&$("#retry-finish"))$("#retry-finish").onclick=()=>saveFinishedExam()};
+ setMessage("Guardando el resultado y enviando notificación…");
+ try{
+  const {data}=await SUPA.auth.getSession();const token=data.session?.access_token;if(!token)throw new Error("La sesión expiró. Inicia sesión de nuevo.");
+  const details=S.ans.map(x=>({question_id:x.q.it.e.id,mode:x.q.it.m,theme:x.q.it.e.tema,target:x.q.it.t||null,selected:x.pick,prompt:x.q.txt}));
+  const response=await fetch("/api/finish-exam",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({attemptId:S.attemptId,title:"Práctica de histología",mode:"practice",themes:S.c?.temas||[],startedAt:S.startedAt,durationSeconds:Math.floor((Date.now()-S.startTimeMs)/1000),details})});
+  const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo guardar el examen.");
+  await syncProgress();if(payload.emailSent)setMessage("Resultado guardado y correo de notificación enviado.");else setMessage("Resultado guardado, pero el correo no se pudo confirmar. Puedes reintentar.",true);
+ }catch(error){setMessage("No se pudo confirmar el guardado del examen: "+(error.message||"error de conexión"),true)}
+}
+async function adminView(){
+ if(!isAdmin()){home();return}nav("i");app.innerHTML=head("Panel administrativo")+`<p class="mu">Consultas protegidas por Supabase RLS. Los correos de registro y exámenes se envían por funciones del servidor.</p><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="card"><h2 style="margin-top:0">Usuarios</h2><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div><div class="card"><h2 style="margin-top:0">Exámenes recientes</h2><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div><div class="row"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p>`;
+ $("#admin-refresh").onclick=()=>adminView();
+ $("#admin-retry-notifications").onclick=async()=>{const btn=$("#admin-retry-notifications"),status=$("#admin-retry-status");btn.disabled=true;status.textContent="Reintentando notificaciones…";try{const {data}=await SUPA.auth.getSession();const response=await fetch("/api/retry-notifications",{method:"POST",headers:{Authorization:`Bearer ${data.session?.access_token||""}`}});const result=await response.json();if(!response.ok)throw new Error(result.error||"Error");const summary=`Correos enviados: ${result.sent}. Fallidos: ${result.failed}.`;await adminView();const updatedStatus=$("#admin-retry-status");if(updatedStatus)updatedStatus.textContent=summary}catch(error){status.textContent="No se pudo reintentar: "+(error.message||"error")}finally{btn.disabled=false}};
+ try{
+  const [userResult,examCount,attemptResult]=await Promise.all([
+   SUPA.from("profiles").select("id,email,display_name,role,created_at",{count:"exact"}).order("created_at",{ascending:false}).limit(250),
+   SUPA.from("exam_attempts").select("id",{count:"exact",head:true}),
+   SUPA.from("exam_attempts").select("id,user_id,exam_title,total_questions,correct_answers,incorrect_answers,unanswered,score,duration_seconds,completed_at,notification_status").order("completed_at",{ascending:false}).limit(300)
+  ]);
+  if(userResult.error)throw userResult.error;if(examCount.error)throw examCount.error;if(attemptResult.error)throw attemptResult.error;
+  const users=userResult.data||[],attempts=attemptResult.data||[],userMap=new Map(users.map(u=>[u.id,u]));
+  $("#admin-users-count").textContent=String(userResult.count??users.length);$("#admin-exams-count").textContent=String(examCount.count??0);
+  $("#admin-correct-count").textContent=String(attempts.reduce((sum,a)=>sum+a.correct_answers,0));$("#admin-wrong-count").textContent=String(attempts.reduce((sum,a)=>sum+a.incorrect_answers,0));
+  $("#admin-users").innerHTML=users.length?`<table class="admin-table"><thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Registro</th></tr></thead><tbody>${users.map(u=>`<tr><td>${esc(u.email||"—")}</td><td>${esc(u.display_name||"—")}</td><td>${esc(u.role)}</td><td>${esc(u.created_at?new Date(u.created_at).toLocaleString("es-MX"):"—")}</td></tr>`).join("")}</tbody></table>`:"No hay usuarios registrados.";
+  $("#admin-exams").innerHTML=attempts.length?`<table class="admin-table"><thead><tr><th>Estudiante</th><th>Examen</th><th>Aciertos</th><th>Errores</th><th>Nota</th><th>Fecha</th><th>Correo</th></tr></thead><tbody>${attempts.map(a=>`<tr><td>${esc(userMap.get(a.user_id)?.email||a.user_id)}</td><td>${esc(a.exam_title)}</td><td>${a.correct_answers}/${a.total_questions}</td><td>${a.incorrect_answers}${a.unanswered?` + ${a.unanswered} omitidas`:""}</td><td>${a.score}%</td><td>${esc(new Date(a.completed_at).toLocaleString("es-MX"))}</td><td>${esc(a.notification_status)}</td></tr>`).join("")}</tbody></table><p class="mu">Se muestran los últimos ${attempts.length} exámenes (máximo 300 en esta vista).</p>`:"Todavía no hay exámenes completados.";
+ }catch(error){console.error("admin dashboard error",error);const box=$("#admin-users");if(box)box.textContent="No se pudieron cargar los datos: "+(error.message||"error de conexión")}
+}
+
+initDB().then(()=>bootAuth()).catch(error=>{console.error(error);authView("login","No se pudo iniciar la aplicación. Revisa la configuración y la conexión.")}).finally(()=>app.removeAttribute("aria-busy"));
+</script></body></html>
