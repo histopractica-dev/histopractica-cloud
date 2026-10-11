@@ -1,7 +1,7 @@
 const REASONS = ["Imagen incorrecta", "Respuesta incorrecta", "Opciones ambiguas", "Problema técnico", "Otro"];
 const API_KEY = process.env.RESEND_API_KEY;
-const FROM = process.env.RESEND_FROM;
-const TO = process.env.ADMIN_EMAIL;
+const FROM = process.env.EMAIL_FROM;
+const TO = process.env.NOTIFICATION_EMAIL;
 const SB_URL = process.env.SUPABASE_URL;
 const SB_KEY = process.env.SUPABASE_ANON_KEY;
 const hits = new Map();
