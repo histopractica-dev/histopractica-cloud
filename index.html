@@ -1090,18 +1090,16 @@ body.mo { overflow: hidden; }
 
 /* Quiz compacto: evitar scroll vacío en móviles */
 .qv > h2 { margin: 10px 0 8px; font-size: clamp(1.05rem, 4.5vw, 1.3rem); line-height: 1.25; }
-.qv .img { min-height: 110px; max-height: 40vh; }
-.qv .img img { max-height: 38vh; object-fit: contain; }
+.qv .img { min-height: 180px; max-height: 64vh; }
+.qv .img img { max-height: 62vh; width:100%; object-fit: contain; }
 .qv .og { gap: 7px; margin-top: 9px; }
 .qv .opt { min-height: 42px; padding-top: 7px; padding-bottom: 7px; }
 .qv .hint { margin: 7px 0; font-size: var(--fs-xs); }
 .qv .sheet { margin-top: 8px; }
-@media (max-height: 740px) { .qv .img { min-height: 90px; max-height: 32vh; } .qv .img img { max-height: 30vh; } .qv > h2 { margin: 6px 0; } }
+@media (max-height: 740px) { .qv .img { min-height: 150px; max-height: 54vh; } .qv .img img { max-height: 52vh; } .qv > h2 { margin: 6px 0; } }
 /* Quiz: lupa visible, etiquetas de acierto/error (no solo color), hoja de feedback */
-.img { position: relative; overflow:hidden; touch-action: pan-y; }
-.img.zoomed { cursor: grab; touch-action: none; user-select:none; -webkit-user-select:none; }
-.img.zoomed #zw { will-change:transform; backface-visibility:hidden; }
-.img.zoomed img { -webkit-user-drag:none; user-select:none; }
+.img { position: relative; touch-action: pan-y; }
+.img.zoomed { cursor: grab; touch-action: none; }
 .zb { position: absolute; top: 8px; right: 8px; z-index: 3; width: var(--h-sm); height: var(--h-sm); display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .62); color: #fff; cursor: pointer; }
 .zb .ic { width: 22px; height: 22px; }
 .opt .ot { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs); font-weight: 800; white-space: nowrap; }
@@ -1256,9 +1254,9 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation}
  .opt{min-height:48px;padding:10px;gap:8px;font-size:.94rem;line-height:1.3}
  .opt kbd{flex:none;min-width:25px}
  .opt .ot{white-space:normal;text-align:right;font-size:.7rem;max-width:44%;}
- .img{min-height:120px}
- .img img{max-height:42vh;max-width:100%;height:auto;object-fit:contain}
- #vp{max-height:38vh}
+ .img{min-height:180px;max-height:64vh}
+ .img img{max-height:62vh;max-width:100%;width:100%;height:auto;object-fit:contain}
+ #vp{max-height:62vh}
  .sheet{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
  .sheet h3{font-size:1.08rem}
  .sheet .fbt{max-height:17vh}
@@ -1567,12 +1565,12 @@ const avKey=()=>"hp_av_"+(CURRENT_USER?.id||""),avGet=()=>{
 const inits=()=>{const p=avGet();if(p)return `<img src="${esc(p)}" alt="Foto de perfil">`;const n=(CURRENT_PROFILE?.display_name||"").trim();return n?esc(n.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()):`<span aria-hidden="true">👤</span>`};
 function modal(h){$(".modal")?.remove();const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${h}</div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);m.querySelector("button,select,input")?.focus();return m}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$(".modal")?.remove()});
-function hpNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(880,c.currentTime);o.frequency.setValueAtTime(1175,c.currentTime+.09);g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.13,c.currentTime+.025);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.24);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.25);o.onended=()=>c.close()}catch(e){}}
-function hpShowNotification(title,detail,icon='🔔',action='profile',actionData=''){let b=$("#toasts");if(!b){b=document.createElement("div");b.id="toasts";b.setAttribute("role","status");document.body.appendChild(b)}const d=document.createElement("button");d.type="button";d.className="toast hp-notice";d.setAttribute("aria-label",title+". Haz click para ver.");d.innerHTML=`<span class="toast-emoji" aria-hidden="true">${icon}</span><span class="hp-notice-copy"><b>${esc(title)}</b><small>${esc(detail||"Haz click para ver")}</small><u>Haz click para ver</u></span>`;d.style.pointerEvents="auto";d.onclick=()=>{d.remove();if(action==='ranking')rankView();else if(action==='social'){socialView();if(actionData)setTimeout(()=>hpOpenChat(actionData),120)}else perfilView()};b.appendChild(d);hpNotificationSound();setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),350)},7000)}
+function hpNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=window.__hpNoticeAudio||(window.__hpNoticeAudio=new C());const play=()=>{const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.type="sine";o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1175,t+.09);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.25)};if(c.state==="suspended")c.resume().then(play).catch(()=>{});else play()}catch(e){}}
+function hpShowNotification(title,detail,icon='🔔',action='profile'){let b=$("#toasts");if(!b){b=document.createElement("div");b.id="toasts";b.setAttribute("role","status");document.body.appendChild(b)}const d=document.createElement("button");d.type="button";d.className="toast hp-notice";d.setAttribute("aria-label",title+". Haz click para ver.");d.innerHTML=`<span class="toast-emoji" aria-hidden="true">${icon}</span><span class="hp-notice-copy"><b>${esc(title)}</b><small>${esc(detail||"Haz click para ver")}</small><u>Haz click para ver</u></span>`;d.style.pointerEvents="auto";d.onclick=()=>{d.remove();if(action==='ranking'&&typeof rankView==='function')rankView();else if(typeof perfilView==='function')perfilView()};b.appendChild(d);hpNotificationSound();setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),350)},7000)}
 function toast(t){hpShowNotification(t,"Consulta tu progreso y logros","🏆","profile")}
 function achList(){const it=questionItems({temas:Object.keys(T),mod:"M"},BANK),dn=it.filter(x=>ANSWERED.has(itKey(x))).length,tis=Object.entries(T).map(([k,v])=>{const c=it.filter(x=>x.e.tema===k);return{k,v,qn:c.length,ok:c.length>0&&c.every(x=>ANSWERED.has(itKey(x)))}}).filter(x=>x.qn);
  return [["a1","Primera respuesta","Contesta una pregunta",dn>=1,"🌱"],["a10","10 preguntas","Contesta 10 preguntas distintas",dn>=10,"🎯"],["a100","100 preguntas","Contesta 100 preguntas distintas",dn>=100,"💯"],["tw","Primer tejido completado","Contesta todas las preguntas de un tejido",tis.some(x=>x.ok),"🧠"]].map(([id,t,d,ok,emoji])=>({id,t,d,ok,emoji,c:"var(--o)"})).concat(tis.map(x=>({id:"t-"+x.k,t:`Dominio: ${x.v}`,d:`Contesta las ${x.qn} preguntas`,ok:x.ok,emoji:EM[x.k],c:COL[x.k]})))}
-function checkAch(){if(CURRENT_USER?.id&&typeof hpStartInboxNotifications==='function')hpStartInboxNotifications();if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;const key="hp_ach_"+CURRENT_USER.id,got=achList().filter(x=>x.ok),seen=rd(key,null);if(seen===null){put(key,got.map(x=>x.id));return}const nw=got.filter(x=>!seen.includes(x.id));if(nw.length){put(key,seen.concat(nw.map(x=>x.id)));nw.forEach(x=>hpShowNotification("¡Logro conseguido!",x.t+" · "+x.d,"🏆","profile"))}}
+function checkAch(){if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;const key="hp_ach_"+CURRENT_USER.id,got=achList().filter(x=>x.ok),seen=rd(key,null);if(seen===null){put(key,got.map(x=>x.id));return}const nw=got.filter(x=>!seen.includes(x.id));if(nw.length){put(key,seen.concat(nw.map(x=>x.id)));nw.forEach(x=>hpShowNotification("¡Logro conseguido!",x.t+" · "+x.d,"🏆","profile"))}}
 function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({temas:Object.keys(T),mod:"M"},BANK),done=items.filter(it=>ANSWERED.has(itKey(it))).length,r=SYNC_READY,v=x=>r?x:SK,ac=achList(),got=ac.filter(x=>x.ok).length;
  app.innerHTML=`<div id="perfil"><div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h1 class="hero" style="margin:0;flex:1;font-size:1.5rem">Perfil</h1></div>
  <div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:76px;height:76px;font-size:1.5rem;cursor:default">${inits()}</span><div style="flex:1;min-width:160px"><b style="font-size:1.2rem">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||"Estudiante")}</b><div class="mu">${isAdmin()?"Administrador":"Estudiante"}</div><div class="row" style="margin-top:8px"><button class="btn sm s" id="av-b" type="button">Cambiar foto</button>${avGet()?'<button class="btn sm s" id="av-d" type="button">Quitar</button>':""}</div></div><input type="file" id="av-f" accept="image/*" hidden><p id="av-m" class="r" role="alert" style="width:100%;margin:0"></p></div>
@@ -1639,11 +1637,11 @@ function feedbackSound(correct){
  for(const n of notes){try{const osc=ctx.createOscillator(),gain=ctx.createGain(),at=start+n.t;osc.type=correct?"sine":"triangle";osc.frequency.setValueAtTime(n.f,at);gain.gain.setValueAtTime(.0001,at);gain.gain.exponentialRampToValueAtTime(correct?.12:.085,at+.018);gain.gain.exponentialRampToValueAtTime(.0001,at+n.d);osc.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+n.d+.01)}catch(e){}}
 }
 
-function run(c,forced){
+async function run(c,forced){
  const ex=forced||buildExam(c,BANK);
  if(!ex.items.length){const t="No hay preguntas para esa combinación. Añade imágenes o cambia la selección.",m=$("#msg");return m?m.innerHTML=`<p class="r">${t}</p>`:alert(t)}
  if(ex.short&&!forced){nav("i");return app.innerHTML=`<div class="card"><b>Preguntas insuficientes</b><p>Hay ${ex.avail} preguntas posibles y pediste ${c.n}.</p><button class="btn" id="red">Hacer ${ex.avail}</button><br><button class="btn s" id="bk">Volver</button></div>`,$("#red").onclick=()=>run(c,ex),$("#bk").onclick=home}
- S={c,q:ex.items.map(it=>({it,question:null})),spare:ex.spare,i:0,ans:[],streak:0,best:0,attemptId:crypto.randomUUID(),startedAt:new Date().toISOString(),startTimeMs:Date.now(),finished:false,rankBefore:typeof hpRankSnapshot==="function"?hpRankSnapshot():Promise.resolve(null)};IMGS.clear();warm(S,0);{const go=$("#go");if(go)go.disabled=true}show()}
+ const rankBefore=typeof hpRankSnapshot==="function"?await hpRankSnapshot():null;const currentStreak=CURRENT_USER?(Number(rankBefore?.find(x=>String(x.id)===String(CURRENT_USER.id))?.points)||0):0;S={c,q:ex.items.map(it=>({it,question:null})),spare:ex.spare,i:0,ans:[],streak:currentStreak,best:0,attemptId:crypto.randomUUID(),startedAt:new Date().toISOString(),startTimeMs:Date.now(),finished:false,rankBefore:Promise.resolve(rankBefore)};IMGS.clear();warm(S,0);{const go=$("#go");if(go)go.disabled=true}show()}
 
 async function prepareQuestionRemote(item){
  const {data,error}=await SUPA.auth.getSession();if(error)throw error;
@@ -1704,13 +1702,11 @@ async function show(){
  const photo=$("#ph"),image=$("#im"),ready=()=>{image.classList.remove("loading");image.setAttribute("aria-busy","false")};photo.onload=ready;if(photo.complete&&photo.naturalWidth)ready();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=$(".bar i");if(b)b.style.width=100*S.i/n+"%"}));warm(session,index+1);
  let z=0,panX=0,panY=0,dragPan=null,wasDragged=false;
- const zoomScale=2.4,clampPan=()=>{const box=$("#im").getBoundingClientRect(),photo=$("#ph"),w=Math.min(box.width,photo.clientWidth||box.width),h=Math.min(box.height,photo.clientHeight||box.height);const maxX=Math.max(0,(w*zoomScale-box.width)/2),maxY=Math.max(0,(h*zoomScale-box.height)/2);panX=Math.max(-maxX,Math.min(maxX,panX));panY=Math.max(-maxY,Math.min(maxY,panY))};
- const paintZoom=()=>{$("#zw").style.transformOrigin="50% 50%";$("#zw").style.transform=z?`translate3d(${panX}px,${panY}px,0) scale(${zoomScale})`:"none"};
- const zoomImage=(on)=>{z=on?1:0;if(!z){panX=0;panY=0}const im=$("#im");paintZoom();im.classList.toggle("zoomed",!!z);$("#zbtn").setAttribute("aria-pressed",String(!!z));$("#zbtn span").textContent=z?"Reducir":"Ampliar imagen";$("#zbtn").setAttribute("aria-label",z?"Reducir imagen":"Ampliar imagen")};
- $("#im").onclick=e=>{if(wasDragged){wasDragged=false;return}if(e.target.closest(".zb")){zoomImage(!z);return}if(e.target.closest("img")||e.target.closest("#zw"))zoomImage(!z)};
- $("#im").onpointerdown=e=>{if(!z||e.target.closest(".zb"))return;e.preventDefault();dragPan={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false};try{$("#im").setPointerCapture(e.pointerId)}catch(_){} };
- $("#im").onpointermove=e=>{if(!dragPan||dragPan.id!==e.pointerId)return;const dx=e.clientX-dragPan.x,dy=e.clientY-dragPan.y;if(Math.abs(dx)+Math.abs(dy)>2){dragPan.moved=true;wasDragged=true}if(dragPan.moved){panX=dragPan.px+dx;panY=dragPan.py+dy;clampPan();paintZoom()}};
- const endPan=e=>{if(dragPan&&dragPan.id===e.pointerId){if(!dragPan.moved)wasDragged=false;dragPan=null}};$("#im").onpointerup=endPan;$("#im").onpointercancel=endPan;
+ const zoomImage=(on,origin)=>{z=on?1:0;if(!z){panX=0;panY=0}const wrap=$("#zw"),im=$("#im");wrap.style.transformOrigin=origin||"50% 50%";wrap.style.transform=z?`translate(${panX}px, ${panY}px) scale(2.4)`:"none";im.classList.toggle("zoomed",!!z);$("#zbtn").setAttribute("aria-pressed",String(!!z));$("#zbtn span").textContent=z?"Reducir":"Ampliar imagen";$("#zbtn").setAttribute("aria-label",z?"Reducir imagen":"Ampliar imagen")};
+ $("#im").onclick=e=>{if(wasDragged){wasDragged=false;return}if(e.target.closest(".zb")){zoomImage(!z,"50% 50%");return}if(e.target.closest("img")||e.target.closest("#zw")){const r=$("#im").getBoundingClientRect();zoomImage(!z,`${100*(e.clientX-r.left)/Math.max(1,r.width)}% ${100*(e.clientY-r.top)/Math.max(1,r.height)}%`)}};
+ $("#im").onpointerdown=e=>{if(!z||e.target.closest(".zb"))return;dragPan={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false};try{e.preventDefault();$("#im").setPointerCapture(e.pointerId)}catch(_){}};
+ $("#im").onpointermove=e=>{if(!dragPan||dragPan.id!==e.pointerId)return;const dx=e.clientX-dragPan.x,dy=e.clientY-dragPan.y;if(Math.abs(dx)+Math.abs(dy)>3){dragPan.moved=true;wasDragged=true}if(dragPan.moved){const wrap=$("#zw"),im=$("#im"),w=im.clientWidth,h=im.clientHeight,iw=wrap.scrollWidth,ih=wrap.scrollHeight,scale=2.4;const limX=Math.max(0,(iw*scale-w)/2),limY=Math.max(0,(ih*scale-h)/2);panX=Math.max(-limX,Math.min(limX,dragPan.px+dx));panY=Math.max(-limY,Math.min(limY,dragPan.py+dy));wrap.style.transform=`translate3d(${panX}px,${panY}px,0) scale(${scale})`}};
+ const endPan=e=>{if(dragPan&&dragPan.id===e.pointerId){if(!dragPan.moved)wasDragged=false;try{if($("#im").hasPointerCapture(e.pointerId))$("#im").releasePointerCapture(e.pointerId)}catch(_){}dragPan=null}};$("#im").onpointerup=endPan;$("#im").onpointercancel=endPan;
  $("#xx").onclick=()=>{if(confirm("¿Salir de este examen? Las respuestas ya registradas se conservan."))home()};
  $("#ph").onerror=async()=>{if(!photo.dataset.healed){photo.dataset.healed="1";if(await healImage(photo,q.it.e.id))return}ready();$("#im").onclick=null;$("#im").style.cursor="default";$$(".opt").forEach(button=>button.disabled=true);SEL=null;$("#ck").disabled=true;$("#im").innerHTML='<div style="padding:20px;text-align:center;color:#fff"><p>La imagen no cargó. Esta pregunta no cuenta.</p><button class="btn sm s" id="rt">Reintentar</button> <button class="btn sm s" id="sb">Sustituir</button></div>';
   $("#rt").onclick=show;$("#sb").onclick=()=>{const m=S.spare.shift();if(m)S.q[S.i]={it:m,question:null};else S.q.splice(S.i,1);show()}};
@@ -2032,7 +2028,7 @@ async function hpSearchPeople(){
 async function hpSendFriend(id,b){b.disabled=true;try{const r=await SUPA.from('friend_requests').insert({sender_id:CURRENT_USER.id,receiver_id:id,status:'pending'});if(r.error)throw r.error;hpToast('Solicitud de amistad enviada','🤝');await hpRenderFriends();await hpSearchPeople()}catch(e){hpToast(e.code==='23505'?'Ya existe una solicitud entre ustedes.':'No se pudo enviar la solicitud.','⚠️');b.disabled=false}}
 async function hpAcceptFriend(f){try{const a=await SUPA.rpc('accept_friend_request',{request_id:f.requestId});if(a.error)throw a.error;hpToast('¡Ahora son amigos!','🤝');hpRenderFriends()}catch(e){hpToast('No se pudo aceptar. Comprueba la migración SQL.','⚠️')}}
 async function hpRenderFriends(){
- hpStartInboxNotifications();const box=$('#hp-friends');if(!box)return;box.textContent='Cargando…';
+ const box=$('#hp-friends');if(!box)return;box.textContent='Cargando…';
  try{await hpLoadFriends();box.innerHTML=HP_FRIENDS.length?HP_FRIENDS.map(f=>`<div class="tl"><div class="hp-person"><span class="rank-avatar">👤</span><span><b>${hpSafe(f.name)}</b><small class="mu" style="display:block">${f.state==='friend'?'Amigo':f.state==='incoming'?'Solicitud recibida':'Solicitud enviada'}</small></span></div><div class="row">${f.state==='friend'?`<button class="btn sm" data-hp-chat="${hpSafe(f.id)}">Mensaje</button>`:f.state==='incoming'?`<button class="btn sm" data-hp-accept="${hpSafe(f.id)}">Aceptar</button>`:'<span class="hp-pill">Pendiente</span>'}</div></div>`).join(''):'<div class="empty"><span style="font-size:2rem">🤝</span><b>Aún no hay amigos</b><span>Busca estudiantes por su nombre para enviar una solicitud.</span></div>';
  box.querySelectorAll('[data-hp-chat]').forEach(b=>b.onclick=()=>hpOpenChat(b.dataset.hpChat));box.querySelectorAll('[data-hp-accept]').forEach(b=>b.onclick=()=>hpAcceptFriend(HP_FRIENDS.find(f=>f.id===b.dataset.hpAccept)));
  }catch(e){box.innerHTML='<p class="mu">No se pudo cargar la comunidad. Abre la migración <b>supabase-social.sql</b> y ejecútala en Supabase SQL Editor.</p>'}
@@ -2049,20 +2045,6 @@ async function hpLoadMessages(id){
  list.innerHTML=(r.data||[]).map(m=>`<div class="hp-msg ${m.sender_id===CURRENT_USER.id?'mine':''}">${hpSafe(m.body)}<small>${new Date(m.created_at).toLocaleString('es-MX',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'})}</small></div>`).join('')||'<p class="mu">Empieza la conversación 👋</p>';list.scrollTop=list.scrollHeight;
  }catch(e){list.innerHTML='<p class="mu">No se pudieron cargar mensajes. Revisa la configuración SQL/RLS.</p>'}
 }
-// Realtime inbox: notify on incoming DMs even when the conversation is not open.
-let HP_INBOX_CHANNEL=null,HP_NOTIFIED_MESSAGE_IDS=new Set();
-function hpStartInboxNotifications(){
- if(!CURRENT_USER?.id||!SUPA||HP_INBOX_CHANNEL)return;
- try{HP_INBOX_CHANNEL=SUPA.channel('hp-inbox-'+CURRENT_USER.id)
-  .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages',filter:'receiver_id=eq.'+CURRENT_USER.id},async payload=>{
-   const m=payload.new;if(!m||m.receiver_id!==CURRENT_USER.id||m.sender_id===CURRENT_USER.id||HP_NOTIFIED_MESSAGE_IDS.has(m.id))return;
-   HP_NOTIFIED_MESSAGE_IDS.add(m.id);
-   let name='Un amigo';try{const f=HP_FRIENDS.find(x=>x.id===m.sender_id);if(f)name=f.name;else{const pr=await SUPA.rpc('get_social_profile_names',{target_ids:[m.sender_id]});name=pr.data?.[0]?.display_name||name}}catch(e){}
-   if(HP_ACTIVE_CHAT===m.sender_id){hpLoadMessages(m.sender_id);return}
-   hpShowNotification('Nuevo mensaje de '+name,String(m.body||'Te ha enviado un mensaje').slice(0,110),'💬','social',m.sender_id);
-  }).subscribe();
- }catch(e){console.warn('No se pudo activar la bandeja en tiempo real',e)}
-}
 /* Store previous rank points to detect a genuine overtake on the next result screen. */
 async function hpRankSnapshot(){
  try{const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return null;return r.data.map((x,i)=>({id:x.user_id||x.userId||x.uid||x.id,alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id)}catch(e){return null}
@@ -2071,16 +2053,17 @@ async function hpCheckOvertakes(){
  try{
   const before=await S?.rankBefore;if(!before?.length)return;
   const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return;
-  const idOf=x=>String(x.user_id||x.userId||x.uid||x.id||'');
-  const after=r.data.map((x,i)=>({id:idOf(x),alias:x.alias||x.display_name||x.name||'Estudiante',pos:Number(x.pos)||i+1,points:Number(x.points)||0})).filter(x=>x.id);
-  const old=before.map((x,i)=>({...x,id:String(x.id),pos:Number(x.pos)||i+1}));
-  const oldMe=old.find(x=>x.id===String(CURRENT_USER.id)),newMe=after.find(x=>x.id===String(CURRENT_USER.id));if(!oldMe||!newMe)return;
-  const oldPos=new Map(old.map(x=>[x.id,x.pos])),newPos=new Map(after.map(x=>[x.id,x.pos]));
-  // Notify each real position crossing, regardless of who initiated the change.
-  const overtook=after.filter(x=>x.id!==newMe.id&&oldPos.has(x.id)&&oldPos.get(x.id)>oldMe.pos&&x.pos<newMe.pos);
-  const overtaken=after.filter(x=>x.id!==newMe.id&&oldPos.has(x.id)&&oldPos.get(x.id)<oldMe.pos&&x.pos>newMe.pos);
-  if(overtook.length){const x=overtook.sort((a,b)=>a.pos-b.pos)[0];hpShowNotification('¡Adelantaste a '+x.alias+'!','Ahora estás por delante en el ranking.','🔥','ranking')}
-  else if(overtaken.length){const x=overtaken.sort((a,b)=>b.pos-a.pos)[0];hpShowNotification('¡'+x.alias+' te adelantó!','Te ha superado en el ranking de rachas.','⚡','ranking')}
+  const idOf=x=>x.user_id||x.userId||x.uid||x.id||null;
+  const after=r.data.map((x,i)=>({...x,id:idOf(x),alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id);
+  const old=before.map((x,i)=>({...x,pos:Number(x.pos)||i+1}));
+  const oldMe=old.find(x=>x.id===CURRENT_USER.id),newMe=after.find(x=>x.id===CURRENT_USER.id);
+  if(!oldMe||!newMe)return;
+  const previouslyAbove=old.filter(x=>x.id!==CURRENT_USER.id&&x.pos<oldMe.pos);
+  const nowAbove=new Set(after.filter(x=>x.pos<newMe.pos).map(x=>x.id));
+  const passed=previouslyAbove.filter(x=>!nowAbove.has(x.id));
+  if(!passed.length)return;
+  const target=passed.sort((a,b)=>b.pos-a.pos)[0];
+  hpShowNotification('¡Superaste una racha!','Ahora estás por delante de '+target.alias+'.','🔥','ranking');
  }catch(e){console.warn('No se pudo comprobar el cambio de ranking',e)}
 }
 </script>
