@@ -1090,13 +1090,13 @@ body.mo { overflow: hidden; }
 
 /* Quiz compacto: evitar scroll vacío en móviles */
 .qv > h2 { margin: 10px 0 8px; font-size: clamp(1.05rem, 4.5vw, 1.3rem); line-height: 1.25; }
-.qv .img { min-height: 110px; max-height: 40vh; }
-.qv .img img { max-height: 38vh; object-fit: contain; }
+.qv .img { min-height: 180px; max-height: 64vh; }
+.qv .img img { max-height: 62vh; width:100%; object-fit: contain; }
 .qv .og { gap: 7px; margin-top: 9px; }
 .qv .opt { min-height: 42px; padding-top: 7px; padding-bottom: 7px; }
 .qv .hint { margin: 7px 0; font-size: var(--fs-xs); }
 .qv .sheet { margin-top: 8px; }
-@media (max-height: 740px) { .qv .img { min-height: 90px; max-height: 32vh; } .qv .img img { max-height: 30vh; } .qv > h2 { margin: 6px 0; } }
+@media (max-height: 740px) { .qv .img { min-height: 150px; max-height: 54vh; } .qv .img img { max-height: 52vh; } .qv > h2 { margin: 6px 0; } }
 /* Quiz: lupa visible, etiquetas de acierto/error (no solo color), hoja de feedback */
 .img { position: relative; touch-action: pan-y; }
 .img.zoomed { cursor: grab; touch-action: none; }
@@ -1254,9 +1254,9 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation}
  .opt{min-height:48px;padding:10px;gap:8px;font-size:.94rem;line-height:1.3}
  .opt kbd{flex:none;min-width:25px}
  .opt .ot{white-space:normal;text-align:right;font-size:.7rem;max-width:44%;}
- .img{min-height:120px}
- .img img{max-height:42vh;max-width:100%;height:auto;object-fit:contain}
- #vp{max-height:38vh}
+ .img{min-height:180px;max-height:64vh}
+ .img img{max-height:62vh;max-width:100%;width:100%;height:auto;object-fit:contain}
+ #vp{max-height:62vh}
  .sheet{padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px))}
  .sheet h3{font-size:1.08rem}
  .sheet .fbt{max-height:17vh}
@@ -1565,8 +1565,8 @@ const avKey=()=>"hp_av_"+(CURRENT_USER?.id||""),avGet=()=>{
 const inits=()=>{const p=avGet();if(p)return `<img src="${esc(p)}" alt="Foto de perfil">`;const n=(CURRENT_PROFILE?.display_name||"").trim();return n?esc(n.split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()):`<span aria-hidden="true">👤</span>`};
 function modal(h){$(".modal")?.remove();const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${h}</div>`;m.onclick=e=>{if(e.target===m)m.remove()};document.body.appendChild(m);m.querySelector("button,select,input")?.focus();return m}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")$(".modal")?.remove()});
-function hpNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.setValueAtTime(880,c.currentTime);o.frequency.setValueAtTime(1175,c.currentTime+.09);g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.13,c.currentTime+.025);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.24);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.25);o.onended=()=>c.close()}catch(e){}}
-function hpShowNotification(title,detail,icon='🔔',action='profile'){let b=$("#toasts");if(!b){b=document.createElement("div");b.id="toasts";b.setAttribute("role","status");document.body.appendChild(b)}const d=document.createElement("button");d.type="button";d.className="toast hp-notice";d.setAttribute("aria-label",title+". Haz click para ver.");d.innerHTML=`<span class="toast-emoji" aria-hidden="true">${icon}</span><span class="hp-notice-copy"><b>${esc(title)}</b><small>${esc(detail||"Haz click para ver")}</small><u>Haz click para ver</u></span>`;d.style.pointerEvents="auto";d.onclick=()=>{d.remove();if(action==='ranking')rankView();else perfilView()};b.appendChild(d);hpNotificationSound();setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),350)},7000)}
+function hpNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=window.__hpNoticeAudio||(window.__hpNoticeAudio=new C());const play=()=>{const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.type="sine";o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1175,t+.09);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.25)};if(c.state==="suspended")c.resume().then(play).catch(()=>{});else play()}catch(e){}}
+function hpShowNotification(title,detail,icon='🔔',action='profile'){let b=$("#toasts");if(!b){b=document.createElement("div");b.id="toasts";b.setAttribute("role","status");document.body.appendChild(b)}const d=document.createElement("button");d.type="button";d.className="toast hp-notice";d.setAttribute("aria-label",title+". Haz click para ver.");d.innerHTML=`<span class="toast-emoji" aria-hidden="true">${icon}</span><span class="hp-notice-copy"><b>${esc(title)}</b><small>${esc(detail||"Haz click para ver")}</small><u>Haz click para ver</u></span>`;d.style.pointerEvents="auto";d.onclick=()=>{d.remove();if(action==='ranking'&&typeof rankView==='function')rankView();else if(typeof perfilView==='function')perfilView()};b.appendChild(d);hpNotificationSound();setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),350)},7000)}
 function toast(t){hpShowNotification(t,"Consulta tu progreso y logros","🏆","profile")}
 function achList(){const it=questionItems({temas:Object.keys(T),mod:"M"},BANK),dn=it.filter(x=>ANSWERED.has(itKey(x))).length,tis=Object.entries(T).map(([k,v])=>{const c=it.filter(x=>x.e.tema===k);return{k,v,qn:c.length,ok:c.length>0&&c.every(x=>ANSWERED.has(itKey(x)))}}).filter(x=>x.qn);
  return [["a1","Primera respuesta","Contesta una pregunta",dn>=1,"🌱"],["a10","10 preguntas","Contesta 10 preguntas distintas",dn>=10,"🎯"],["a100","100 preguntas","Contesta 100 preguntas distintas",dn>=100,"💯"],["tw","Primer tejido completado","Contesta todas las preguntas de un tejido",tis.some(x=>x.ok),"🧠"]].map(([id,t,d,ok,emoji])=>({id,t,d,ok,emoji,c:"var(--o)"})).concat(tis.map(x=>({id:"t-"+x.k,t:`Dominio: ${x.v}`,d:`Contesta las ${x.qn} preguntas`,ok:x.ok,emoji:EM[x.k],c:COL[x.k]})))}
@@ -1704,9 +1704,9 @@ async function show(){
  let z=0,panX=0,panY=0,dragPan=null,wasDragged=false;
  const zoomImage=(on,origin)=>{z=on?1:0;if(!z){panX=0;panY=0}const wrap=$("#zw"),im=$("#im");wrap.style.transformOrigin=origin||"50% 50%";wrap.style.transform=z?`translate(${panX}px, ${panY}px) scale(2.4)`:"none";im.classList.toggle("zoomed",!!z);$("#zbtn").setAttribute("aria-pressed",String(!!z));$("#zbtn span").textContent=z?"Reducir":"Ampliar imagen";$("#zbtn").setAttribute("aria-label",z?"Reducir imagen":"Ampliar imagen")};
  $("#im").onclick=e=>{if(wasDragged){wasDragged=false;return}if(e.target.closest(".zb")){zoomImage(!z,"50% 50%");return}if(e.target.closest("img")||e.target.closest("#zw")){const r=$("#im").getBoundingClientRect();zoomImage(!z,`${100*(e.clientX-r.left)/Math.max(1,r.width)}% ${100*(e.clientY-r.top)/Math.max(1,r.height)}%`)}};
- $("#im").onpointerdown=e=>{if(!z||e.target.closest(".zb"))return;dragPan={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false};try{$("#im").setPointerCapture(e.pointerId)}catch(_){} };
- $("#im").onpointermove=e=>{if(!dragPan||dragPan.id!==e.pointerId)return;const dx=e.clientX-dragPan.x,dy=e.clientY-dragPan.y;if(Math.abs(dx)+Math.abs(dy)>3){dragPan.moved=true;wasDragged=true}if(dragPan.moved){panX=dragPan.px+dx;panY=dragPan.py+dy;$("#zw").style.transform=`translate(${panX}px, ${panY}px) scale(2.4)`}};
- const endPan=e=>{if(dragPan&&dragPan.id===e.pointerId){if(!dragPan.moved)wasDragged=false;dragPan=null}};$("#im").onpointerup=endPan;$("#im").onpointercancel=endPan;
+ $("#im").onpointerdown=e=>{if(!z||e.target.closest(".zb"))return;dragPan={id:e.pointerId,x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false};try{e.preventDefault();$("#im").setPointerCapture(e.pointerId)}catch(_){}};
+ $("#im").onpointermove=e=>{if(!dragPan||dragPan.id!==e.pointerId)return;const dx=e.clientX-dragPan.x,dy=e.clientY-dragPan.y;if(Math.abs(dx)+Math.abs(dy)>3){dragPan.moved=true;wasDragged=true}if(dragPan.moved){const wrap=$("#zw"),im=$("#im"),w=im.clientWidth,h=im.clientHeight,iw=wrap.scrollWidth,ih=wrap.scrollHeight,scale=2.4;const limX=Math.max(0,(iw*scale-w)/2),limY=Math.max(0,(ih*scale-h)/2);panX=Math.max(-limX,Math.min(limX,dragPan.px+dx));panY=Math.max(-limY,Math.min(limY,dragPan.py+dy));wrap.style.transform=`translate3d(${panX}px,${panY}px,0) scale(${scale})`}};
+ const endPan=e=>{if(dragPan&&dragPan.id===e.pointerId){if(!dragPan.moved)wasDragged=false;try{if($("#im").hasPointerCapture(e.pointerId))$("#im").releasePointerCapture(e.pointerId)}catch(_){}dragPan=null}};$("#im").onpointerup=endPan;$("#im").onpointercancel=endPan;
  $("#xx").onclick=()=>{if(confirm("¿Salir de este examen? Las respuestas ya registradas se conservan."))home()};
  $("#ph").onerror=async()=>{if(!photo.dataset.healed){photo.dataset.healed="1";if(await healImage(photo,q.it.e.id))return}ready();$("#im").onclick=null;$("#im").style.cursor="default";$$(".opt").forEach(button=>button.disabled=true);SEL=null;$("#ck").disabled=true;$("#im").innerHTML='<div style="padding:20px;text-align:center;color:#fff"><p>La imagen no cargó. Esta pregunta no cuenta.</p><button class="btn sm s" id="rt">Reintentar</button> <button class="btn sm s" id="sb">Sustituir</button></div>';
   $("#rt").onclick=show;$("#sb").onclick=()=>{const m=S.spare.shift();if(m)S.q[S.i]={it:m,question:null};else S.q.splice(S.i,1);show()}};
