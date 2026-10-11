@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/image-watchdog", "schedule": "0 12 * * *" }
+  ]
+}
