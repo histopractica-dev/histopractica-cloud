@@ -491,7 +491,211 @@ exports.handler = wrap(["POST"], async (event) => {
 };
 
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler };
+__defs["_lib/guard"] = function (module, exports, require) {
+// Seguridad de imágenes: copia de cada foto en Postgres (tabla image_backups) y restauración al bucket histology-images.
+const crypto = require("crypto");
+const { rest, restAll, baseUrl, serviceKey, HttpError, enc } = require("./supa");
+const { sendEmail, esc } = require("./email");
+
+const BUCKET = "histology-images", MIN_BYTES = 1000;
+const encPath = (p) => String(p).split("/").map(encodeURIComponent).join("/");
+const sHeaders = (extra) => ({ apikey: serviceKey(), Authorization: `Bearer ${serviceKey()}`, ...(extra || {}) });
+const publicUrl = (p) => `${baseUrl()}/storage/v1/object/public/${BUCKET}/${encPath(p)}`;
+
+function looksImage(buf, type) {
+  if (!buf || buf.length < MIN_BYTES) return false;
+  if (/svg/i.test(type || "")) return buf.slice(0, 2000).toString("utf8").includes("<svg");
+  const h4 = buf.slice(0, 4).toString("latin1");
+  return (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) || (buf[0] === 0x89 && h4.slice(1) === "PNG") || h4 === "GIF8" || (h4 === "RIFF" && buf.slice(8, 12).toString("latin1") === "WEBP");
+}
+
+const tableHint = (e) => {
+  if (/image_backups|PGRST205|42P01/i.test(String((e && e.message) || ""))) throw new HttpError(500, "Falta crear la tabla image_backups en Supabase. Ejecuta el archivo supabase-image-backups.sql en el SQL Editor.");
+  throw e;
+};
+
+async function listStorage() {
+  const map = new Map();
+  for (let offset = 0; ; offset += 1000) {
+    const res = await fetch(`${baseUrl()}/storage/v1/object/list/${BUCKET}`, { method: "POST", headers: sHeaders({ "Content-Type": "application/json" }), body: JSON.stringify({ prefix: "", limit: 1000, offset, sortBy: { column: "name", order: "asc" } }) });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !Array.isArray(data)) throw new HttpError(502, `Storage no respondió bien al listar el bucket (${res.status}).`);
+    for (const o of data) if (o && o.name && o.id !== null) map.set(o.name, o.metadata && o.metadata.size != null ? Number(o.metadata.size) : null);
+    if (data.length < 1000) return map;
+  }
+}
+
+async function downloadObject(path) {
+  const res = await fetch(`${baseUrl()}/storage/v1/object/authenticated/${BUCKET}/${encPath(path)}`, { headers: sHeaders() });
+  if (!res.ok) return null;
+  return { buf: Buffer.from(await res.arrayBuffer()), type: (res.headers.get("content-type") || "image/jpeg").split(";")[0] };
+}
+
+async function uploadObject(path, buf, type) {
+  const res = await fetch(`${baseUrl()}/storage/v1/object/${BUCKET}/${encPath(path)}`, { method: "POST", headers: sHeaders({ "Content-Type": type || "image/jpeg", "x-upsert": "true", "cache-control": "max-age=3600" }), body: buf });
+  if (!res.ok) { const t = await res.text().catch(() => ""); throw new HttpError(502, `No se pudo subir ${path} (${res.status}) ${t.slice(0, 120)}`); }
+}
+
+async function storeBackup(id, path, buf, type) {
+  const row = { question_id: id, image_path: path, content_type: type || "image/jpeg", data: buf.toString("base64"), bytes: buf.length, sha256: crypto.createHash("sha256").update(buf).digest("hex"), updated_at: new Date().toISOString() };
+  try { await rest("image_backups?on_conflict=question_id", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: row }); } catch (e) { tableHint(e); }
+}
+async function getBackup(id) {
+  try { const rows = await rest(`image_backups?question_id=eq.${enc(id)}&select=*&limit=1`); return (rows && rows[0]) || null; } catch (e) { tableHint(e); }
+}
+async function backupIndex() {
+  try { const rows = await restAll("image_backups?select=question_id,image_path,bytes&order=question_id.asc"); return new Map((rows || []).map((r) => [r.question_id, r])); } catch (e) { tableHint(e); }
+}
+async function restoreFrom(backup, path) {
+  const buf = Buffer.from(String(backup.data || ""), "base64");
+  if (!looksImage(buf, backup.content_type)) throw new HttpError(500, "La copia guardada no parece una imagen válida.");
+  await uploadObject(path, buf, backup.content_type);
+}
+
+// Procesa items con n trabajadores hasta el límite de tiempo; devuelve cuántos quedaron sin procesar.
+async function pool(items, n, fn, deadline) {
+  let i = 0;
+  const worker = async () => { while (i < items.length) { if (Date.now() > deadline) return; await fn(items[i++]); } };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, worker));
+  return Math.max(0, items.length - i);
+}
+
+// Revisa todas las imágenes: restaura las que faltan, crea las copias que faltan y comprueba que se sirvan públicamente.
+async function runCheck({ budgetMs } = {}) {
+  const deadline = Date.now() + (budgetMs || Number(process.env.GUARD_BUDGET_MS) || 8000);
+  const qs = (await restAll("questions?select=id,image_path&image_path=not.is.null&order=id.asc")) || [];
+  const backups = await backupIndex();
+  const files = await listStorage();
+  const r = { total: qs.length, ok: 0, restored: [], missing: [], unserved: [], backedUp: 0, backupPending: 0, notChecked: 0, failed: [] };
+  const present = [], absent = [];
+  for (const q of qs) { const sz = files.get(q.image_path); (files.has(q.image_path) && (sz === null || sz >= MIN_BYTES) ? present : absent).push(q); }
+
+  r.notChecked += await pool(absent, 4, async (q) => {
+    if (!backups.has(q.id)) { r.missing.push(q.id); return; }
+    try { await restoreFrom(await getBackup(q.id), q.image_path); r.restored.push(q.id); }
+    catch (e) { r.failed.push({ id: q.id, error: e.message }); }
+  }, deadline);
+
+  r.backupPending = await pool(present.filter((q) => !backups.has(q.id)), 6, async (q) => {
+    try {
+      const d = await downloadObject(q.image_path);
+      if (!d || !looksImage(d.buf, d.type)) throw new Error("archivo ilegible o no es una imagen");
+      await storeBackup(q.id, q.image_path, d.buf, d.type); r.backedUp++;
+    } catch (e) { r.failed.push({ id: q.id, error: e.message }); }
+  }, deadline);
+
+  r.notChecked += await pool(present, 12, async (q) => {
+    try {
+      const res = await fetch(publicUrl(q.image_path), { headers: { Range: "bytes=0-0" }, signal: AbortSignal.timeout(6000) });
+      try { res.body && (await res.body.cancel()); } catch (e) {}
+      res.ok ? r.ok++ : r.unserved.push(q.id);
+    } catch (e) { r.unserved.push(q.id); }
+  }, deadline);
+  return r;
+}
+
+const hasProblems = (r) => !!(r.restored.length || r.missing.length || r.unserved.length || r.failed.length);
+
+async function emailReport(r) {
+  const block = (title, arr) => (arr.length ? { html: `<h3 style="margin:16px 0 6px">${esc(title)} (${arr.length})</h3><p style="word-break:break-all;font-family:monospace;font-size:13px">${arr.map((x) => esc(x)).join("<br>")}</p>`, text: `\n${title} (${arr.length}):\n${arr.join("\n")}\n` } : { html: "", text: "" });
+  const parts = [
+    block("Restauradas automáticamente desde la copia", r.restored),
+    block("SIN archivo y SIN copia: hay que volver a subirlas", r.missing),
+    block("El archivo existe pero no se sirve públicamente (revisa que el bucket sea público)", r.unserved),
+    block("Con error", r.failed.map((f) => `${f.id}: ${f.error}`)),
+  ];
+  const summary = `Revisadas: ${r.total} · Bien: ${r.ok} · Copias nuevas: ${r.backedUp}` + (r.notChecked || r.backupPending ? ` · Sin revisar por tiempo: ${r.notChecked + r.backupPending}` : "");
+  const n = r.restored.length + r.missing.length + r.unserved.length + r.failed.length;
+  return sendEmail({
+    subject: `⚠️ HistoPráctica: problemas con ${n} imagen(es) del banco`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:auto;color:#333"><h2 style="margin:0 0 12px">🛡 Revisión diaria de imágenes</h2><p>${esc(summary)}</p>${parts.map((p) => p.html).join("")}</div>`,
+    text: `Revisión diaria de imágenes de HistoPráctica\n\n${summary}\n${parts.map((p) => p.text).join("")}`,
+  });
+}
+const emailFailure = (e) => sendEmail({ subject: "❌ HistoPráctica: no se pudo revisar las imágenes", html: `<div style="font-family:Arial,sans-serif"><h2>❌ La revisión diaria de imágenes falló</h2><p>${esc((e && e.message) || e)}</p></div>`, text: `La revisión diaria de imágenes falló: ${(e && e.message) || e}` });
+
+// Restaura UNA imagen si su archivo falta (lo usa la web cuando una foto no carga).
+const healAt = new Map();
+async function healOne(qid) {
+  if (Date.now() - (healAt.get(qid) || 0) < 30000) return { restored: false, exists: null, throttled: true };
+  if (healAt.size > 500) healAt.clear();
+  healAt.set(qid, Date.now());
+  const rows = await rest(`questions?id=eq.${enc(qid)}&select=id,image_path&limit=1`), q = rows && rows[0];
+  if (!q || !q.image_path) return { restored: false, exists: false };
+  const d = await downloadObject(q.image_path);
+  if (d && looksImage(d.buf, d.type)) return { restored: false, exists: true };
+  const b = await getBackup(q.id);
+  if (!b) return { restored: false, exists: false, noBackup: true };
+  await restoreFrom(b, q.image_path);
+  return { restored: true, exists: false };
+}
+
+module.exports = { looksImage, storeBackup, runCheck, hasProblems, emailReport, emailFailure, healOne };
+
+};
+
+__defs["image-guard"] = function (module, exports, require) {
+// POST /api/image-guard  { action: "check" | "store" | "heal", ... }
+//  check (admin): restaura las fotos que faltan, crea copias pendientes y comprueba que se sirvan
+//  store (admin): guarda la copia de una foto { questionId, contentType, data (base64) }
+//  heal  (sesión): restaura una foto concreta si falta su archivo { questionId }
+const { wrap, json, authenticate, parseBody, rest, enc, HttpError } = require("./_lib/supa");
+const G = require("./_lib/guard");
+
+exports.handler = wrap(["POST"], async (event) => {
+  const { isAdmin } = await authenticate(event);
+  const b = parseBody(event), action = String(b.action || ""), id = String(b.questionId || "");
+  if (action === "heal") {
+    if (!id || id.length > 300) throw new HttpError(400, "Pregunta no válida.");
+    return json(200, { ok: true, ...(await G.healOne(id)) });
+  }
+  if (!isAdmin) throw new HttpError(403, "Solo un administrador puede usar esta función.");
+  if (action === "check") return json(200, { ok: true, ...(await G.runCheck()) });
+  if (action === "store") {
+    if (!id || id.length > 300) throw new HttpError(400, "Pregunta no válida.");
+    const type = /^image\/[a-z0-9.+-]+$/i.test(String(b.contentType || "")) ? String(b.contentType) : "image/jpeg";
+    const data = String(b.data || "");
+    if (!data || data.length > 5000000) throw new HttpError(400, "Imagen vacía o demasiado grande.");
+    const buf = Buffer.from(data, "base64");
+    if (!G.looksImage(buf, type)) throw new HttpError(400, "El archivo no parece una imagen válida.");
+    const rows = await rest(`questions?id=eq.${enc(id)}&select=id,image_path&limit=1`), q = rows && rows[0];
+    if (!q) throw new HttpError(404, "Esa pregunta no existe en la base de datos.");
+    if (!q.image_path) throw new HttpError(400, "Esa pregunta no tiene imagen en Storage.");
+    await G.storeBackup(q.id, q.image_path, buf, type);
+    return json(200, { ok: true, bytes: buf.length });
+  }
+  throw new HttpError(400, "Acción no válida.");
+});
+
+};
+
+__defs["image-watchdog"] = function (module, exports, require) {
+// GET /api/image-watchdog → revisión diaria (Vercel Cron). Restaura lo que falte y avisa por correo si hubo problemas.
+// Autorización: cabecera "Authorization: Bearer <CRON_SECRET>" (Vercel la envía sola) o sesión de administrador.
+const crypto = require("crypto");
+const { wrap, json, authenticate, HttpError } = require("./_lib/supa");
+const G = require("./_lib/guard");
+
+const cronOk = (event) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return false;
+  const got = Buffer.from(String((event.headers && (event.headers.authorization || event.headers.Authorization)) || "")), want = Buffer.from(`Bearer ${secret}`);
+  return got.length === want.length && crypto.timingSafeEqual(got, want);
+};
+
+exports.handler = wrap(["GET", "POST"], async (event) => {
+  if (!cronOk(event)) { const { isAdmin } = await authenticate(event); if (!isAdmin) throw new HttpError(403, "Solo el cron programado o un administrador."); }
+  let report;
+  try { report = await G.runCheck(); }
+  catch (e) { const mail = await G.emailFailure(e).catch((x) => ({ ok: false, error: x.message })); console.error("image-watchdog:", e.message, mail.ok ? "(aviso enviado)" : "(aviso NO enviado: " + mail.error + ")"); throw e; }
+  let email = { sent: false, reason: "sin problemas" };
+  if (G.hasProblems(report)) { const r = await G.emailReport(report); email = r.ok ? { sent: true } : { sent: false, error: r.error }; }
+  return json(200, { ok: true, ...report, email });
+});
+
+};
+
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler };
 
 module.exports = async (req, res) => {
   try {
