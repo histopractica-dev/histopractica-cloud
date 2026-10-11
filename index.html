@@ -1447,7 +1447,7 @@ const setTheme=p=>{const h=document.documentElement;try{p==="auto"?localStorage.
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themePref()==="auto")setTheme("auto")});
 document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
 new MutationObserver(()=>{window.scrollTo(0,0);app.classList.remove("hp-pop");void app.offsetWidth;app.classList.add("hp-pop")}).observe(app,{childList:true});
-const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
+const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
 const qc=e=>(e.subtipo?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
 const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
@@ -1557,7 +1557,7 @@ function achList(){const it=questionItems({temas:Object.keys(T),mod:"M"},BANK),d
 function checkAch(){if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;const key="hp_ach_"+CURRENT_USER.id,got=achList().filter(x=>x.ok),seen=rd(key,null);if(seen===null){put(key,got.map(x=>x.id));return}const nw=got.filter(x=>!seen.includes(x.id));if(nw.length){put(key,seen.concat(nw.map(x=>x.id)));nw.forEach(x=>toast("Logro desbloqueado: "+x.t))}}
 function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({temas:Object.keys(T),mod:"M"},BANK),done=items.filter(it=>ANSWERED.has(itKey(it))).length,r=SYNC_READY,v=x=>r?x:SK,ac=achList(),got=ac.filter(x=>x.ok).length;
  app.innerHTML=`<div id="perfil"><div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h1 class="hero" style="margin:0;flex:1;font-size:1.5rem">Perfil</h1></div>
- <div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:76px;height:76px;font-size:1.5rem;cursor:default">${inits()}</span><div style="flex:1;min-width:160px"><b style="font-size:1.2rem">${esc(CURRENT_PROFILE?.display_name||"Estudiante")}</b><div class="mu">${isAdmin()?"Administrador":"Estudiante"}</div><div class="row" style="margin-top:8px"><button class="btn sm s" id="av-b" type="button">Cambiar foto</button>${avGet()?'<button class="btn sm s" id="av-d" type="button">Quitar</button>':""}</div></div><input type="file" id="av-f" accept="image/*" hidden><p id="av-m" class="r" role="alert" style="width:100%;margin:0"></p></div>
+ <div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:76px;height:76px;font-size:1.5rem;cursor:default">${inits()}</span><div style="flex:1;min-width:160px"><b style="font-size:1.2rem">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||"Estudiante")}</b><div class="mu">${isAdmin()?"Administrador":"Estudiante"}</div><div class="row" style="margin-top:8px"><button class="btn sm s" id="av-b" type="button">Cambiar foto</button>${avGet()?'<button class="btn sm s" id="av-d" type="button">Quitar</button>':""}</div></div><input type="file" id="av-f" accept="image/*" hidden><p id="av-m" class="r" role="alert" style="width:100%;margin:0"></p></div>
  <div class="tgrid">${[["XP",v(st.xp||0)],["Mejor racha",v(st.best||0)],["Prácticas",v(st.s||0)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
  <div id="sync-status">${syncStatus()}</div>
  <div class="sub">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag">${ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}</div>
@@ -1943,10 +1943,16 @@ button:focus-visible{outline-offset:3px}
 /* Discreet, low-volume UI plup. Audio only starts after a user gesture. */
 let HP_UI_AUDIO=null,HP_SOUND_ON=true;
 function hpPlup(){
- if(!HP_SOUND_ON||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;HP_UI_AUDIO=HP_UI_AUDIO||new AC();if(HP_UI_AUDIO.state==='suspended')HP_UI_AUDIO.resume();const c=HP_UI_AUDIO,t=c.currentTime+.005,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(360,t+.055);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.035,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.075);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.08)}catch(e){}
+ if(!HP_SOUND_ON)return;
+ try{
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  HP_UI_AUDIO=HP_UI_AUDIO||new AC();
+  const play=()=>{const c=HP_UI_AUDIO,t=c.currentTime+.005,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(360,t+.055);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.035,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.075);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.08)};
+  if(HP_UI_AUDIO.state==='suspended'){HP_UI_AUDIO.resume().then(play).catch(()=>{});return}play();
+ }catch(e){}
 }
-document.addEventListener('click',e=>{const b=e.target.closest('button,[role="button"],#nav button,summary');if(b&&!b.disabled&&!b.dataset.noPlup)hpPlup()});
+// Capture phase means the sound still fires if a button handler stops event bubbling.
+document.addEventListener('click',e=>{const b=e.target.closest('button,[role="button"],summary,a,input[type="checkbox"],input[type="radio"],label.ch,select');if(b&&!b.disabled&&!b.dataset.noPlup)hpPlup()},true);
 function hpConfetti(){
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const root=document.createElement('div');root.className='hp-confetti';root.setAttribute('aria-hidden','true');
@@ -1968,11 +1974,15 @@ async function hpLoadFriends(){
  ]);
  if(incoming.error||outgoing.error||accepted.error)throw (incoming.error||outgoing.error||accepted.error);
  const ids=[...new Set([...(incoming.data||[]).map(x=>x.sender_id),...(outgoing.data||[]).map(x=>x.receiver_id),...(accepted.data||[]).map(x=>x.user_id===CURRENT_USER.id?x.friend_id:x.user_id)])].filter(x=>x!==CURRENT_USER.id);
- let profiles=[];if(ids.length){const r=await SUPA.from('profiles').select('id,display_name').in('id',ids);if(r.error)throw r.error;profiles=r.data||[]}
+ let profiles=[];if(ids.length){const r=await SUPA.rpc('get_social_profile_names',{target_ids:ids});if(r.error)throw r.error;profiles=r.data||[]}
  const names=new Map(profiles.map(p=>[p.id,p.display_name||'Estudiante']));
- HP_FRIENDS=(accepted.data||[]).map(x=>{const id=x.user_id===CURRENT_USER.id?x.friend_id:x.user_id;return{id,name:names.get(id)||'Estudiante',state:'friend'}})
- .concat((incoming.data||[]).map(x=>({id:x.sender_id,name:names.get(x.sender_id)||'Estudiante',state:'incoming',requestId:x.id})))
- .concat((outgoing.data||[]).map(x=>({id:x.receiver_id,name:names.get(x.receiver_id)||'Estudiante',state:'outgoing',requestId:x.id})));
+ const byPerson=new Map();
+ // friendships contains reciprocal rows (A->B and B->A); collapse them into one entry.
+ for(const x of accepted.data||[]){const id=x.user_id===CURRENT_USER.id?x.friend_id:x.user_id;if(id!==CURRENT_USER.id)byPerson.set(id,{id,name:names.get(id)||'Estudiante',state:'friend'});}
+ // A friendship wins over any stale pending request for the same person.
+ for(const x of incoming.data||[]){if(!byPerson.has(x.sender_id))byPerson.set(x.sender_id,{id:x.sender_id,name:names.get(x.sender_id)||'Estudiante',state:'incoming',requestId:x.id});}
+ for(const x of outgoing.data||[]){if(!byPerson.has(x.receiver_id))byPerson.set(x.receiver_id,{id:x.receiver_id,name:names.get(x.receiver_id)||'Estudiante',state:'outgoing',requestId:x.id});}
+ HP_FRIENDS=[...byPerson.values()];
  return HP_FRIENDS;
 }
 function socialView(){
@@ -1985,7 +1995,7 @@ function socialView(){
 async function hpSearchPeople(){
  const q=$('#hp-friend-search').value.trim(),status=$('#hp-search-status'),box=$('#hp-search-results');if(q.length<2){status.textContent='Escribe al menos 2 caracteres.';return}
  status.textContent='Buscando…';box.innerHTML='';
- try{const r=await SUPA.from('profiles').select('id,display_name').ilike('display_name','%'+q.replace(/[%_]/g,'')+'%').neq('id',CURRENT_USER.id).limit(12);if(r.error)throw r.error;
+ try{const r=await SUPA.rpc('search_students',{search_text:q});if(r.error)throw r.error;
  const existing=new Set(HP_FRIENDS.map(x=>x.id));box.innerHTML=(r.data||[]).map(p=>`<div class="tl"><div class="hp-person"><span class="rank-avatar">👤</span><b>${hpSafe(p.display_name||'Estudiante')}</b></div><button class="btn sm s" data-hp-add="${hpSafe(p.id)}" ${existing.has(p.id)?'disabled':''}>${existing.has(p.id)?(HP_FRIENDS.find(f=>f.id===p.id)?.state==='friend'?'Amigo':HP_FRIENDS.find(f=>f.id===p.id)?.state==='outgoing'?'Enviada':'Responder en solicitudes'):'Añadir'}</button></div>`).join('')||'<p class="mu">No encontramos estudiantes con ese nombre.</p>';box.querySelectorAll('[data-hp-add]').forEach(b=>b.onclick=()=>hpSendFriend(b.dataset.hpAdd,b));
  status.textContent=`${(r.data||[]).length} resultado(s).`;
  }catch(e){status.textContent='No se pudo buscar. Ejecuta la migración social de Supabase y revisa las políticas RLS.'}
