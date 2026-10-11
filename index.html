@@ -127,15 +127,45 @@ async function refreshRemoteBank(){
  })));
  loadBank();
 }
+/* ---------- Imágenes: siempre una copia propia en Supabase Storage ---------- */
+/* Descarga una imagen (con reintentos). Lanza error si no es una imagen o el sitio la bloquea. */
+async function fetchImageBlob(url,tries=3){
+ let last=Error("sin respuesta");
+ for(let k=0;k<tries;k++){
+  try{const r=await fetch(url);
+   if(r.ok){const b=await r.blob();if(/^image\//.test(b.type))return b;last=Error("no es una imagen");break}
+   last=Error("HTTP "+r.status);if(r.status===404||r.status===403||r.status===410)break
+  }catch(x){last=x}
+  await new Promise(s=>setTimeout(s,900*(k+1)))
+ }
+ throw last
+}
+/* Sube un blob al bucket y devuelve la ruta (image_path). */
+async function putImage(id,blob){
+ const ext=(blob.type.split("/")[1]||"jpg").replace("jpeg","jpg").replace("+xml",""),path=`${String(id).replace(/[^a-zA-Z0-9_-]/g,"_")}.${ext}`;
+ const {error}=await SUPA.storage.from("histology-images").upload(path,blob,{upsert:true,contentType:blob.type||"image/jpeg",cacheControl:"3600"});
+ if(error)throw error;return path
+}
+/* Pide a Commons un enlace nuevo para una imagen "commons-<pageid>". */
+async function freshCommonsUrl(id){
+ const m=/^commons-(\d+)$/.exec(String(id));if(!m)return null;
+ try{const d=await (await fetch(`https://commons.wikimedia.org/w/api.php?action=query&pageids=${m[1]}&prop=imageinfo&iiprop=url&iiurlwidth=1000&format=json&origin=*`)).json();
+  const i=Object.values(d.query?.pages||{})[0]?.imageinfo?.[0];return i?.thumburl||null}catch(x){return null}
+}
 async function storeQuestionOnSupabase(e){
  if(!isAdmin())throw new Error("Solo el administrador puede modificar el banco.");
  let imagePath=e._image_path||null,externalUrl=null;
  if(String(e.url||"").startsWith("data:image/")){
    const response=await fetch(e.url);const blob=await response.blob();const ext=blob.type.split("/")[1]?.replace("jpeg","jpg")||"jpg";imagePath=`${String(e.id).replace(/[^a-zA-Z0-9_-]/g,"_")}.${ext}`;
    const {error:upError}=await SUPA.storage.from("histology-images").upload(imagePath,blob,{upsert:true,contentType:blob.type||"image/jpeg",cacheControl:"3600"});if(upError)throw upError;
- }else if(!imagePath){externalUrl=e.url;}
+ }else if(!imagePath){
+   /* Enlace externo (Commons, JSON importado…): se copia a Supabase para que no caduque ni dependa del navegador. */
+   try{imagePath=await putImage(e.id,await fetchImageBlob(e.url))}
+   catch(err){console.warn("No se pudo copiar a Supabase; se conserva el enlace externo:",e.id,err);imagePath=null;externalUrl=e.url}
+ }
  const row={id:String(e.id),theme:e.tema,subtype:e.subtipo||null,image_path:imagePath,external_image_url:externalUrl,source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||"Sin especificar",traits:e.rasgos||null,verified:e.verificada===true,published:e.published!==false,cells:e.celulas||[],structures:e.estructuras||[],guides:e.guias||[],created_by:CURRENT_USER.id,updated_at:new Date().toISOString()};
  const {error}=await SUPA.from("questions").upsert(row,{onConflict:"id"});if(error)throw error;
+ return imagePath?"storage":"external";
 }
 function saveBank(list,del){
  if(!isAdmin()){alert("Solo el administrador puede modificar el banco.");return false;}
@@ -146,6 +176,29 @@ function saveBank(list,del){
  return true;
 }
 async function setPublished(id,published){if(!isAdmin())return;const {error}=await SUPA.from("questions").update({published,updated_at:new Date().toISOString()}).eq("id",id);if(error){alert("No se pudo cambiar la publicación: "+error.message);return}await refreshRemoteBank();bankView()}
+/* Repara TODO el banco: copia a Supabase cada imagen con enlace externo (aunque aún cargue, para que no caduque)
+   y recupera las rotas: re-pide el enlace a Commons (commons-<id>) o re-sube el archivo si falta en el bucket.
+   Las marcas y preguntas no se tocan (son porcentajes de la imagen). */
+async function repairImages(statusEl,outEl){
+ if(!isAdmin())return;
+ const list=[...BANK],res={ok:0,mig:0,rec:0,bad:[]};
+ for(let i=0;i<list.length;i++){
+  const e=list[i];statusEl.textContent=`Revisando ${i+1}/${list.length}: ${e.id}`;
+  try{
+   if(e._image_path&&await loadImg(e.url)){res.ok++;continue}
+   let blob=null,recovered=false;
+   if(!e._image_path){try{blob=await fetchImageBlob(e.url)}catch(x){}}
+   if(!blob){const fresh=await freshCommonsUrl(e.id);if(fresh){try{blob=await fetchImageBlob(fresh);recovered=true}catch(x){}}}
+   if(!blob){res.bad.push(e.id+(e._image_path?" · archivo faltante en Supabase":" · enlace roto o bloqueado por el sitio de origen"));continue}
+   const path=await putImage(e.id,blob);
+   const {error}=await SUPA.from("questions").update({image_path:path,external_image_url:null,updated_at:new Date().toISOString()}).eq("id",e.id);if(error)throw error;
+   if(recovered||e._image_path)res.rec++;else res.mig++;
+  }catch(err){res.bad.push(e.id+" · "+(err.message||"error"))}
+ }
+ await refreshRemoteBank();bankView();
+ const summary=`Reparación terminada.\nYa estaban bien (en Supabase): ${res.ok}\nCopiadas a Supabase: ${res.mig}\nRecuperadas (enlace roto o archivo faltante): ${res.rec}\nSin recuperar: ${res.bad.length}`+(res.bad.length?"\n\nSin recuperar (elimínalas o vuelve a añadirlas, o desde Editar ocúltalas con Ocultar):\n"+res.bad.join("\n"):"");
+ const out=$("#rp-out");if(out)out.textContent=summary;const st=$("#bank-admin-status");if(st)st.textContent="Reparación terminada.";
+}
 function nav(a){const n=$("#nav");document.body.classList.toggle("hasnav",a!=null);if(a==null){n.style.display="none";return}n.style.display="flex";
  n.innerHTML=[["i","🏠","Inicio"],["p","🎯","Practicar"],["e","🔁","Errores"],["g","📈","Progreso"]].map(([k,i,l])=>`<button data-k="${k}" class="${k===a?"on":""}" ${k===a?'aria-current="page"':""}><i>${i}</i>${l}</button>`).join("");
  $$("#nav button").forEach(b=>b.onclick=()=>({i:home,p:()=>cfgView(Object.keys(T),1),e:errView,g:progView}[b.dataset.k])())}
@@ -350,16 +403,17 @@ async function fin(){
 
 /* ---------- Banco ---------- */
 let BF="all";
-function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k);
+function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k),extN=BANK.filter(e=>!e._image_path).length;
  const card=e=>{const mk=(e.celulas||[]).map(m=>({...m,k:"Célula"})).concat((e.estructuras||[]).map(m=>({...m,k:"Estructura"})));
   return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
-  <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc(e.subtipo||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>esc(m.n)).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}</p>
+  <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc(e.subtipo||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>esc(m.n)).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}${e._image_path?"":" · ⚠️ enlace externo"}</p>
   <div class="row"><button class="btn sm s" data-e="${esc(e.id)}">✏️ Editar</button><button class="btn sm s" data-pub="${esc(e.id)}">${e.published===false?"Publicar":"Ocultar"}</button><button class="btn sm w" data-d="${esc(e.id)}">🗑</button></div></div>`};
- app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
+ app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><button class="btn s" id="rp" style="margin-top:10px">🛠 Reparar imágenes${extN?` (${extN} con enlace externo)`:""}</button><pre id="rp-out"></pre><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
  ${BANK.length?vis.map(k=>cnt(k).length?`<h2>${EM[k]} ${T[k]} <span class="mu">· ${cnt(k).length} img · ${cnt(k).reduce((s,e)=>s+qc(e),0)} preg.</span></h2><div class="grid">${cnt(k).map(card).join("")}</div>`:"").join(""):'<p class="mu">Aún no hay imágenes. Ve a Añadir.</p>'}
  <div class="sub">Copia de seguridad</div><div class="card"><p class="mu" style="margin:0 0 10px">Guarda un respaldo JSON del banco de imágenes y sus marcas. <b id="lb" class="${lb&&Date.now()-lb<6048e5||!LOCAL.length?"":"r"}">Última copia: ${lb?new Date(lb).toLocaleDateString("es"):"nunca"}.</b></p><div class="row"><button class="btn" id="ex" style="flex:1">Guardar copia</button><label class="btn s" style="flex:1;cursor:pointer">Restaurar copia<input id="rf" type="file" accept=".json,application/json" hidden></label></div><pre id="out"></pre><button class="btn sm w" id="clr" style="margin-top:8px">Vaciar mis imágenes</button></div>
  <div class="sub">Importar JSON</div><div class="card"><p class="mu" style="margin:0 0 10px">Pega un JSON con muchas imágenes a la vez: <b>{"bank":[…]}</b> o una lista <b>[…]</b>.</p><textarea id="pj" rows="6" placeholder='{"bank":[{"id":"…","tema":"epi","subtipo":"…","url":"https://…","fuente":"…","licencia":"…","verificada":true}]}' spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.8rem;resize:vertical"></textarea><br><br><button class="btn" id="pi">📋 Importar imágenes</button><pre id="po"></pre></div>`;
  $("#ad").onclick=()=>sview();$$("[name=bf]").forEach(r=>r.onchange=()=>{BF=r.value;bankView()});
+ $("#rp").onclick=async()=>{const b=$("#rp");b.disabled=true;try{await repairImages($("#bank-admin-status"),$("#rp-out"))}catch(err){b.disabled=false;$("#rp-out").textContent="Error: "+(err.message||err)}};
  $$("[data-e]").forEach(b=>b.onclick=()=>{const e=BANK.find(x=>x.id===b.dataset.e);validate({pid:e.id,thumb:e.url,page:e.fuenteUrl||"",autor:e.autor||"",lic:e.licencia},e.tema,e)});
  $$("[data-pub]").forEach(b=>b.onclick=()=>{const q=BANK.find(x=>x.id===b.dataset.pub);if(q)setPublished(q.id,q.published===false)});
  $$("[data-d]").forEach(b=>b.onclick=()=>{if(!confirm("¿Eliminar esta imagen del banco para todos los usuarios?"))return;saveBank([],b.dataset.d);b.disabled=true;b.textContent="Eliminando…"});
@@ -369,10 +423,10 @@ function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage
   if(!isAdmin()){const output=$(o);if(output)output.textContent="Se requiere una sesión administradora.";return}
   for(const x of a){const w=!validE(x)?"datos incompletos":ids.has(x.id)?"ya existe":"";if(w)bad.push((x&&x.id||"?")+": "+w);else{ok.push(x);ids.add(x.id)}}
   const output=$(o);if(output)output.textContent=`Validación completada. Se van a importar ${ok.length} imágenes; omitidas: ${bad.length}.\n`+(bad.length?bad.join("\n"):"");
-  let imported=0;const failures=[];
-  for(let i=0;i<ok.length;i++){const item=ok[i];const top=$("#bank-admin-status");if(top)top.textContent=`Importando ${i+1}/${ok.length}: ${item.id}`;if(output)output.textContent=`Subiendo ${i+1}/${ok.length}: ${item.id}\n`;try{await storeQuestionOnSupabase(item);imported++}catch(error){failures.push(`${item.id}: ${error.message||"error desconocido"}`)}}
+  let imported=0,external=0;const failures=[];
+  for(let i=0;i<ok.length;i++){const item=ok[i];const top=$("#bank-admin-status");if(top)top.textContent=`Importando ${i+1}/${ok.length}: ${item.id}`;if(output)output.textContent=`Subiendo ${i+1}/${ok.length}: ${item.id}\n`;try{const where=await storeQuestionOnSupabase(item);imported++;if(where==="external")external++}catch(error){failures.push(`${item.id}: ${error.message||"error desconocido"}`)}}
   try{await refreshRemoteBank();bankView()}catch(error){const message=`Se importaron ${imported}/${ok.length} registros, pero no se pudo actualizar la vista: ${error.message||"error"}`;const target=$(o);if(target)target.textContent=message;return}
-  const summary=`Importación terminada. Añadidas: ${imported}/${ok.length}. Omitidas: ${bad.length}. Errores: ${failures.length}. El progreso de usuarios no se importa; permanece separado por cuenta.`;
+  const summary=`Importación terminada. Añadidas: ${imported}/${ok.length}. Omitidas: ${bad.length}. Errores: ${failures.length}.${external?` ${external} quedaron con enlace externo (el sitio no permitió copiarlas).`:""} El progreso de usuarios no se importa; permanece separado por cuenta.`;
   if($("#bank-admin-status"))$("#bank-admin-status").textContent=summary;
   const finalOutput=$(o);if(finalOutput)finalOutput.textContent=summary+(bad.length?"\n\nOmitidas:\n"+bad.join("\n"):"")+(failures.length?"\n\nErrores:\n"+failures.join("\n"):"");
  };
