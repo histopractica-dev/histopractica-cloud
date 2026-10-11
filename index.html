@@ -1531,18 +1531,18 @@ function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
  $$("[data-n]").forEach(button=>button.onclick=()=>{desired=+button.dataset.n;useAll=false;upd()});$("#all-questions").onclick=()=>{useAll=true;upd()};
  if(custom){$("#select-all").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=true);upd()};$("#select-none").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=false);upd()}}upd();syncUI();if($("#bk"))$("#bk").onclick=home;
  $("#go").onclick=()=>{const c=cfg(),a=questionItems(c,BANK).length;if(!c.temas.length||!Number.isInteger(c.n)||c.n<1||c.n>a||c.scope==="pending"&&!SYNC_READY)return upd();CFG=c;run(c)}}
-function wrongQuestionCard(item){
+function wrongQuestionCard(item,showAnswer=true){
  const q=item?.q||null,it=q?.it||item?.it||item;
  if(!it?.e)return "";
  const prompt=q?.txt||(it.m==="A"?"¿Qué tipo de tejido observas?":it.m==="B"?"¿Qué célula está señalada?":"¿Qué estructura está señalada?");
  const answer=q?.ans||(it.m==="A"?it.e.subtipo:it.t?.n)||"Respuesta no disponible";
  const picked=item?.pick;
- return `<article class="card wrong-q"><img class="wrong-thumb" src="${esc(it.e.url||"")}" alt="Microfotografía de ${esc(T[it.e.tema]||"histología")}" loading="lazy" decoding="async"><div class="wrong-details"><p class="mu wrong-meta">${esc(T[it.e.tema]||"Histología")} · ${esc(MN[it.m]||"Pregunta")}</p><h3>${esc(prompt)}</h3>${picked!==undefined?`<p class="wrong-picked">Tu respuesta: <span class="r">${esc(picked)}</span></p>`:""}<p class="wrong-answer">Respuesta correcta: <b class="g">${esc(answer)}</b></p></div></article>`;
+ return `<article class="card wrong-q"><img class="wrong-thumb" src="${esc(it.e.url||"")}" alt="Microfotografía de ${esc(T[it.e.tema]||"histología")}" loading="lazy" decoding="async"><div class="wrong-details"><p class="mu wrong-meta">${esc(T[it.e.tema]||"Histología")} · ${esc(MN[it.m]||"Pregunta")}</p><h3>${esc(prompt)}</h3>${picked!==undefined?`<p class="wrong-picked">Tu respuesta: <span class="r">${esc(picked)}</span></p>`:""}${showAnswer?`<p class="wrong-answer">Respuesta correcta: <b class="g">${esc(answer)}</b></p>`:""}</div></article>`;
 }
 function errView(){nav("e");const keys=new Set(ERR()),items=balancedItems(questionItems({temas:Object.keys(T),mod:"M"},BANK).filter(it=>keys.has(itKey(it))));
- app.innerHTML=head()+`<h1 class="hero">Errores</h1>`+(items.length?`<p class="mu">${items.length} pregunta(s) por repasar. Aquí tienes las imágenes y sus respuestas correctas.</p><button class="btn" id="go">Repasar errores</button><div class="wrong-list">${items.map(wrongQuestionCard).join("")}</div><button class="btn" id="go-bottom">Repasar errores</button>`:`<div class="card big"><div style="font-size:3rem">🎉</div><b style="font-size:1.4rem">Sin errores pendientes</b><span class="mu">Los fallos de tus prácticas aparecerán aquí.</span></div>`);
+ app.innerHTML=head()+`<h1 class="hero">Errores</h1>`+(items.length?`<p class="mu">${items.length} pregunta(s) por repasar. Aquí tienes las imágenes de las preguntas que fallaste. Las respuestas correctas se mantienen ocultas para que puedas practicar.</p><button class="btn" id="go">🔁 Repasar errores</button><div class="wrong-list">${items.map(item=>wrongQuestionCard(item,false)).join("")}</div>`:`<div class="card big"><div style="font-size:3rem">🎉</div><b style="font-size:1.4rem">Sin errores pendientes</b><span class="mu">Los fallos de tus prácticas aparecerán aquí.</span></div>`);
  const startReview=()=>run({temas:Object.keys(T),mod:"M",n:items.length,cor:"i"},{items,spare:[],short:false,avail:items.length});
- if(items.length){$("#go").onclick=startReview;$("#go-bottom").onclick=startReview}}
+ if(items.length){$("#go").onclick=startReview}}
 const avKey=()=>"hp_av_"+(CURRENT_USER?.id||""),avGet=()=>{
  const remote=CURRENT_USER?.user_metadata?.avatar_url;
  if(typeof remote==="string"&&/^https:\/\//i.test(remote))return remote;
