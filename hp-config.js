@@ -2,6 +2,6 @@
    Never place the service-role key, Resend API key, database password,
    or webhook secret in this file. */
 window.HP_CONFIG = {
-  supabaseUrl: "REEMPLAZA_CON_LA_URL_PUBLICA_DE_TU_PROYECTO",
-  supabaseAnonKey: "REEMPLAZA_CON_TU_CLAVE_ANON_PUBLICA"
+  supabaseUrl: "https://qplgoyjaoqmqfbjazvxh.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwbGdveWphb3FtcWZiamF6dnhoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NDgzNDMsImV4cCI6MjEwNzIyNDM0M30.qbj6bFL_eYPO4FliAcO2N_WGdke2j4lzfcqw8-h41ok"
 };
