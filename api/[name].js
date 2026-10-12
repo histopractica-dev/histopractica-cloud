@@ -379,7 +379,7 @@ const { wrap, json, authenticate, restAll } = require("./_lib/supa");
 exports.handler = wrap(["GET"], async (event) => {
   await authenticate(event);
   const [profiles, answers] = await Promise.all([
-    restAll("profiles?select=id,display_name,best_streak&order=id.asc"),
+    restAll("profiles?select=id,display_name,best_streak,role&order=id.asc"),
     restAll("practice_answers?select=id,user_id,is_correct,answered_at&order=user_id.asc,answered_at.asc,id.asc"),
   ]);
 
@@ -397,13 +397,14 @@ exports.handler = wrap(["GET"], async (event) => {
     }
   }
 
-  const people = new Map((profiles || []).map((p) => [p.id, {
+  const adminIds = new Set((profiles || []).filter((p) => p.role === "admin").map((p) => p.id));
+  const people = new Map((profiles || []).filter((p) => p.role !== "admin").map((p) => [p.id, {
     user_id: p.id,
     alias: String(p.display_name || "").trim() || "Estudiante",
     best_streak: Number(p.best_streak) || 0,
   }]));
   for (const id of byUser.keys()) {
-    if (!people.has(id)) people.set(id, { user_id: id, alias: "Estudiante", best_streak: 0 });
+    if (!people.has(id) && !adminIds.has(id)) people.set(id, { user_id: id, alias: "Estudiante", best_streak: 0 });
   }
 
   const best = [], xp = [];
@@ -415,7 +416,7 @@ exports.handler = wrap(["GET"], async (event) => {
   }
   const order = (a, b) => b.points - a.points || a.alias.localeCompare(b.alias, "es-MX");
   best.sort(order); xp.sort(order);
-  return json(200, { best, xp });
+  return json(200, { best, xp, admins: [...adminIds] });
 });
 
 };
