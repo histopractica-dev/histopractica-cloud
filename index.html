@@ -1401,11 +1401,14 @@ body:not(.hasnav) #nav{display:none}
 <script>
 const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
 const EM={epi:"🧫",con:"🧵",adi:"🧈",car:"👂",oseo:"🦴",san:"🩸",mus:"💪",ner:"🧠"};
+/* Sistema nervioso en dos niveles que nunca se mezclan en una misma pregunta: general (no sé la región exacta) y específico (región concreta). */
+const NER_G=["Sistema nervioso central","Sistema nervioso periférico (SNP)"],NER_E=["Corteza cerebral","Corteza cerebelosa"],nerLevel=l=>NER_G.includes(l)?"g":NER_E.includes(l)?"e":null,
+normSub=s=>s==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":s==="Sistema nervioso central (sin corteza)"?"Sistema nervioso central":s;
 const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simple cilíndrico","Epitelio plano estratificado queratinizado","Epitelio plano estratificado no queratinizado","Epitelio plano estratificado paraqueratinizado","Epitelio cúbico estratificado","Epitelio cilíndrico estratificado","Epitelio pseudoestratificado","Urotelio (epitelio de transición)"],
 con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso","Tejido conjuntivo elástico","Tejido conjuntivo reticular"],
 adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
-ner:["Corteza cerebral","Corteza cerebelosa","Sistema nervioso central (sin corteza)","Sistema nervioso periférico (SNP)"]};
+ner:NER_G.concat(NER_E)};
 const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
 car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
 ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria","Célula de Schwann","Célula satélite","Célula de Purkinje","Neurona piramidal","Neurona pseudounipolar"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
@@ -1433,8 +1436,8 @@ const kv=(m,k,v)=>new Promise((res,rej)=>{const t=DB.transaction("kv",m==="r"?"r
 async function initDB(){try{DB=await idb();let b=await kv("r","bank");if(!b){b=[];try{b=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(e){}if(b.length){await kv("w","bank",b);try{localStorage.removeItem("hp_bank")}catch(e){}}}LOCAL=b;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}catch(e){DB=null;try{LOCAL=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(x){}}}
 function persist(){const warn=()=>alert("No se pudo guardar en este navegador. Guarda una copia de seguridad desde el Banco.");if(!DB){try{localStorage.setItem("hp_bank",JSON.stringify(LOCAL))}catch(e){warn()}return}kv("w","bank",LOCAL).catch(warn)}
 function loadBank(){
- if(CURRENT_USER){BANK=[...new Map(REMOTE_BANK.filter(validE).map(e=>[e.id,{...e,subtipo:e.subtipo==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":e.subtipo}])).values()];return}
- let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,{...e,subtipo:e.subtipo==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":e.subtipo}])).values()]
+ if(CURRENT_USER){BANK=[...new Map(REMOTE_BANK.filter(validE).map(e=>[e.id,{...e,subtipo:normSub(e.subtipo)}])).values()];return}
+ let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,{...e,subtipo:normSub(e.subtipo)}])).values()]
 }
 function isAdmin(){return CURRENT_PROFILE?.role==="admin"}
 async function imageUrlForRow(row){if(row.image_path){const {data}=SUPA.storage.from("histology-images").getPublicUrl(row.image_path);return data.publicUrl}return row.external_image_url||""}
@@ -1610,7 +1613,8 @@ function question(it,r=Math.random){
  if(it.m==="A"){ans=e.subtipo;gz=e.guias||[];txt=gz.length?"¿Qué tipo de tejido observas en la zona marcada?":"¿Qué tipo de tejido observas?";pool=LB}
  else{const t=it.t;ans=t.n;pool=it.m==="B"?CE:ES;txt=it.m==="B"?"¿Qué célula queda dentro del recuadro?":(t.externa?"¿Qué estructura se señala?":"¿Qué estructura señala el recuadro?");if(t.x!=null&&!t.externa)mk={x:t.x,y:t.y,w:t.w,h:t.h}}
  const mine=it.m==="A"?[]:BANK.filter(x=>x.tema===e.tema).flatMap(x=>(it.m==="B"?x.celulas:x.estructuras)||[]).map(m=>m.n),same=(pool[e.tema]||[]).concat(mine),rel=(REL[e.tema]||[]).flatMap(k=>pool[k]||[]);
- return{it,txt,ans,mk,gz,opts:shuf([ans,...distract(ans,[same,rel,all(pool)],r)],r)}}
+ const lv=it.m==="A"&&e.tema==="ner"?nerLevel(ans):null,tiers=lv?[LB.ner.filter(o=>nerLevel(o)===lv)]:[same,rel,all(pool)];
+ return{it,txt,ans,mk,gz,opts:shuf([ans,...distract(ans,tiers,r)],r)}}
 
 /* ---------- Inicio ---------- */
 const DESC={epi:"Revestimiento de superficies y cavidades, sin glándulas.",con:"Soporte: fibras, sustancia fundamental y células.",adi:"Reserva de energía: grasa blanca y parda.",car:"Hialino, elástico y fibrocartílago.",oseo:"Hueso compacto y esponjoso.",san:"Frotis sanguíneo y sus células.",mus:"Estriado esquelético, cardiaco y liso.",ner:"Neuronas, neuroglia y epéndimo."};
@@ -1935,7 +1939,7 @@ function validate(x,tema,edit){
  const r1=v=>+v.toFixed(1),up=edit?edit.fuente==="Imagen propia":String(x.pid).startsWith("up"),back=()=>edit?bankView():sview();
  app.innerHTML=`<div class="xt"><button class="x" id="vb" aria-label="Cancelar">✕</button><h2 style="margin:0;flex:1">${edit?"Editar imagen":"Preparar imagen"}</h2></div>
  <div class="stk"><div class="vwrap"><div id="vw"><img id="vp" src="${esc(x.thumb)}" alt=""><span id="dots"></span><div class="bx" id="bx" style="display:none"><i class="hdl" id="hd"></i></div></div></div></div>
- <div class="card"><b><span class="num">1</span>¿Qué tejido es?</b><p class="mu" style="margin:4px 0 8px">Para la pregunta "¿Qué tipo de tejido observas?". Los recuadros guía del paso 2 solo señalan dónde mirar.</p><select id="vs"><option value="">No hacer pregunta de tejido</option>${LB[tema].map(o=>`<option ${(edit?edit.subtipo:LB[tema][0])===o?"selected":""}>${o}</option>`).join("")}</select></div>
+ <div class="card"><b><span class="num">1</span>¿Qué tejido es?</b><p class="mu" style="margin:4px 0 8px">Para la pregunta "¿Qué tipo de tejido observas?". Los recuadros guía del paso 2 solo señalan dónde mirar.</p><select id="vs"><option value="">No hacer pregunta de tejido</option>${(()=>{const cur=edit?edit.subtipo:LB[tema][0],op=o=>`<option ${cur===o?"selected":""}>${o}</option>`;return tema==="ner"?`<optgroup label="Parte general (no sé la región exacta)">${NER_G.map(op).join("")}</optgroup><optgroup label="Región específica">${NER_E.map(op).join("")}</optgroup>`:LB[tema].map(op).join("")})()}</select></div>
  <div class="card"><b><span class="num">2</span>Marcas y estructuras <span class="mu">(opcional)</span></b><p class="mu" style="margin:4px 0 8px">Célula y Estructura con recuadro generan preguntas. También puedes usar una flecha ya dibujada en la imagen con un programa externo: activa la casilla y escribe la respuesta correcta.</p><label class="ch" style="display:flex;margin:10px 0"><input id="ext-structure" type="checkbox" ${(edit&&(edit.estructuras||[]).some(m=>m.externa))?"checked":""}><span>➡️ Esta imagen ya tiene una flecha/marca externa para preguntar «¿Qué estructura se señala?»</span></label><input id="ext-answer" maxlength="100" placeholder="Respuesta correcta de la flecha (ej. Núcleo)" value="${esc(edit&&((edit.estructuras||[]).find(m=>m.externa)||{}).n||"")}" style="margin-bottom:12px"><div id="ctl"></div><div id="vl"></div></div>
  <div class="card"><b><span class="num">3</span>Guardar</b><br><br><input id="vr" placeholder="Pista de estudio (opcional)" value="${esc(edit?edit.rasgos:"")}"><p id="cn" class="mu"></p><p id="vm" class="r"></p><button class="btn" id="va">${edit?"Guardar cambios":"Guardar en el banco"}</button></div>`;
  const bx=$("#bx"),wr=$("#vw"),im=$("#vp"),paint=()=>{const b=DR.box;if(b)bx.style.cssText=`left:${b.x-b.w/2}%;top:${b.y-b.h/2}%;width:${b.w}%;height:${b.h}%`};
