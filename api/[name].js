@@ -335,6 +335,7 @@ exports.handler = wrap(["GET", "POST", "DELETE"], async (event) => {
 
   if (event.httpMethod === "DELETE") {
     await rest(`practice_answers?user_id=eq.${enc(user.id)}`, { method: "DELETE", prefer: "return=minimal" });
+    await rest(`profiles?id=eq.${enc(user.id)}`, { method: "PATCH", body: { best_streak: 0 }, prefer: "return=minimal" });
     return json(200, { ok: true });
   }
 
@@ -352,6 +353,54 @@ exports.handler = wrap(["GET", "POST", "DELETE"], async (event) => {
     await rest("practice_answers", { method: "POST", prefer: "return=minimal", body: { id: crypto.randomUUID(), user_id: user.id, answer_id: answerId, question_key: key, question_id: q.id, mode, theme: q.theme, target_label: expected, is_correct: isCorrect, answered_at: new Date().toISOString() } });
   } catch (e) { if (!/duplicate|23505/i.test(e.message)) throw e; }
   return json(200, { isCorrect, expected });
+});
+
+};
+
+__defs["rank-stats"] = function (module, exports, require) {
+// Rankings complementarios: récord de racha y XP acumulado.
+const { wrap, json, authenticate, restAll } = require("./_lib/supa");
+
+exports.handler = wrap(["GET"], async (event) => {
+  await authenticate(event);
+  const [profiles, answers] = await Promise.all([
+    restAll("profiles?select=id,display_name,best_streak&order=id.asc"),
+    restAll("practice_answers?select=id,user_id,is_correct,answered_at&order=user_id.asc,answered_at.asc,id.asc"),
+  ]);
+
+  const byUser = new Map();
+  for (const row of answers || []) {
+    if (!row.user_id) continue;
+    let s = byUser.get(row.user_id);
+    if (!s) { s = { current: 0, best: 0, xp: 0 }; byUser.set(row.user_id, s); }
+    if (row.is_correct === true) {
+      s.current++;
+      s.xp += 10;
+      if (s.current > s.best) s.best = s.current;
+    } else {
+      s.current = 0;
+    }
+  }
+
+  const people = new Map((profiles || []).map((p) => [p.id, {
+    user_id: p.id,
+    alias: String(p.display_name || "").trim() || "Estudiante",
+    best_streak: Number(p.best_streak) || 0,
+  }]));
+  for (const id of byUser.keys()) {
+    if (!people.has(id)) people.set(id, { user_id: id, alias: "Estudiante", best_streak: 0 });
+  }
+
+  const best = [], xp = [];
+  for (const p of people.values()) {
+    const s = byUser.get(p.user_id) || { best: 0, xp: 0 };
+    const maxStreak = Math.max(p.best_streak, s.best);
+    if (maxStreak > 0) best.push({ user_id: p.user_id, alias: p.alias, points: maxStreak });
+    if (s.xp > 0) xp.push({ user_id: p.user_id, alias: p.alias, points: s.xp });
+  }
+  const order = (a, b) => b.points - a.points || a.alias.localeCompare(b.alias, "es-MX");
+  best.sort(order); xp.sort(order);
+  return json(200, { best, xp });
 });
 
 };
@@ -695,7 +744,7 @@ exports.handler = wrap(["GET", "POST"], async (event) => {
 
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler };
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler };
 
 module.exports = async (req, res) => {
   try {
