@@ -1427,6 +1427,7 @@ const MN={E:"Tipo de neurona",D:"Central o periférico",A:"Identificar tejido",B
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],app=$("#app");
 let BANK=[],S=null,CFG=null,SEL=null,SR=[],DR=null,SMSG="",OFF=0,LQ="";
 let SUPA=null,CURRENT_USER=null,CURRENT_PROFILE=null,REMOTE_BANK=[],REMOTE_STATS=null,REMOTE_ERRORS=null;
+const noMail=s=>{s=String(s==null?"":s).trim();return s.includes("@")?(s.split("@")[0].trim()||"Estudiante"):s};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),acc=(a,n)=>n?Math.round(100*a/n):0;
 const shuf=(a,r=Math.random)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -1747,7 +1748,7 @@ async function rankView(){
  const me=x=>x.is_me?' <span class="bdg b">Tú</span>':"";
  const person=x=>`<span class="rank-person"><span class="rank-avatar" aria-hidden="true">${avatarFor(x)}</span><b class="pnm">${esc(x.alias??x.display_name??x.name??"Estudiante")}${me(x)}</b></span>`;
  const score=x=>`${Number(x.points||0).toLocaleString("es-MX")} ${modes[selected].unit}`;
- const normalize=(items)=>items.map((x,i)=>{const id=x.user_id??x.userId??x.uid??x.id??null;return {...x,id,alias:x.alias??x.display_name??x.name??"Estudiante",points:Number(x.points)||0,is_me:!!x.is_me||String(id)===String(CURRENT_USER?.id),_oldPos:Number(x.pos)||i+1}}).filter(x=>x.id&&x.points>0).sort((a,b)=>b.points-a.points||a._oldPos-b._oldPos||String(a.alias).localeCompare(String(b.alias),"es-MX"));
+ const normalize=(items)=>items.map((x,i)=>{const id=x.user_id??x.userId??x.uid??x.id??null;return {...x,id,alias:noMail(x.alias??x.display_name??x.name??"Estudiante"),points:Number(x.points)||0,is_me:!!x.is_me||String(id)===String(CURRENT_USER?.id),_oldPos:Number(x.pos)||i+1}}).filter(x=>x.id&&x.points>0).sort((a,b)=>b.points-a.points||a._oldPos-b._oldPos||String(a.alias).localeCompare(String(b.alias),"es-MX"));
  const render=()=>{
   const box=$("#rk");if(!box)return;
   $$('[data-ranking-mode]').forEach(b=>{const on=b.dataset.rankingMode===selected;b.classList.toggle("s",!on);b.setAttribute("aria-pressed",String(on))});
@@ -1761,7 +1762,7 @@ async function rankView(){
   box.innerHTML=`<div class="pod">${top.map((x,i)=>`<div class="pc ${M[i]} p${i+1}"><span class="md" aria-label="Puesto ${i+1}">${i+1}</span>${person(x)}<span class="pp">${esc(score(x))}</span></div>`).join("")}</div>`+(rest.length?`<div class="rl">${rest.map((x,i)=>`<div class="rr${x.is_me?" me":""}"><span class="rp">${i+4}</span>${person(x)}<b>${esc(score(x))}</b></div>`).join("")}</div>`:"");
  };
  $$('[data-ranking-mode]').forEach(b=>b.onclick=()=>{selected=b.dataset.rankingMode;render()});
- const loadCurrent=async()=>{try{const {data,error}=await SUPA.rpc("leaderboard");if(error)throw error;if(!Array.isArray(data))throw new Error("Respuesta de ranking no válida");rankData.current=data.map((x,i)=>({...x,user_id:x.user_id??x.userId??x.uid??x.id,alias:x.alias??x.display_name??x.name??"Estudiante",points:Number(x.points)||0,pos:Number(x.pos)||i+1}));}catch(e){console.warn("No se pudo cargar el ranking por racha actual",e);rankData.current=false}};
+ const loadCurrent=async()=>{try{const {data,error}=await SUPA.rpc("leaderboard");if(error)throw error;if(!Array.isArray(data))throw new Error("Respuesta de ranking no válida");rankData.current=data.map((x,i)=>({...x,user_id:x.user_id??x.userId??x.uid??x.id,alias:noMail(x.alias??x.display_name??x.name??"Estudiante"),points:Number(x.points)||0,pos:Number(x.pos)||i+1}));}catch(e){console.warn("No se pudo cargar el ranking por racha actual",e);rankData.current=false}};
  const loadOtherModes=async()=>{try{const {data,error}=await SUPA.auth.getSession();if(error)throw error;const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");const response=await fetch("/api/rank-stats",{headers:{Authorization:`Bearer ${token}`}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudieron consultar los rankings.");rankData.best=Array.isArray(payload.best)?payload.best:false;rankData.xp=Array.isArray(payload.xp)?payload.xp:false;}catch(e){console.warn("No se pudieron cargar los rankings de racha máxima y XP",e);rankData.best=false;rankData.xp=false}};
  const loadAvatars=async()=>{try{const result=await SUPA.from("profile_avatars").select("user_id,alias,avatar_url");if(!result.error)avatarRows=result.data||[];else console.warn("No se pudieron consultar los avatares del ranking:",result.error.message)}catch(error){console.warn("No se pudieron consultar los avatares del ranking",error)}for(const row of avatarRows){if(row.user_id)byId.set(String(row.user_id),row);const a=String(row.alias||"").trim().toLocaleLowerCase("es-MX");if(a){const list=byAlias.get(a)||[];list.push(row);byAlias.set(a,list)}}};
  render();
@@ -2019,7 +2020,7 @@ function authView(mode="login",message=""){
  nav(null);const titles={login:"Inicia sesión",signup:"Crea tu cuenta",forgot:"Recuperar contraseña",update:"Crear nueva contraseña"};
  const isSignup=mode==="signup",isForgot=mode==="forgot",isUpdate=mode==="update";
  const fields=isUpdate?`<label>Nueva contraseña<input id="auth-password" type="password" minlength="8" autocomplete="new-password" required></label>`:
-  `<label>Correo electrónico<input id="auth-email" type="email" autocomplete="${isSignup?"email":"username"}" required></label>${isSignup?`<label>Nombre (opcional)<input id="auth-name" type="text" maxlength="80" autocomplete="name"></label>`:""}${isForgot?"":`<label>Contraseña<input id="auth-password" type="password" minlength="8" autocomplete="${isSignup?"new-password":"current-password"}" required></label>`}`;
+  `<label>Correo electrónico<input id="auth-email" type="email" autocomplete="${isSignup?"email":"username"}" required></label>${isSignup?`<label>Nombre<input id="auth-name" type="text" maxlength="80" autocomplete="name" required></label>`:""}${isForgot?"":`<label>Contraseña<input id="auth-password" type="password" minlength="8" autocomplete="${isSignup?"new-password":"current-password"}" required></label>`}`;
  app.innerHTML=`<section class="auth-wrap"><div class="auth-brand">${LOGO}<span>Histo<em>Práctica</em></span></div><p class="mu" style="text-align:center">Entrena tu ojo histológico, en cualquier dispositivo.</p><div class="card"><h1 class="hero" style="font-size:1.6rem">${titles[mode]||titles.login}</h1>${mode==="login"||isSignup?`<div class="auth-tabs"><button class="btn ${!isSignup?"":"s"}" type="button" data-auth-mode="login">Entrar</button><button class="btn ${isSignup?"":"s"}" type="button" data-auth-mode="signup">Registrarme</button></div>`:""}<p id="auth-message" class="${message?"auth-note":"mu"}" role="status">${esc(message||"")}</p><form id="auth-form">${fields}<button class="btn" id="auth-submit" style="margin-top:16px">${isSignup?"Crear cuenta":isForgot?"Enviar enlace":isUpdate?"Guardar contraseña":"Iniciar sesión"}</button></form>${mode==="login"?`<p style="text-align:center"><button class="ib" id="forgot-link" type="button">Olvidé mi contraseña</button></p>`:""}${isForgot||isUpdate?`<p><button class="btn s" id="back-login" type="button">Volver a iniciar sesión</button></p>`:""}<p class="hint">${isSignup?"Te enviaremos un correo para verificar tu cuenta si la verificación está activada en Supabase.":"Tus datos y tu progreso se guardan de manera privada en tu cuenta."}</p></div></section>`;
  $$('[data-auth-mode]').forEach(b=>b.onclick=()=>authView(b.dataset.authMode));if($("#forgot-link"))$("#forgot-link").onclick=()=>authView("forgot");if($("#back-login"))$("#back-login").onclick=()=>authView("login");
  $("#auth-form").onsubmit=async event=>{event.preventDefault();const button=$("#auth-submit"),messageBox=$("#auth-message");button.disabled=true;messageBox.textContent="Procesando…";
@@ -2027,7 +2028,7 @@ function authView(mode="login",message=""){
    if(isUpdate){const password=$("#auth-password").value;const {error}=await SUPA.auth.updateUser({password});if(error)throw error;await SUPA.auth.signOut();authView("login","Contraseña actualizada. Ya puedes iniciar sesión.");return}
    const email=$("#auth-email").value.trim(),password=$("#auth-password")?.value;
    if(isForgot){const {error}=await SUPA.auth.resetPasswordForEmail(email,{redirectTo:location.origin});if(error)throw error;authView("login","Si existe una cuenta con ese correo, recibirás instrucciones para recuperar el acceso.");return}
-   if(isSignup){const displayName=$("#auth-name").value.trim();const {data,error}=await SUPA.auth.signUp({email,password,options:{emailRedirectTo:location.origin,data:{display_name:displayName}}});if(error)throw error;if(data.session){notifyLogin(data.session,"registro de cuenta");await enterApp(data.session)}else authView("login","Cuenta creada. Revisa tu correo para verificarla y luego inicia sesión.");return}
+   if(isSignup){const displayName=noMail($("#auth-name").value);if(!displayName)throw new Error("Escribe tu nombre para crear la cuenta.");const {data,error}=await SUPA.auth.signUp({email,password,options:{emailRedirectTo:location.origin,data:{display_name:displayName}}});if(error)throw error;if(data.session){notifyLogin(data.session,"registro de cuenta");await enterApp(data.session)}else authView("login","Cuenta creada. Revisa tu correo para verificarla y luego inicia sesión.");return}
    const {data,error}=await SUPA.auth.signInWithPassword({email,password});if(error)throw error;notifyLogin(data.session,"correo y contraseña");await enterApp(data.session);
   }catch(error){messageBox.className="auth-error";messageBox.textContent=error?.message||"No se pudo completar la operación.";button.disabled=false}
  };
@@ -2037,7 +2038,7 @@ async function enterApp(session){
  let profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle();
  if(profileResult.error)throw new Error("No se pudo consultar tu perfil. Comprueba que ejecutaste la migración SQL de HistoPráctica.");
  if(!profileResult.data){const {error}=await SUPA.from("profiles").insert({id:CURRENT_USER.id,email:CURRENT_USER.email||null,display_name:CURRENT_USER.user_metadata?.display_name||null});if(error&&error.code!=="23505")throw new Error("No se pudo crear tu perfil. Comprueba la migración y las políticas RLS.");profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle()}
- if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;
+ if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;if(CURRENT_PROFILE.display_name)CURRENT_PROFILE.display_name=noMail(CURRENT_PROFILE.display_name);
  try{await refreshRemoteBank()}catch(error){throw new Error("No se pudo cargar el banco de Supabase. Verifica la migración SQL, las políticas RLS y el bucket histology-images. Detalle: "+(error.message||"error"))}
  ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();notifStart();home();if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
 }
@@ -2259,14 +2260,14 @@ async function hpLoadMessages(id){
 }
 /* Store previous rank points to detect a genuine overtake on the next result screen. */
 async function hpRankSnapshot(){
- try{const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return null;return r.data.map((x,i)=>({id:x.user_id||x.userId||x.uid||x.id,alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id)}catch(e){return null}
+ try{const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return null;return r.data.map((x,i)=>({id:x.user_id||x.userId||x.uid||x.id,alias:noMail(x.alias||x.display_name||x.name||'Estudiante'),points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id)}catch(e){return null}
 }
 async function hpCheckOvertakes(){
  try{
   const before=await S?.rankBefore;if(!before?.length)return;
   const r=await SUPA.rpc('leaderboard');if(r.error||!Array.isArray(r.data))return;
   const idOf=x=>x.user_id||x.userId||x.uid||x.id||null;
-  const after=r.data.map((x,i)=>({...x,id:idOf(x),alias:x.alias||x.display_name||x.name||'Estudiante',points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id);
+  const after=r.data.map((x,i)=>({...x,id:idOf(x),alias:noMail(x.alias||x.display_name||x.name||'Estudiante'),points:Number(x.points)||0,pos:Number(x.pos)||i+1})).filter(x=>x.id);
   const old=before.map((x,i)=>({...x,pos:Number(x.pos)||i+1}));
   const oldMe=old.find(x=>x.id===CURRENT_USER.id),newMe=after.find(x=>x.id===CURRENT_USER.id);
   if(!oldMe||!newMe)return;
