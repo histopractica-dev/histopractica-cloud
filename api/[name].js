@@ -485,14 +485,8 @@ exports.handler = wrap(["POST"], async (event) => {
     catch (e) { if (!/duplicate|23505/i.test(e.message)) throw e; const again = await rest(`exam_attempts?user_id=eq.${enc(user.id)}&client_attempt_id=eq.${enc(b.attemptId)}&select=*&limit=1`); attempt = again && again[0]; }
   }
   if (!attempt) throw new HttpError(500, "No se pudo guardar el examen.");
-  if (attempt.notification_status === "sent") return json(200, { ok: true, emailSent: true, attemptId: attempt.id });
 
-  const bad = attempt._bad || (Array.isArray(attempt.details) ? attempt.details.filter((d) => d.is_correct === false).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected })) : []);
-  const result = await notify("exam_completed", {
-    attempt_id: attempt.id, ...emailInfo, score: Number(attempt.score), correct: attempt.correct_answers, incorrect: attempt.incorrect_answers, unanswered: attempt.unanswered, total: attempt.total_questions,
-    duration_seconds: attempt.duration_seconds, themes: (attempt.themes || []).map((k) => T[k] || k), at: attempt.completed_at, bad: bad.slice(0, 20),
-  });
-  return json(200, { ok: true, emailSent: result.ok === true, attemptId: attempt.id, ...(result.ok ? {} : { emailError: result.error }) });
+  return json(200, { ok: true, emailSent: false, attemptId: attempt.id });
 });
 
 };
@@ -513,20 +507,12 @@ exports.handler = wrap(["POST"], async (event) => {
   const stale = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   const rows = (await rest(`notification_outbox?or=${enc(`(status.in.(pending,failed),and(status.eq.sending,created_at.lt.${stale}))`)}&attempts=lt.10&select=*&order=created_at.asc&limit=40`)) || [];
   for (const row of rows) {
+    const m = row.payload && row.payload.method;
+    if (row.event_type === "exam_completed" || (row.event_type === "login" && m !== "registro de cuenta" && m !== "enlace de correo")) continue;
     if (row.payload && row.payload.attempt_id) done.add(row.payload.attempt_id);
     const r = await deliver(row); r.ok ? sent++ : failed++;
   }
 
-  // Exámenes con correo sin confirmar que no están en la cola (por ejemplo, de versiones anteriores).
-  const old = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-  const atts = (await rest(`exam_attempts?notification_status=in.(pending,failed)&completed_at=lt.${enc(old)}&select=id,user_id,score,correct_answers,incorrect_answers,unanswered,total_questions,duration_seconds,themes,completed_at,details&order=completed_at.asc&limit=20`)) || [];
-  for (const a of atts) {
-    if (done.has(a.id)) continue;
-    const prof = ((await rest(`profiles?id=eq.${enc(a.user_id)}&select=email,display_name&limit=1`)) || [])[0] || {};
-    const bad = (Array.isArray(a.details) ? a.details : []).filter((d) => d.is_correct === false).slice(0, 20).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected }));
-    const r = await notify("exam_completed", { attempt_id: a.id, email: prof.email || "", name: prof.display_name || "", score: Number(a.score), correct: a.correct_answers, incorrect: a.incorrect_answers, unanswered: a.unanswered, total: a.total_questions, duration_seconds: a.duration_seconds, themes: (a.themes || []).map((k) => T[k] || k), at: a.completed_at, bad });
-    r.ok ? sent++ : failed++;
-  }
   return json(200, { sent, failed });
 });
 
@@ -534,11 +520,17 @@ exports.handler = wrap(["POST"], async (event) => {
 
 __defs["login-notify"] = function (module, exports, require) {
 // POST /.netlify/functions/login-notify → avisa a NOTIFICATION_EMAIL de un inicio de sesión (desde EMAIL_FROM, con Resend).
-const { wrap, json, authenticate, parseBody } = require("./_lib/supa");
+const { wrap, json, authenticate, parseBody, rest, enc } = require("./_lib/supa");
 const { notify } = require("./_lib/notify");
 
 exports.handler = wrap(["POST"], async (event) => {
   const { user } = await authenticate(event, { needProfile: false });
+  // Solo se avisa de cuentas nuevas: ni inicios de sesión normales ni recuperaciones de contraseña.
+  const method0 = String((parseBody(event) || {}).method || "").slice(0, 60);
+  if (method0 !== "registro de cuenta" && method0 !== "enlace de correo") return json(200, { ok: true, skipped: "solo se notifican cuentas nuevas" });
+  const recent = (v) => { const t = v ? Date.parse(v) : NaN; return !Number.isNaN(t) && Date.now() - t <= 10 * 60 * 1000; };
+  if (!recent(method0 === "registro de cuenta" ? user.created_at : user.email_confirmed_at)) return json(200, { ok: true, skipped: "no es una cuenta nueva" });
+  try { const prev = await rest(`notification_outbox?event_type=eq.login&payload->>email=eq.${enc(user.email || "")}&select=id&limit=1`); if (prev && prev.length) return json(200, { ok: true, skipped: "ya notificado" }); } catch (e) { /* si la consulta falla, se continúa */ }
   // Solo inicios de sesión reales y recientes (evita spam con tokens viejos).
   const last = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : NaN;
   if (!Number.isNaN(last) && Date.now() - last > 5 * 60 * 1000) return json(200, { ok: true, skipped: "sesión no reciente" });
