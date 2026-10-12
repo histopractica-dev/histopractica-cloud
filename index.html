@@ -1588,32 +1588,52 @@ function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({tema
   $("#rs-ok").onchange=()=>$("#rs-go").disabled=!$("#rs-ok").checked;$("#rs-no").onclick=()=>m.remove();
   $("#rs-go").onclick=async()=>{const g=$("#rs-go");g.disabled=true;try{await syncProgress();if(SYNC_ERROR)throw new Error("No se pudo sincronizar antes de reiniciar. Inténtalo con conexión.");await progressRequest("DELETE");ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;try{localStorage.removeItem("hp_st");localStorage.removeItem("hp_err");localStorage.removeItem("hp_ach_"+CURRENT_USER.id)}catch(x){}SYNC_READY=false;m.remove();perfilView();syncProgress()}catch(x){$("#rs-m").textContent=x.message||"No se pudo reiniciar.";g.disabled=false}}}}
 async function rankView(){
- nav("b");app.innerHTML=head()+`<h1 class="hero">Ranking</h1><p class="mu" style="margin:0 0 14px">Ranking por racha actual de aciertos consecutivos 🔥. Si fallas, tu racha vuelve a cero.</p><div id="rk" aria-live="polite">${SK}</div>`;
- const em=(t,d)=>`<div class="empty"><span class="emoji-icon" aria-hidden="true" style="font-size:2.4rem">🏆</span><b>${esc(t)}</b><span>${esc(d)}</span></div>`,me=x=>x.is_me?' <span class="bdg b">Tú</span>':"";
- try{
-  const {data,error}=await SUPA.rpc("leaderboard");if(!$("#rk"))return;if(error)throw error;
-  if(!data.length){$("#rk").innerHTML=em("Aún no hay ranking","Aparecerá cuando haya prácticas terminadas.");return}
-  let avatarRows=[];
-  try{const result=await SUPA.from("profile_avatars").select("user_id,alias,avatar_url");if(!result.error)avatarRows=result.data||[];else console.warn("No se pudieron consultar los avatares del ranking:",result.error.message)}catch(error){console.warn("No se pudieron consultar los avatares del ranking",error)}
-  const byId=new Map(),byAlias=new Map();
-  for(const row of avatarRows){if(row.user_id)byId.set(String(row.user_id),row);const a=String(row.alias||"").trim().toLocaleLowerCase("es-MX");if(a){const list=byAlias.get(a)||[];list.push(row);byAlias.set(a,list)}}
-  const avatarFor=x=>{
-   const id=x.user_id??x.userId??x.uid??x.id??null;
-   const alias=String(x.alias??x.display_name??x.name??"").trim().toLocaleLowerCase("es-MX");
-   const row=(id?byId.get(String(id)):null)||((byAlias.get(alias)||[]).length===1?byAlias.get(alias)[0]:null);
-   const direct=x.avatar_url??x.avatarUrl??x.avatar;
-   const ownPhoto=x.is_me?avGet():"";
-   const url=(typeof direct==="string"&&/^https:\/\//i.test(direct))?direct:(typeof row?.avatar_url==="string"&&/^https:\/\//i.test(row.avatar_url)?row.avatar_url:(typeof ownPhoto==="string"&&/^https:\/\//i.test(ownPhoto)?ownPhoto:""));
-   return url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.textContent='👤'">`:"👤";
-  };
-  const person=x=>`<span class="rank-person"><span class="rank-avatar" aria-hidden="true">${avatarFor(x)}</span><b class="pnm">${esc(x.alias??x.display_name??x.name??"Estudiante")}${me(x)}</b></span>`;
+ nav("b");
+ const modes={
+  current:{title:"Racha actual",description:"Aciertos consecutivos que llevas ahora. Una respuesta incorrecta reinicia esta racha.",icon:"🔥",unit:"🔥"},
+  best:{title:"Racha máxima",description:"Récord personal de aciertos consecutivos. No baja cuando se rompe tu racha actual.",icon:"🏅",unit:"🔥"},
+  xp:{title:"XP",description:"Puntos acumulados: ganas 10 XP por cada respuesta correcta.",icon:"⭐",unit:"XP"}
+ };
+ app.innerHTML=head()+`<h1 class="hero">Ranking</h1><div class="row" id="rank-modes" role="group" aria-label="Modalidad de ranking" style="gap:8px;flex-wrap:wrap;margin:0 0 12px"><button type="button" class="btn sm" data-ranking-mode="current" aria-pressed="true">🔥 Racha actual</button><button type="button" class="btn sm s" data-ranking-mode="best" aria-pressed="false">🏅 Racha máxima</button><button type="button" class="btn sm s" data-ranking-mode="xp" aria-pressed="false">⭐ XP</button></div><p id="rk-desc" class="mu" style="margin:0 0 14px"></p><div id="rk" aria-live="polite">${SK}</div>`;
+ const em=(t,d)=>`<div class="empty"><span class="emoji-icon" aria-hidden="true" style="font-size:2.4rem">🏆</span><b>${esc(t)}</b><span>${esc(d)}</span></div>`;
+ let selected="current",rankData={current:null,best:null,xp:null},avatarRows=[];
+ const byId=new Map(),byAlias=new Map();
+ const avatarFor=x=>{
+  const id=x.user_id??x.userId??x.uid??x.id??null;
+  const alias=String(x.alias??x.display_name??x.name??"").trim().toLocaleLowerCase("es-MX");
+  const row=(id?byId.get(String(id)):null)||((byAlias.get(alias)||[]).length===1?byAlias.get(alias)[0]:null);
+  const direct=x.avatar_url??x.avatarUrl??x.avatar;
+  const ownPhoto=x.is_me?avGet():"";
+  const url=(typeof direct==="string"&&/^https:\/\//i.test(direct))?direct:(typeof row?.avatar_url==="string"&&/^https:\/\//i.test(row.avatar_url)?row.avatar_url:(typeof ownPhoto==="string"&&/^https:\/\//i.test(ownPhoto)?ownPhoto:""));
+  return url?`<img src="${esc(url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove();this.parentElement.textContent='👤'">`:"👤";
+ };
+ const me=x=>x.is_me?' <span class="bdg b">Tú</span>':"";
+ const person=x=>`<span class="rank-person"><span class="rank-avatar" aria-hidden="true">${avatarFor(x)}</span><b class="pnm">${esc(x.alias??x.display_name??x.name??"Estudiante")}${me(x)}</b></span>`;
+ const score=x=>`${Number(x.points||0).toLocaleString("es-MX")} ${modes[selected].unit}`;
+ const normalize=(items)=>items.map((x,i)=>{const id=x.user_id??x.userId??x.uid??x.id??null;return {...x,id,alias:x.alias??x.display_name??x.name??"Estudiante",points:Number(x.points)||0,is_me:!!x.is_me||String(id)===String(CURRENT_USER?.id),_oldPos:Number(x.pos)||i+1}}).filter(x=>x.id&&x.points>0).sort((a,b)=>b.points-a.points||a._oldPos-b._oldPos||String(a.alias).localeCompare(String(b.alias),"es-MX"));
+ const render=()=>{
+  const box=$("#rk");if(!box)return;
+  $$('[data-ranking-mode]').forEach(b=>{const on=b.dataset.rankingMode===selected;b.classList.toggle("s",!on);b.setAttribute("aria-pressed",String(on))});
+  $("#rk-desc").textContent=modes[selected].description;
+  const source=rankData[selected];
+  if(source===null){box.innerHTML=em("Cargando ranking","Consultando los datos sincronizados…");return}
+  if(source===false){box.innerHTML=em("Ranking no disponible","No se pudieron cargar los datos de esta modalidad. Inténtalo de nuevo más tarde.");return}
+  const data=normalize(source);
+  if(!data.length){box.innerHTML=em("Aún no hay participantes","Aparecerá aquí cuando haya datos de esta modalidad.");return}
   const M=["gold","silver","bronze"],top=data.slice(0,3),rest=data.slice(3,100);
-  $("#rk").innerHTML=`<div class="pod">${top.map((x,i)=>`<div class="pc ${M[i]} p${i+1}"><span class="md" aria-label="Puesto ${esc(x.pos)}">${esc(x.pos)}</span>${person(x)}<span class="pp">${esc(x.points)} 🔥</span></div>`).join("")}</div>`+(rest.length?`<div class="rl">${rest.map(x=>`<div class="rr${x.is_me?" me":""}"><span class="rp">${esc(x.pos)}</span>${person(x)}<b>${esc(x.points)} 🔥</b></div>`).join("")}</div>`:"");
- }catch(e){if(!$("#rk"))return;$("#rk").innerHTML=/leaderboard|PGRST202|42883/.test((e.code||"")+(e.message||""))?em("Ranking no disponible","Vuelve a intentarlo más tarde."):em("No se pudo cargar","Comprueba tu conexión e inténtalo de nuevo.")}
+  box.innerHTML=`<div class="pod">${top.map((x,i)=>`<div class="pc ${M[i]} p${i+1}"><span class="md" aria-label="Puesto ${i+1}">${i+1}</span>${person(x)}<span class="pp">${esc(score(x))}</span></div>`).join("")}</div>`+(rest.length?`<div class="rl">${rest.map((x,i)=>`<div class="rr${x.is_me?" me":""}"><span class="rp">${i+4}</span>${person(x)}<b>${esc(score(x))}</b></div>`).join("")}</div>`:"");
+ };
+ $$('[data-ranking-mode]').forEach(b=>b.onclick=()=>{selected=b.dataset.rankingMode;render()});
+ const loadCurrent=async()=>{try{const {data,error}=await SUPA.rpc("leaderboard");if(error)throw error;if(!Array.isArray(data))throw new Error("Respuesta de ranking no válida");rankData.current=data.map((x,i)=>({...x,user_id:x.user_id??x.userId??x.uid??x.id,alias:x.alias??x.display_name??x.name??"Estudiante",points:Number(x.points)||0,pos:Number(x.pos)||i+1}));}catch(e){console.warn("No se pudo cargar el ranking por racha actual",e);rankData.current=false}};
+ const loadOtherModes=async()=>{try{const {data,error}=await SUPA.auth.getSession();if(error)throw error;const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");const response=await fetch("/api/rank-stats",{headers:{Authorization:`Bearer ${token}`}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudieron consultar los rankings.");rankData.best=Array.isArray(payload.best)?payload.best:false;rankData.xp=Array.isArray(payload.xp)?payload.xp:false;}catch(e){console.warn("No se pudieron cargar los rankings de racha máxima y XP",e);rankData.best=false;rankData.xp=false}};
+ const loadAvatars=async()=>{try{const result=await SUPA.from("profile_avatars").select("user_id,alias,avatar_url");if(!result.error)avatarRows=result.data||[];else console.warn("No se pudieron consultar los avatares del ranking:",result.error.message)}catch(error){console.warn("No se pudieron consultar los avatares del ranking",error)}for(const row of avatarRows){if(row.user_id)byId.set(String(row.user_id),row);const a=String(row.alias||"").trim().toLocaleLowerCase("es-MX");if(a){const list=byAlias.get(a)||[];list.push(row);byAlias.set(a,list)}}};
+ render();
+ await Promise.all([loadCurrent(),loadOtherModes(),loadAvatars()]);
+ render();
 }
-const TUT=[["🎯","Elige un tejido","En Inicio toca un tejido y pulsa «Empezar a practicar». Cada tarjeta muestra cuántas preguntas has contestado."],["👀","Responde y aprende","Observa la imagen, elige una opción y pulsa «Comprobar». Verás «Respuesta correcta» o «Respuesta incorrecta» y la explicación."],["👤","Sigue tu avance","En tu perfil (el círculo de la parte superior) están tus estadísticas, logros y ajustes. La pestaña Ranking compara las rachas actuales de los estudiantes."]];
+const TUT=[["🎯","Elige un tejido","En Inicio toca un tejido y pulsa «Empezar a practicar». Cada tarjeta muestra cuántas preguntas has contestado."],["👀","Responde y aprende","Observa la imagen, elige una opción y pulsa «Comprobar». Verás «Respuesta correcta» o «Respuesta incorrecta» y la explicación."],["👤","Sigue tu avance","En tu perfil (el círculo de la parte superior) están tus estadísticas, logros y ajustes. La pestaña Ranking compara la racha actual, la racha máxima y los XP de los estudiantes."]];
 function tutorial(i=0){const key="hp_tut_"+(CURRENT_USER?.id||""),end=()=>{put(key,1);$(".modal")?.remove()},[emoji,t,d]=TUT[i];modal(`<div class="obi emoji-icon" aria-hidden="true">${emoji}</div><div class="stp" role="img" aria-label="Paso ${i+1} de ${TUT.length}">${TUT.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><h2 style="text-align:center;margin-top:0">${t}</h2><p style="text-align:center">${d}</p><div class="row" style="justify-content:space-between;margin-top:16px"><button class="btn s sm" id="t-p" ${i?"":"disabled"}>Anterior</button><button class="btn s sm" id="t-s">Omitir</button><button class="btn sm" id="t-n">${i<TUT.length-1?"Siguiente":"Terminar"}</button></div>`);$("#t-p").onclick=()=>tutorial(i-1);$("#t-s").onclick=end;$("#t-n").onclick=()=>i<TUT.length-1?tutorial(i+1):end()}
-function helpModal(){modal(`<h2 style="margin-top:0">Ayuda</h2>${[["Cómo elegir tejidos","En Inicio toca una tarjeta de tejido; en «Practicar» puedes combinar varios."],["Cómo responder","Elige una opción y pulsa «Comprobar». Puedes ampliar la imagen con «Ampliar imagen»."],["Cómo interpretar el progreso","El porcentaje es de preguntas contestadas (acertadas o no), no de aciertos."],["Perfil, logros y clasificación","Tu perfil reúne estadísticas, logros y ajustes. La clasificación compara puntos de prácticas terminadas."],["Cómo reportar una pregunta","Tras comprobar una respuesta, usa «Reportar pregunta»."]].map(([q,a])=>`<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join("")}<button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
+function helpModal(){modal(`<h2 style="margin-top:0">Ayuda</h2>${[["Cómo elegir tejidos","En Inicio toca una tarjeta de tejido; en «Practicar» puedes combinar varios."],["Cómo responder","Elige una opción y pulsa «Comprobar». Puedes ampliar la imagen con «Ampliar imagen»."],["Cómo interpretar el progreso","El porcentaje es de preguntas contestadas (acertadas o no), no de aciertos."],["Perfil, logros y clasificación","Tu perfil reúne estadísticas, logros y ajustes. En Ranking puedes comparar racha actual, racha máxima y XP."],["Cómo reportar una pregunta","Tras comprobar una respuesta, usa «Reportar pregunta»."]].map(([q,a])=>`<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join("")}<button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
 function privacyModal(){modal(`<div class="legal"><h2 style="margin-top:0;font-size:1.25rem">Política de privacidad</h2><p>HistoPráctica guarda solo lo necesario para que puedas estudiar y llevar tu progreso.</p><ul><li>Cuenta: tu correo, tu contraseña (la gestiona Supabase Auth) y, si lo indicas, tu nombre.</li><li>Progreso: tus respuestas, XP, errores y prácticas se guardan en tu cuenta.</li><li>Avisos: al registrarte, iniciar sesión o terminar una práctica se envía un correo al administrador de la app.</li><li>Ranking: los demás estudiantes ven el nombre de tu perfil, tu foto si añades una y tus puntos.</li><li>Reportes: al reportar una pregunta, el administrador recibe tu correo, la pregunta, el motivo y tu comentario.</li><li>En tu navegador se guardan el tema, el tutorial y una copia de tus estadísticas.</li></ul></div><button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
 const RPT=new Set();
 function suggestionModal(){
