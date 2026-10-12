@@ -1402,7 +1402,7 @@ body:not(.hasnav) #nav{display:none}
 const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
 const EM={epi:"🧫",con:"🧵",adi:"🧈",car:"👂",oseo:"🦴",san:"🩸",mus:"💪",ner:"🧠"};
 /* Sistema nervioso en dos niveles que nunca se mezclan en una misma pregunta: general (no sé la región exacta) y específico (región concreta). */
-const NER_G=["Sistema nervioso central","Sistema nervioso periférico (SNP)"],NER_E=["Corteza cerebral","Corteza cerebelosa"],nerLevel=l=>NER_G.includes(l)?"g":NER_E.includes(l)?"e":null,
+const NER_G=["Sistema nervioso central","Sistema nervioso periférico (SNP)"],NER_E=["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario"],nerLevel=l=>NER_G.includes(l)?"g":NER_E.includes(l)?"e":null,
 normSub=s=>s==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":s==="Sistema nervioso central (sin corteza)"?"Sistema nervioso central":s;
 const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simple cilíndrico","Epitelio plano estratificado queratinizado","Epitelio plano estratificado no queratinizado","Epitelio plano estratificado paraqueratinizado","Epitelio cúbico estratificado","Epitelio cilíndrico estratificado","Epitelio pseudoestratificado","Urotelio (epitelio de transición)"],
 con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso","Tejido conjuntivo elástico","Tejido conjuntivo reticular"],
