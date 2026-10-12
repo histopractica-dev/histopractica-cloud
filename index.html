@@ -3,8 +3,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
 <!-- TÍTULO Y DESCRIPCIÓN OPTIMIZADOS PARA BÚSQUEDAS EN GOOGLE -->
-<title>HistoPráctica | Quizzes y Cuestionarios de Histología Médica</title>
-<meta name="description" content="Entrena tu ojo histológico con quizzes interactivos, cuestionarios de práctica y preguntas de exámenes de histología médica en cualquier dispositivo. Ideal para estudiantes de medicina y biología.">
+<title>HistoPráctica | Simulador de histología: practica la identificación de tejidos</title>
+<meta name="description" content="Practica histología médica identificando tejidos y células en imágenes reales. Empieza con tejido epitelial y tejido conjuntivo. Pensado para estudiantes de Medicina.">
 
 <!-- Datos estructurados para buscadores -->
 <script type="application/ld+json">
@@ -31,9 +31,10 @@
 <!-- OPEN GRAPH (PARA REDES Y WHATSAPP) OPTIMIZADO -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="HistoPráctica">
-<meta property="og:title" content="HistoPráctica | Quizzes y Cuestionarios de Histología Médica">
-<meta property="og:description" content="Entrena tu ojo histológico con quizzes interactivos, cuestionarios de práctica y preguntas de exámenes de histología médica en cualquier dispositivo.">
-<meta property="og:url" content="https://histopractica.online">
+<meta property="og:title" content="HistoPráctica | Simulador de histología: practica la identificación de tejidos">
+<meta property="og:description" content="Practica histología médica identificando tejidos y células en imágenes reales. Pensado para estudiantes de Medicina.">
+<link rel="canonical" href="https://histopractica.online/">
+<meta property="og:url" content="https://histopractica.online/">
 <meta property="og:locale" content="es_ES">
 <meta property="og:image" content="https://histopractica.online/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -42,8 +43,8 @@
 
 <!-- TWITTER CARD -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="HistoPráctica | Quizzes de Histología Médica">
-<meta name="twitter:description" content="Entrena tu ojo histológico con quizzes interactivos y preguntas de examen de histología médica.">
+<meta name="twitter:title" content="HistoPráctica | Simulador de histología médica">
+<meta name="twitter:description" content="Practica la identificación de tejidos y células en imágenes reales de histología.">
 <meta name="twitter:image" content="https://histopractica.online/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -1322,7 +1323,63 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation}
 }
 @media(min-width:640px){.wrong-q{grid-template-columns:minmax(180px,38%) minmax(0,1fr);align-items:center}.wrong-thumb{max-height:210px}}
 
-</style></head><body><main id="app" aria-busy="true"><div class="startup-loading" role="status" aria-label="Cargando HistoPráctica"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div></main><nav id="nav"></nav>
+</style>
+<style id="hp-landing">
+#landing{max-width:960px;margin:0 auto}
+.lp-brand{display:flex;align-items:center;gap:8px;font-size:1.45rem;font-weight:800;padding:6px 0 18px}
+.lp-brand .ic{color:var(--g);width:1.3em;height:1.3em}
+.lp-brand em{color:var(--g);font-style:normal}
+.lp-hero{display:grid;gap:24px;align-items:center;padding:4px 0 28px}
+.lp-hero h1{font-size:clamp(1.6rem,5.2vw,2.4rem);line-height:1.15;font-weight:800;margin:0 0 12px;letter-spacing:-.01em}
+.lp-hero p{font-size:1.05rem;margin:0 0 20px;max-width:34em}
+.lp-cta .btn{max-width:320px}
+.lp-fig{margin:0}
+.lp-box{position:relative;aspect-ratio:4/3;border:2px solid var(--ln);border-radius:var(--r-lg);background:var(--sf);overflow:hidden;display:grid;place-items:center}
+.lp-box>.ic{width:26%;height:auto;color:var(--gt);opacity:.45}
+.lp-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lp-fig figcaption{font-size:var(--fs-xs);color:var(--mu);margin-top:8px;min-height:1.2em;overflow-wrap:anywhere}
+.lp-sec{padding:14px 0}
+.lp-sec h2{font-size:1.4rem;margin:0 0 10px}
+.lp-sec p{margin:0 0 10px;max-width:46em}
+.lp-areas{display:grid;gap:12px;margin-top:12px}
+.lp-areas .card{margin:0}
+.lp-areas h3{margin:0 0 6px;font-size:1.1rem;font-weight:800}
+.lp-areas p{margin:0;color:var(--mu);font-size:.95rem}
+.lp-end{text-align:center}
+.lp-end p{margin-left:auto;margin-right:auto}
+.lp-end .btn{margin:0 auto}
+.lp-foot{border-top:2px solid var(--ln);margin-top:28px;padding-top:14px;color:var(--mu);font-size:var(--fs-sm);text-align:center}
+@media(min-width:760px){.lp-hero{grid-template-columns:1.05fr 1fr}.lp-areas{grid-template-columns:1fr 1fr}}
+</style>
+</head><body><main id="app" aria-busy="true"><div id="landing">
+<header class="lp-brand"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></header>
+<section class="lp-hero">
+<div>
+<h1>HistoPráctica: practica la identificación de tejidos histológicos con imágenes</h1>
+<p>Un simulador de histología pensado sobre todo para estudiantes de Medicina. Observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula con más seguridad.</p>
+<div class="lp-cta"><button type="button" class="btn" data-enter>Entrar</button></div>
+</div>
+<figure class="lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="800" height="600" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
+</section>
+<section class="lp-sec">
+<h2>¿Qué es HistoPráctica?</h2>
+<p>HistoPráctica es una herramienta para practicar histología a partir de la observación. La plataforma te muestra una imagen real de un corte histológico y tú identificas qué tejido es, qué célula aparece o qué estructura señala la marca, según el modo de práctica que elijas.</p>
+<p>Las preguntas son de opción múltiple y funcionan como complemento de tu estudio: no sustituyen al libro de texto ni a las prácticas de laboratorio. Con tu cuenta, tu progreso se guarda de forma privada.</p>
+</section>
+<section class="lp-sec">
+<h2>Áreas de práctica disponibles</h2>
+<div class="lp-areas">
+<div class="card"><h3>Tejido epitelial</h3><p>Reconoce distintos epitelios por la forma de sus células y el número de capas.</p></div>
+<div class="card"><h3>Tejido conjuntivo propiamente dicho</h3><p>Practica la identificación del tejido conjuntivo laxo y denso a partir de imágenes.</p></div>
+</div>
+</section>
+<section class="lp-sec lp-end">
+<h2>Empieza a practicar</h2>
+<p>Entra con tu cuenta o crea una nueva desde la pantalla de acceso.</p>
+<button type="button" class="btn" data-enter>Entrar</button>
+</section>
+<footer class="lp-foot">HistoPráctica · Herramienta de estudio de histología. Las imágenes conservan la atribución y la licencia de su fuente.</footer>
+</div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
@@ -1930,17 +1987,22 @@ async function enterApp(session){
  ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();home();if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
 }
 async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
+/* Portada pública: se muestra siempre al abrir el sitio. Solo se omite si se llega desde un enlace de correo (confirmación, recuperación o error de enlace). */
+let LANDING_ACTIVE=!/(^|[#&])access_token=/.test(location.hash)&&!new URLSearchParams(location.search).has("code")&&!/(^|[#&])error=/.test(location.hash)&&new URLSearchParams(location.hash.slice(1)).get("type")!=="recovery",BOOT_ERR="",BOOT=Promise.resolve();
+if(!LANDING_ACTIVE)app.innerHTML=LOADER;
+function bootFail(msg){if(LANDING_ACTIVE)BOOT_ERR=msg;else authView("login",msg)}
 async function bootAuth(){
  const viaLink=/(^|[#&])access_token=/.test(location.hash)||new URLSearchParams(location.search).has("code");
  let config=window.HP_CONFIG||{};
  if(!config.supabaseUrl||config.supabaseUrl.includes("REEMPLAZA_")||!config.supabaseAnonKey||config.supabaseAnonKey.includes("REEMPLAZA_")){
   try{const response=await fetch("/api/public-config",{cache:"no-store"});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo cargar la configuración pública de Supabase.");config=payload}
-  catch(error){authView("login",(error.message||"Falta configurar Supabase.")+" Añade SUPABASE_URL y SUPABASE_ANON_KEY en las variables de Vercel.");return}
+  catch(error){bootFail((error.message||"Falta configurar Supabase.")+" Añade SUPABASE_URL y SUPABASE_ANON_KEY en las variables de Vercel.");return}
  }
- if(!window.supabase?.createClient){authView("login","No se pudo cargar el cliente de Supabase. Comprueba tu conexión a internet e inténtalo de nuevo.");return}
+ if(!window.supabase?.createClient){bootFail("No se pudo cargar el cliente de Supabase. Comprueba tu conexión a internet e inténtalo de nuevo.");return}
  SUPA=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
- SUPA.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];authView("login")}if(event==="PASSWORD_RECOVERY")authView("update")});
+ SUPA.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];if(!LANDING_ACTIVE)authView("login")}if(event==="PASSWORD_RECOVERY")authView("update")});
  if(new URLSearchParams(location.hash.slice(1)).get("type")==="recovery"){authView("update");return}
+ if(LANDING_ACTIVE)return;
  const {data,error}=await SUPA.auth.getSession();if(error)throw error;if(data.session){if(viaLink)notifyLogin(data.session,"enlace de correo");try{await enterApp(data.session)}catch(e){authView("login",e.message)}}else authView("login");
 }
 async function notifyLogin(session,method){
@@ -1979,7 +2041,34 @@ async function adminView(){
 }
 
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
-initDB().then(()=>bootAuth()).catch(error=>{console.error(error);authView("login","No se pudo iniciar la aplicación. Revisa la configuración y la conexión.")}).finally(()=>app.removeAttribute("aria-busy"));
+BOOT=initDB().then(()=>bootAuth()).catch(error=>{console.error(error);bootFail("No se pudo iniciar la aplicación. Revisa la configuración y la conexión.")}).finally(()=>app.removeAttribute("aria-busy"));
+/* «Entrar»: con sesión válida va a la pantalla principal; sin sesión, a la pantalla de acceso que ya existía. */
+async function landingEnter(){
+ $$("[data-enter]").forEach(b=>b.disabled=true);
+ try{
+  await BOOT;LANDING_ACTIVE=false;
+  if(BOOT_ERR||!SUPA){authView("login",BOOT_ERR||"No se pudo iniciar la aplicación. Revisa la configuración y la conexión.");return}
+  const {data,error}=await SUPA.auth.getSession();
+  if(error||!data.session){authView("login");return}
+  app.innerHTML=LOADER;
+  try{await enterApp(data.session)}catch(e){authView("login",e.message)}
+ }catch(e){console.error(e);LANDING_ACTIVE=false;authView("login",e.message||"No se pudo comprobar la sesión.")}
+}
+document.addEventListener("click",e=>{if(LANDING_ACTIVE&&e.target.closest&&e.target.closest("[data-enter]"))landingEnter()});
+/* Imagen de muestra: la elige el servidor (/api/landing-image) y solo devuelve una URL y su atribución; el banco no se consulta desde el navegador. Si falla, la portada queda con el logo. */
+async function loadLandingImage(){
+ const img=$("#lp-img"),cap=$("#lp-cap");if(!img)return;
+ try{
+  const r=await fetch("/api/landing-image",{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);
+  const d=await r.json();if(!d||!/^https:\/\//.test(d.url||""))throw new Error("sin imagen");
+  img.onload=()=>{img.hidden=false};
+  img.alt="Imagen de histología de muestra"+(T[d.theme]?" ("+T[d.theme].toLowerCase()+")":"");
+  img.src=d.url;
+  const credit=[d.source,d.author,d.license].filter(Boolean).join(" · ");
+  if(cap)cap.textContent="Imagen de muestra del banco de HistoPráctica."+(credit?" "+credit+".":"");
+ }catch(e){console.warn("Imagen de portada no disponible:",e.message||e)}
+}
+loadLandingImage();
 </script>
 <style id="hp-pro-layer">
 /* HistoPráctica Pro · polish layer */
