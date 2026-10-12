@@ -19,7 +19,7 @@ const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simpl
 con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso"],
 adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
-ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario","Sustancia blanca","Sustancia negra","Sustancia gris","Nervio periférico","Ganglio espinal","Ganglio autónomo"]};
+ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario","Sustancia blanca","Sustancia negra","Sustancia gris","Nervio periférico","Ganglio nervioso"]};
 const DIVS=["Sistema nervioso central","Sistema nervioso periférico"];
 const NEUS=["Neurona multipolar","Neurona bipolar","Neurona pseudounipolar","Neurona anaxónica"];
 const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
