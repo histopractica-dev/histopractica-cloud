@@ -1742,7 +1742,7 @@ async function rankView(){
  };
  app.innerHTML=head()+`<h1 class="hero">Ranking</h1><div class="row" id="rank-modes" role="group" aria-label="Modalidad de ranking" style="gap:8px;flex-wrap:wrap;margin:0 0 12px"><button type="button" class="btn sm" data-ranking-mode="current" aria-pressed="true">🔥 Racha actual</button><button type="button" class="btn sm s" data-ranking-mode="best" aria-pressed="false">🏅 Racha máxima</button><button type="button" class="btn sm s" data-ranking-mode="xp" aria-pressed="false">⭐ XP</button></div><p id="rk-desc" class="mu" style="margin:0 0 14px"></p><div id="rk" aria-live="polite">${SK}</div>`;
  const em=(t,d)=>`<div class="empty"><span class="emoji-icon" aria-hidden="true" style="font-size:2.4rem">🏆</span><b>${esc(t)}</b><span>${esc(d)}</span></div>`;
- let selected="current",rankData={current:null,best:null,xp:null},avatarRows=[];
+ let selected="current",rankData={current:null,best:null,xp:null},avatarRows=[],adminIds=new Set();
  const byId=new Map(),byAlias=new Map();
  const avatarFor=x=>{
   const id=x.user_id??x.userId??x.uid??x.id??null;
@@ -1756,7 +1756,7 @@ async function rankView(){
  const me=x=>x.is_me?' <span class="bdg b">Tú</span>':"";
  const person=x=>`<span class="rank-person"><span class="rank-avatar" aria-hidden="true">${avatarFor(x)}</span><b class="pnm">${esc(x.alias??x.display_name??x.name??"Estudiante")}${me(x)}</b></span>`;
  const score=x=>`${Number(x.points||0).toLocaleString("es-MX")} ${modes[selected].unit}`;
- const normalize=(items)=>items.map((x,i)=>{const id=x.user_id??x.userId??x.uid??x.id??null;return {...x,id,alias:noMail(x.alias??x.display_name??x.name??"Estudiante"),points:Number(x.points)||0,is_me:!!x.is_me||String(id)===String(CURRENT_USER?.id),_oldPos:Number(x.pos)||i+1}}).filter(x=>x.id&&x.points>0).sort((a,b)=>b.points-a.points||a._oldPos-b._oldPos||String(a.alias).localeCompare(String(b.alias),"es-MX"));
+ const normalize=(items)=>items.map((x,i)=>{const id=x.user_id??x.userId??x.uid??x.id??null;return {...x,id,alias:noMail(x.alias??x.display_name??x.name??"Estudiante"),points:Number(x.points)||0,is_me:!!x.is_me||String(id)===String(CURRENT_USER?.id),_oldPos:Number(x.pos)||i+1}}).filter(x=>x.id&&x.points>0&&!adminIds.has(String(x.id))).sort((a,b)=>b.points-a.points||a._oldPos-b._oldPos||String(a.alias).localeCompare(String(b.alias),"es-MX"));
  const render=()=>{
   const box=$("#rk");if(!box)return;
   $$('[data-ranking-mode]').forEach(b=>{const on=b.dataset.rankingMode===selected;b.classList.toggle("s",!on);b.setAttribute("aria-pressed",String(on))});
@@ -1766,12 +1766,14 @@ async function rankView(){
   if(source===false){box.innerHTML=em("Ranking no disponible","No se pudieron cargar los datos de esta modalidad. Inténtalo de nuevo más tarde.");return}
   const data=normalize(source);
   if(!data.length){box.innerHTML=em("Aún no hay participantes","Aparecerá aquí cuando haya datos de esta modalidad.");return}
-  const M=["gold","silver","bronze"],top=data.slice(0,3),rest=data.slice(3,100);
-  box.innerHTML=`<div class="pod">${top.map((x,i)=>`<div class="pc ${M[i]} p${i+1}"><span class="md" aria-label="Puesto ${i+1}">${i+1}</span>${person(x)}<span class="pp">${esc(score(x))}</span></div>`).join("")}</div>`+(rest.length?`<div class="rl">${rest.map((x,i)=>`<div class="rr${x.is_me?" me":""}"><span class="rp">${i+4}</span>${person(x)}<b>${esc(score(x))}</b></div>`).join("")}</div>`:"");
+  const M=["gold","silver","bronze"],top=data.slice(0,3),rest=data.slice(3,10),myIdx=data.findIndex(x=>x.is_me);
+  const meRow=myIdx>=0?data[myIdx]:(isAdmin()?null:{is_me:true,id:CURRENT_USER?.id,alias:noMail(CURRENT_PROFILE?.display_name||"Estudiante"),points:0});
+  const mine=meRow&&myIdx!==-1&&myIdx<10?"":meRow?`${myIdx>=11?'<div class="rk-gap" aria-hidden="true">···</div>':""}<div class="rr me rk-mine"><span class="rp">${myIdx>=0?myIdx+1:"—"}</span>${person(meRow)}<b>${esc(score(meRow))}</b></div>`:"";
+  box.innerHTML=`<div class="pod">${top.map((x,i)=>`<div class="pc ${M[i]} p${i+1}"><span class="md" aria-label="Puesto ${i+1}">${i+1}</span>${person(x)}<span class="pp">${esc(score(x))}</span></div>`).join("")}</div>`+(rest.length?`<div class="rl">${rest.map((x,i)=>`<div class="rr${x.is_me?" me":""}"><span class="rp">${i+4}</span>${person(x)}<b>${esc(score(x))}</b></div>`).join("")}</div>`:"")+mine;
  };
  $$('[data-ranking-mode]').forEach(b=>b.onclick=()=>{selected=b.dataset.rankingMode;render()});
  const loadCurrent=async()=>{try{const {data,error}=await SUPA.rpc("leaderboard");if(error)throw error;if(!Array.isArray(data))throw new Error("Respuesta de ranking no válida");rankData.current=data.map((x,i)=>({...x,user_id:x.user_id??x.userId??x.uid??x.id,alias:noMail(x.alias??x.display_name??x.name??"Estudiante"),points:Number(x.points)||0,pos:Number(x.pos)||i+1}));}catch(e){console.warn("No se pudo cargar el ranking por racha actual",e);rankData.current=false}};
- const loadOtherModes=async()=>{try{const {data,error}=await SUPA.auth.getSession();if(error)throw error;const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");const response=await fetch("/api/rank-stats",{headers:{Authorization:`Bearer ${token}`}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudieron consultar los rankings.");rankData.best=Array.isArray(payload.best)?payload.best:false;rankData.xp=Array.isArray(payload.xp)?payload.xp:false;}catch(e){console.warn("No se pudieron cargar los rankings de racha máxima y XP",e);rankData.best=false;rankData.xp=false}};
+ const loadOtherModes=async()=>{try{const {data,error}=await SUPA.auth.getSession();if(error)throw error;const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");const response=await fetch("/api/rank-stats",{headers:{Authorization:`Bearer ${token}`}});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudieron consultar los rankings.");adminIds=new Set((Array.isArray(payload.admins)?payload.admins:[]).map(String));rankData.best=Array.isArray(payload.best)?payload.best:false;rankData.xp=Array.isArray(payload.xp)?payload.xp:false;}catch(e){console.warn("No se pudieron cargar los rankings de racha máxima y XP",e);rankData.best=false;rankData.xp=false}};
  const loadAvatars=async()=>{try{const result=await SUPA.from("profile_avatars").select("user_id,alias,avatar_url");if(!result.error)avatarRows=result.data||[];else console.warn("No se pudieron consultar los avatares del ranking:",result.error.message)}catch(error){console.warn("No se pudieron consultar los avatares del ranking",error)}for(const row of avatarRows){if(row.user_id)byId.set(String(row.user_id),row);const a=String(row.alias||"").trim().toLocaleLowerCase("es-MX");if(a){const list=byAlias.get(a)||[];list.push(row);byAlias.set(a,list)}}};
  render();
  await Promise.all([loadCurrent(),loadOtherModes(),loadAvatars()]);
@@ -2183,6 +2185,9 @@ button:focus-visible{outline-offset:3px}
  .top>.nt{grid-column:2;grid-row:1;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;justify-content:center}
  .top:has(>.nt)>.av{grid-column:3}
 }
+
+.rk-gap{text-align:center;color:var(--mu);font-weight:800;letter-spacing:.3em;margin:6px 0 2px}
+.rk-mine{margin-top:8px}
 </style>
 <div id="hp-effects" aria-hidden="true"></div>
 <script id="hp-pro-upgrades">
