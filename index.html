@@ -293,6 +293,7 @@ input[type=number] {
   opacity:.5;
   box-shadow:none;
 }
+.ch input:disabled:checked+span { filter:grayscale(1); }
 
 .img.loading {
   background:var(--sf);
@@ -1595,11 +1596,12 @@ function rec(q,ok){if(CURRENT_USER&&SUPA&&Number(S?.best)>0)(async()=>{try{const
 function questionItems(c,bank){
  const mods=c.mod==="M"?["A","B","C","D","E"]:[c.mod],o=[];
  for(const e of bank.filter(e=>c.temas.includes(e.tema))){
-  if(mods.includes("A")&&e.subtipo)o.push({e,m:"A"});
-  if(mods.includes("D")&&e.division)o.push({e,m:"D"});
-  if(mods.includes("E")&&e.neurona)o.push({e,m:"E"});
-  if(mods.includes("B"))(e.celulas||[]).forEach(t=>o.push({e,m:"B",t}));
-  if(mods.includes("C"))(e.estructuras||[]).forEach(t=>o.push({e,m:"C",t}))}
+  const ms=e.tema==="san"?["B"]:mods;/* sangre: solo «¿qué célula?», sin importar la modalidad elegida */
+  if(ms.includes("A")&&e.subtipo)o.push({e,m:"A"});
+  if(ms.includes("D")&&e.division)o.push({e,m:"D"});
+  if(ms.includes("E")&&e.neurona)o.push({e,m:"E"});
+  if(ms.includes("B"))(e.celulas||[]).forEach(t=>o.push({e,m:"B",t}));
+  if(ms.includes("C"))(e.estructuras||[]).forEach(t=>o.push({e,m:"C",t}))}
  return [...new Map(o.map(it=>[itKey(it),it])).values()].filter(it=>c.scope!=="pending"||!ANSWERED.has(itKey(it)))}
 function balancedItems(items,r=Math.random,level=0){
  const groupers=[it=>it.e.tema,it=>it.m,it=>(it.m==="A"?it.e.subtipo:it.m==="D"?it.e.division:it.m==="E"?it.e.neurona:it.t.n).trim().toLocaleLowerCase("es")];
@@ -1635,21 +1637,22 @@ function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
  if(custom&&lc.temas)pre=lc.temas;
  const chips=(n,o,s)=>o.map(([v,l,d])=>`<label class="ch"><input type="radio" name="${n}" value="${v}" ${v==s?"checked":""}><span>${l}${d?`<small>${d}</small>`:""}</span></label>`).join("");
  app.innerHTML=(custom?head():`<div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h2 style="margin:0;flex:1">${EM[pre[0]]} ${T[pre[0]]}</h2></div>`)+(custom?`<h1 class="hero">Practicar</h1><p class="mu" style="margin:0">Combina los temas que quieras. Con todos marcados, es práctica mixta.</p><div class="sub">Temas</div><div class="row" style="margin-bottom:14px"><button class="btn sm s" id="select-all">Seleccionar todos</button><button class="btn sm s" id="select-none">Deseleccionar todos</button></div><div class="row">${Object.entries(T).map(([k,v])=>`<label class="ch"><input type="checkbox" name="t" value="${k}" ${pre.includes(k)?"checked":""}><span>${EM[k]} ${v}<small data-count="${k}"></small></span></label>`).join("")}</div>`:"")+
- `<div class="sub">Modalidad</div><div class="tgrid">${chips("mod",[["A","Tejido","¿Qué tejido es?"],["B","Célula","¿Qué célula marca el recuadro?"],["C","Estructura","¿Qué estructura señala?"],["M","Mixto","Todas las modalidades"]],lc.mod||"M")}</div>
+ `<div class="sub">Modalidad</div><div class="tgrid">${chips("mod",[["A","Tejido","¿Qué tejido es?"],["B","Célula","¿Qué célula marca el recuadro?"],["C","Estructura","¿Qué estructura señala?"],["M","Mixto","Todas las modalidades"]],lc.pref||lc.mod||"M")}</div><p class="hint" id="modhint" style="margin:8px 0 0"></p>
  <div class="sub">Qué practicar</div><div class="tgrid">${chips("scope",[["all","Todo el banco","Incluye preguntas ya respondidas"],["pending","Completar colección","Solo preguntas que aún no has respondido"]],lc.scope||"all")}</div>
  <div class="sub">Preguntas</div><div class="row" id="quick-counts">${[10,20,30,40,50].map(n=>`<button class="btn sm s" data-n="${n}">${n}</button>`).join("")}<button class="btn sm s" id="all-questions">Todas las disponibles</button></div>
  <label for="question-count" class="mu" style="display:block;margin:14px 0 6px">Cantidad de preguntas</label><input id="question-count" type="number" min="1" step="1" value="${lc.n||20}" inputmode="numeric" aria-describedby="av">
  <div class="sub">Corrección</div><div class="row">${chips("cor",[["i","Inmediata"],["f","Al final"]],lc.cor||"i")}</div>
  <p id="av" class="mu" style="margin-top:18px" role="status"></p><p class="hint">La selección reparte las preguntas entre temas, modalidades y categorías; solo repite más una categoría si las otras se agotan.</p><div id="sync-status">${syncStatus()}</div><div id="msg" role="alert"></div><button class="btn" id="go">Empezar a practicar</button>`;
- const cfg=()=>({temas:custom?$$("[name=t]:checked").map(x=>x.value):pre,mod:$("[name=mod]:checked").value,scope:$("[name=scope]:checked").value,n:+$("#question-count").value,cor:$("[name=cor]:checked").value});
+ let userMod=lc.pref||lc.mod||"M";const cfg=()=>{const temas=custom?$$("[name=t]:checked").map(x=>x.value):pre,onlySan=!!temas.length&&temas.every(t=>t==="san");return{temas,mod:onlySan?"B":userMod,pref:userMod,scope:$("[name=scope]:checked").value,n:+$("#question-count").value,cor:$("[name=cor]:checked").value}};
  let desired=lc.n||20,useAll=false;
- const upd=()=>{const c=cfg(),all=questionItems({...c,scope:"all"},BANK).length,available=questionItems(c,BANK).length,waiting=c.scope==="pending"&&!SYNC_READY,a=waiting?0:available,input=$("#question-count");input.max=a;input.min=a?1:0;input.disabled=!a;input.value=a?clamp(useAll?a:Math.floor(desired)||1,1,a):0;c.n=+input.value;CFG=c;
+ const syncMod=()=>{const t=custom?$$("[name=t]:checked").map(x=>x.value):pre,onlySan=!!t.length&&t.every(x=>x==="san"),hasSan=t.includes("san");$$("[name=mod]").forEach(i=>{i.disabled=onlySan;i.checked=onlySan?i.value==="B":i.value===userMod});$("#modhint").textContent=onlySan?"En sangre solo hay preguntas de células.":hasSan?"La modalidad se aplica a los demás tejidos; sangre siempre pregunta por células.":""};
+ const upd=()=>{syncMod();const c=cfg(),all=questionItems({...c,scope:"all"},BANK).length,available=questionItems(c,BANK).length,waiting=c.scope==="pending"&&!SYNC_READY,a=waiting?0:available,input=$("#question-count");input.max=a;input.min=a?1:0;input.disabled=!a;input.value=a?clamp(useAll?a:Math.floor(desired)||1,1,a):0;c.n=+input.value;CFG=c;
  $("#go").disabled=!a||!c.temas.length;$("#select-all")&&($("#select-all").disabled=c.temas.length===Object.keys(T).length);$("#select-none")&&($("#select-none").disabled=!c.temas.length);
  $$("[data-n]").forEach(button=>{button.disabled=+button.dataset.n>a;button.setAttribute("aria-pressed",String(+button.dataset.n===c.n))});$("#all-questions").disabled=!a;$("#all-questions").setAttribute("aria-pressed",String(a>0&&c.n===a));
  $$("[data-count]").forEach(label=>{label.textContent=`${questionItems({...c,temas:[label.dataset.count]},BANK).length} ${c.scope==="pending"?"pendientes":"preguntas"}`});
  $("#av").textContent=!c.temas.length?"Selecciona al menos un tejido para practicar.":waiting?"Sincroniza el progreso para consultar las preguntas pendientes.":c.scope==="pending"&&!a&&all?`Colección completada: ya respondiste las ${all} preguntas de esta selección.`:a?`${a} ${c.scope==="pending"?"preguntas pendientes":"preguntas disponibles"} · máximo ${a}${c.scope==="pending"?` de ${all} en la colección`:""}.`:"No hay preguntas de esta modalidad. Cambia la selección o añade imágenes con marcas.";
  $("#go").textContent=c.scope==="pending"?"Completar colección":"Empezar a practicar";$("#msg").textContent=""};
- $$("input[type=radio],input[type=checkbox]").forEach(input=>input.onchange=upd);$("#question-count").oninput=()=>{const input=$("#question-count"),a=+input.max,valid=input.value!==""&&Number.isInteger(+input.value)&&+input.value>=1&&+input.value<=a;$("#go").disabled=!valid;if(valid){desired=+input.value;useAll=false;CFG=cfg()}$$("[data-n]").forEach(button=>button.setAttribute("aria-pressed",String(valid&&+button.dataset.n===+input.value)));$("#all-questions").setAttribute("aria-pressed",String(valid&&+input.value===a));$("#msg").textContent=valid?"":`Escribe un número entero entre 1 y ${a}.`};$("#question-count").onchange=()=>{desired=+$("#question-count").value;useAll=false;upd()};
+ $$("input[type=radio],input[type=checkbox]").forEach(input=>input.onchange=upd);$$("[name=mod]").forEach(input=>input.onchange=()=>{userMod=input.value;upd()});$("#question-count").oninput=()=>{const input=$("#question-count"),a=+input.max,valid=input.value!==""&&Number.isInteger(+input.value)&&+input.value>=1&&+input.value<=a;$("#go").disabled=!valid;if(valid){desired=+input.value;useAll=false;CFG=cfg()}$$("[data-n]").forEach(button=>button.setAttribute("aria-pressed",String(valid&&+button.dataset.n===+input.value)));$("#all-questions").setAttribute("aria-pressed",String(valid&&+input.value===a));$("#msg").textContent=valid?"":`Escribe un número entero entre 1 y ${a}.`};$("#question-count").onchange=()=>{desired=+$("#question-count").value;useAll=false;upd()};
  $$("[data-n]").forEach(button=>button.onclick=()=>{desired=+button.dataset.n;useAll=false;upd()});$("#all-questions").onclick=()=>{useAll=true;upd()};
  if(custom){$("#select-all").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=true);upd()};$("#select-none").onclick=()=>{$$("[name=t]").forEach(input=>input.checked=false);upd()}}upd();syncUI();if($("#bk"))$("#bk").onclick=home;
  $("#go").onclick=()=>{const c=cfg(),a=questionItems(c,BANK).length;if(!c.temas.length||!Number.isInteger(c.n)||c.n<1||c.n>a||c.scope==="pending"&&!SYNC_READY)return upd();CFG=c;run(c)}}
