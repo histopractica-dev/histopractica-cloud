@@ -1395,20 +1395,20 @@ body:not(.hasnav) #nav{display:none}
 <section class="lp-tis"><h2 class="lp-lab">Tejidos que puedes practicar</h2><ul><li style="--c:#1cb0f6"><i></i>Epitelial</li><li style="--c:#ff9600"><i></i>Conjuntivo propiamente dicho</li><li style="--c:#d4a000"><i></i>Adiposo</li><li style="--c:#ce82ff"><i></i>Cartilaginoso</li><li style="--c:#9a7b4f"><i></i>Óseo</li><li style="--c:#ff4b4b"><i></i>Sanguíneo</li><li style="--c:#2fa000"><i></i>Muscular</li><li style="--c:#7c5cff"><i></i>Nervioso</li></ul></section>
 <details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details>
 </div></div></main><nav id="nav"></nav>
-<!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
+<!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,division (solo nervioso: "Sistema nervioso central"|"Sistema nervioso periférico"),url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
 <script>
 const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
 const EM={epi:"🧫",con:"🧵",adi:"🧈",car:"👂",oseo:"🦴",san:"🩸",mus:"💪",ner:"🧠"};
-/* Sistema nervioso en dos niveles que nunca se mezclan en una misma pregunta: general (no sé la región exacta) y específico (región concreta). */
-const NER_G=["Sistema nervioso central","Sistema nervioso periférico (SNP)"],NER_E=["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario"],nerLevel=l=>NER_G.includes(l)?"g":NER_E.includes(l)?"e":null,
-normSub=s=>s==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":s==="Sistema nervioso central (sin corteza)"?"Sistema nervioso central":s;
+/* Sistema nervioso en dos modalidades separadas: D = «¿central o periférico?» (campo division) y A = «¿qué tejido?» solo con regiones específicas (campo subtipo). */
+const DIVS=["Sistema nervioso central","Sistema nervioso periférico"],
+migrateE=e=>{let s=e.subtipo==="Epitelio simple plano (endotelio)"?"Epitelio simple plano":e.subtipo,d=e.division;if(e.tema==="ner"){const old={"Sistema nervioso central (sin corteza)":DIVS[0],"Sistema nervioso periférico (SNP)":DIVS[1]};if(old[s]){d=d||old[s];s=undefined}}return{...e,subtipo:s,division:d}};
 const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simple cilíndrico","Epitelio plano estratificado queratinizado","Epitelio plano estratificado no queratinizado","Epitelio plano estratificado paraqueratinizado","Epitelio cúbico estratificado","Epitelio cilíndrico estratificado","Epitelio pseudoestratificado","Urotelio (epitelio de transición)"],
 con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso","Tejido conjuntivo elástico","Tejido conjuntivo reticular"],
 adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
-ner:NER_G.concat(NER_E)};
+ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario"]};
 const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
 car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
 ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria","Célula de Schwann","Célula satélite","Célula de Purkinje","Neurona piramidal","Neurona pseudounipolar"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
@@ -1421,7 +1421,7 @@ const IC={home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-
 const ic=(n,c="")=>`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||""}</svg>`;
 const LOGO='<svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg>';
 const SK='<span class="sk-l"></span>',COL={epi:"#1cb0f6",con:"#ff9600",adi:"#d4a000",car:"#ce82ff",oseo:"#9a7b4f",san:"#ff4b4b",mus:"#2fa000",ner:"#7c5cff"};
-const MN={A:"Identificar tejido",B:"Identificar célula",C:"Identificar estructura"};
+const MN={D:"Central o periférico",A:"Identificar tejido",B:"Identificar célula",C:"Identificar estructura"};
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],app=$("#app");
 let BANK=[],S=null,CFG=null,SEL=null,SR=[],DR=null,SMSG="",OFF=0,LQ="";
 let SUPA=null,CURRENT_USER=null,CURRENT_PROFILE=null,REMOTE_BANK=[],REMOTE_STATS=null,REMOTE_ERRORS=null;
@@ -1436,8 +1436,8 @@ const kv=(m,k,v)=>new Promise((res,rej)=>{const t=DB.transaction("kv",m==="r"?"r
 async function initDB(){try{DB=await idb();let b=await kv("r","bank");if(!b){b=[];try{b=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(e){}if(b.length){await kv("w","bank",b);try{localStorage.removeItem("hp_bank")}catch(e){}}}LOCAL=b;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}}catch(e){DB=null;try{LOCAL=JSON.parse(localStorage.getItem("hp_bank")||"[]")}catch(x){}}}
 function persist(){const warn=()=>alert("No se pudo guardar en este navegador. Guarda una copia de seguridad desde el Banco.");if(!DB){try{localStorage.setItem("hp_bank",JSON.stringify(LOCAL))}catch(e){warn()}return}kv("w","bank",LOCAL).catch(warn)}
 function loadBank(){
- if(CURRENT_USER){BANK=[...new Map(REMOTE_BANK.filter(validE).map(e=>[e.id,{...e,subtipo:normSub(e.subtipo)}])).values()];return}
- let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,{...e,subtipo:normSub(e.subtipo)}])).values()]
+ if(CURRENT_USER){BANK=[...new Map(REMOTE_BANK.filter(validE).map(e=>[e.id,migrateE(e)])).values()];return}
+ let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,migrateE(e)])).values()]
 }
 function isAdmin(){return CURRENT_PROFILE?.role==="admin"}
 async function imageUrlForRow(row){if(row.image_path){const {data}=SUPA.storage.from("histology-images").getPublicUrl(row.image_path);return data.publicUrl}return row.external_image_url||""}
@@ -1453,6 +1453,7 @@ async function refreshRemoteBank(){
   id:row.id,tema:row.theme,
   // The student catalog deliberately omits answer labels. They are requested one question at a time from the server.
   subtipo:isAdmin()?(row.subtype||undefined):(row.has_subtype?"Tipo de tejido":undefined),
+  division:isAdmin()?(row.division||undefined):(row.has_division?"Sistema nervioso":undefined),
   url:await imageUrlForRow(row),_image_path:row.image_path||null,
   fuente:row.source,fuenteUrl:row.source_url||undefined,autor:row.author||undefined,licencia:row.license,
   rasgos:row.traits||"",verificada:row.verified===true,publicada:row.published===true,published:row.published===true,
@@ -1516,7 +1517,7 @@ async function storeQuestionOnSupabase(e){
    try{const fb=await fetchImageBlob(e.url);imagePath=await putImage(e.id,fb);freshBlob=fb}
    catch(err){console.warn("No se pudo copiar a Supabase; se conserva el enlace externo:",e.id,err);imagePath=null;externalUrl=e.url}
  }
- const row={id:String(e.id),theme:e.tema,subtype:e.subtipo||null,image_path:imagePath,external_image_url:externalUrl,source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||"Sin especificar",traits:e.rasgos||null,verified:e.verificada===true,published:e.published!==false,cells:e.celulas||[],structures:e.estructuras||[],guides:e.guias||[],created_by:CURRENT_USER.id,updated_at:new Date().toISOString()};
+ const row={id:String(e.id),theme:e.tema,subtype:e.subtipo||null,division:e.division||null,image_path:imagePath,external_image_url:externalUrl,source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||"Sin especificar",traits:e.rasgos||null,verified:e.verificada===true,published:e.published!==false,cells:e.celulas||[],structures:e.estructuras||[],guides:e.guias||[],created_by:CURRENT_USER.id,updated_at:new Date().toISOString()};
  const {error}=await SUPA.from("questions").upsert(row,{onConflict:"id"});if(error)throw error;
  if(freshBlob&&imagePath)await backupImage(e.id,freshBlob);return imagePath?"storage":"external";
 }
@@ -1562,7 +1563,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(t
 document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
 new MutationObserver(()=>{window.scrollTo(0,0);app.classList.remove("hp-pop");void app.offsetWidth;app.classList.add("hp-pop")}).observe(app,{childList:true});
 const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
-const qc=e=>(e.subtipo?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
+const qc=e=>(e.subtipo?1:0)+(e.division?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
 const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
 let ANSWERED=new Set(),PENDING=new Map(),SYNC_READY=false,SYNC_ERROR=false,SYNC_BUSY=null;
@@ -1590,14 +1591,15 @@ function rec(q,ok){if(CURRENT_USER&&SUPA&&Number(S?.best)>0)(async()=>{try{const
 
 /* ---------- Motor ---------- */
 function questionItems(c,bank){
- const mods=c.mod==="M"?["A","B","C"]:[c.mod],o=[];
+ const mods=c.mod==="M"?["A","B","C","D"]:[c.mod],o=[];
  for(const e of bank.filter(e=>c.temas.includes(e.tema))){
   if(mods.includes("A")&&e.subtipo)o.push({e,m:"A"});
+  if(mods.includes("D")&&e.division)o.push({e,m:"D"});
   if(mods.includes("B"))(e.celulas||[]).forEach(t=>o.push({e,m:"B",t}));
   if(mods.includes("C"))(e.estructuras||[]).forEach(t=>o.push({e,m:"C",t}))}
  return [...new Map(o.map(it=>[itKey(it),it])).values()].filter(it=>c.scope!=="pending"||!ANSWERED.has(itKey(it)))}
 function balancedItems(items,r=Math.random,level=0){
- const groupers=[it=>it.e.tema,it=>it.m,it=>(it.m==="A"?it.e.subtipo:it.t.n).trim().toLocaleLowerCase("es")];
+ const groupers=[it=>it.e.tema,it=>it.m,it=>(it.m==="A"?it.e.subtipo:it.m==="D"?it.e.division:it.t.n).trim().toLocaleLowerCase("es")];
  if(level===groupers.length)return shuf(items,r);
  const groups=new Map();for(const it of items){const key=groupers[level](it);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(it)}
  const queues=[...groups.values()].map(group=>balancedItems(group,r,level+1)),out=[];let active=queues;
@@ -1610,10 +1612,11 @@ function distract(ans,tiers,r=Math.random){
  return out}
 function question(it,r=Math.random){
  const e=it.e,all=o=>[].concat(...Object.values(o));let ans,txt,pool,mk=null,gz=[];
+ if(it.m==="D"){gz=e.guias||[];return{it,txt:gz.length?"La zona marcada, ¿es sistema nervioso central o periférico?":"¿Es sistema nervioso central o periférico?",ans:e.division,mk:null,gz,opts:shuf(DIVS.slice(),r)}}
  if(it.m==="A"){ans=e.subtipo;gz=e.guias||[];txt=gz.length?"¿Qué tipo de tejido observas en la zona marcada?":"¿Qué tipo de tejido observas?";pool=LB}
  else{const t=it.t;ans=t.n;pool=it.m==="B"?CE:ES;txt=it.m==="B"?"¿Qué célula queda dentro del recuadro?":(t.externa?"¿Qué estructura se señala?":"¿Qué estructura señala el recuadro?");if(t.x!=null&&!t.externa)mk={x:t.x,y:t.y,w:t.w,h:t.h}}
  const mine=it.m==="A"?[]:BANK.filter(x=>x.tema===e.tema).flatMap(x=>(it.m==="B"?x.celulas:x.estructuras)||[]).map(m=>m.n),same=(pool[e.tema]||[]).concat(mine),rel=(REL[e.tema]||[]).flatMap(k=>pool[k]||[]);
- const lv=it.m==="A"&&e.tema==="ner"?nerLevel(ans):null,tiers=lv?[LB.ner.filter(o=>nerLevel(o)===lv)]:[same,rel,all(pool)];
+ const tiers=it.m==="A"&&e.tema==="ner"?[same]:[same,rel,all(pool)];/* en nervioso, «tejido» solo compite con regiones específicas */
  return{it,txt,ans,mk,gz,opts:shuf([ans,...distract(ans,tiers,r)],r)}}
 
 /* ---------- Inicio ---------- */
@@ -1628,7 +1631,7 @@ function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
  if(custom&&lc.temas)pre=lc.temas;
  const chips=(n,o,s)=>o.map(([v,l,d])=>`<label class="ch"><input type="radio" name="${n}" value="${v}" ${v==s?"checked":""}><span>${l}${d?`<small>${d}</small>`:""}</span></label>`).join("");
  app.innerHTML=(custom?head():`<div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h2 style="margin:0;flex:1">${EM[pre[0]]} ${T[pre[0]]}</h2></div>`)+(custom?`<h1 class="hero">Practicar</h1><p class="mu" style="margin:0">Combina los temas que quieras. Con todos marcados, es práctica mixta.</p><div class="sub">Temas</div><div class="row" style="margin-bottom:14px"><button class="btn sm s" id="select-all">Seleccionar todos</button><button class="btn sm s" id="select-none">Deseleccionar todos</button></div><div class="row">${Object.entries(T).map(([k,v])=>`<label class="ch"><input type="checkbox" name="t" value="${k}" ${pre.includes(k)?"checked":""}><span>${EM[k]} ${v}<small data-count="${k}"></small></span></label>`).join("")}</div>`:"")+
- `<div class="sub">Modalidad</div><div class="tgrid">${chips("mod",[["A","Tejido","¿Qué tejido es?"],["B","Célula","¿Qué célula marca el recuadro?"],["C","Estructura","¿Qué estructura señala?"],["M","Mixto","Todas las modalidades"]],lc.mod||"M")}</div>
+ `<div class="sub">Modalidad</div><div class="tgrid">${chips("mod",[["A","Tejido","¿Qué tejido es?"],["B","Célula","¿Qué célula marca el recuadro?"],["C","Estructura","¿Qué estructura señala?"],["D","Central o periférico","Sistema nervioso: ¿central o periférico?"],["M","Mixto","Todas las modalidades"]],lc.mod||"M")}</div>
  <div class="sub">Qué practicar</div><div class="tgrid">${chips("scope",[["all","Todo el banco","Incluye preguntas ya respondidas"],["pending","Completar colección","Solo preguntas que aún no has respondido"]],lc.scope||"all")}</div>
  <div class="sub">Preguntas</div><div class="row" id="quick-counts">${[10,20,30,40,50].map(n=>`<button class="btn sm s" data-n="${n}">${n}</button>`).join("")}<button class="btn sm s" id="all-questions">Todas las disponibles</button></div>
  <label for="question-count" class="mu" style="display:block;margin:14px 0 6px">Cantidad de preguntas</label><input id="question-count" type="number" min="1" step="1" value="${lc.n||20}" inputmode="numeric" aria-describedby="av">
@@ -1649,8 +1652,8 @@ function cfgView(pre,custom){nav(custom?"p":"i");const lc=CFG||{};
 function wrongQuestionCard(item,showAnswer=true){
  const q=item?.q||null,it=q?.it||item?.it||item;
  if(!it?.e)return "";
- const prompt=q?.txt||(it.m==="A"?"¿Qué tipo de tejido observas?":it.m==="B"?"¿Qué célula está señalada?":"¿Qué estructura está señalada?");
- const answer=q?.ans||(it.m==="A"?it.e.subtipo:it.t?.n)||"Respuesta no disponible";
+ const prompt=q?.txt||(it.m==="A"?"¿Qué tipo de tejido observas?":it.m==="D"?"¿Es sistema nervioso central o periférico?":it.m==="B"?"¿Qué célula está señalada?":"¿Qué estructura está señalada?");
+ const answer=q?.ans||(it.m==="A"?it.e.subtipo:it.m==="D"?it.e.division:it.t?.n)||"Respuesta no disponible";
  const picked=item?.pick;
  return `<article class="card wrong-q"><img class="wrong-thumb" src="${esc(it.e.url||"")}" alt="Microfotografía de ${esc(T[it.e.tema]||"histología")}" loading="lazy" decoding="async"><div class="wrong-details"><p class="mu wrong-meta">${esc(T[it.e.tema]||"Histología")} · ${esc(MN[it.m]||"Pregunta")}</p><h3>${esc(prompt)}</h3>${picked!==undefined?`<p class="wrong-picked">Tu respuesta: <span class="r">${esc(picked)}</span></p>`:""}${showAnswer?`<p class="wrong-answer">Respuesta correcta: <b class="g">${esc(answer)}</b></p>`:""}</div></article>`;
 }
@@ -1786,7 +1789,7 @@ async function prepareQuestion(item){
   if(isAdmin()){const g=question(item);if(typeof g.ans==="string"&&g.ans.trim()&&g.opts.includes(g.ans)){console.warn("Admin: pregunta preparada en local",error);g.src=item;return g}}
   throw error}
 }
-const adminAnswer=q=>{if(!isAdmin()||!q.src)return null;const v=q.src.m==="A"?q.src.e.subtipo:q.src.t&&q.src.t.n;return typeof v==="string"&&v.trim()?v:null};
+const adminAnswer=q=>{if(!isAdmin()||!q.src)return null;const v=q.src.m==="A"?q.src.e.subtipo:q.src.m==="D"?q.src.e.division:q.src.t&&q.src.t.n;return typeof v==="string"&&v.trim()?v:null};
 
 /* ---------- Precarga: la siguiente pregunta (datos + imagen) se prepara mientras respondes la actual ---------- */
 const LOADER='<div class="startup-loading" role="status" aria-label="Cargando"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div>';
@@ -1843,7 +1846,7 @@ async function check(){
   catch(error){const known=adminAnswer(q);if(known==null)throw error;console.warn("Admin: verificación local (el servidor no la aceptó)",error);verification={isCorrect:String(pk).trim().toLowerCase()===known.trim().toLowerCase(),expected:known}}
   if(typeof verification.isCorrect!=="boolean"||typeof verification.expected!=="string")throw new Error("La verificación del servidor no devolvió un resultado válido.");
   ok=verification.isCorrect;q.ans=verification.expected;
-  if(q.it.m==="A")q.it.e.subtipo=verification.expected;else if(q.it.t)q.it.t.n=verification.expected;
+  if(q.it.m==="A")q.it.e.subtipo=verification.expected;else if(q.it.m==="D")q.it.e.division=verification.expected;else if(q.it.t)q.it.t.n=verification.expected;
   S.ans.push({q,pick:pk,ok});S.streak=ok?S.streak+1:0;S.best=Math.max(S.best,S.streak);rec(q,ok);
  }catch(error){S.done=0;if(button){button.disabled=false;button.textContent="Reintentar verificación"}const status=$("#sync-status");if(status)status.innerHTML=`<p class="r" role="alert">${esc(error.message||"No se pudo verificar la respuesta")}. Comprueba tu conexión e inténtalo otra vez.</p>`;return}
  feedbackSound(ok);
@@ -1873,7 +1876,7 @@ let BF="all";
 function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k),extN=BANK.filter(e=>!e._image_path).length;
  const card=e=>{const mk=(e.celulas||[]).map(m=>({...m,k:"Célula"})).concat((e.estructuras||[]).map(m=>({...m,k:"Estructura"})));
   return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" data-qid="${esc(e.id)}" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w&&!m.externa).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
-  <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc(e.subtipo||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>`${m.externa?"➡️ Estructura señalada externamente: ":""}${esc(m.n)}`).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}${e._image_path?"":" · ⚠️ enlace externo"}</p>
+  <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc([e.subtipo,e.division].filter(Boolean).join(" · ")||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>`${m.externa?"➡️ Estructura señalada externamente: ":""}${esc(m.n)}`).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}${e._image_path?"":" · ⚠️ enlace externo"}</p>
   <div class="row"><button class="btn sm s" data-e="${esc(e.id)}">✏️ Editar</button><button class="btn sm s" data-pub="${esc(e.id)}">${e.published===false?"Publicar":"Ocultar"}</button><button class="btn sm w" data-d="${esc(e.id)}">🗑</button></div></div>`};
  app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><button class="btn s" id="rp" style="margin-top:10px">🛠 Reparar imágenes${extN?` (${extN} con enlace externo)`:""}</button><pre id="rp-out"></pre><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
  ${BANK.length?vis.map(k=>cnt(k).length?`<h2>${EM[k]} ${T[k]} <span class="mu">· ${cnt(k).length} img · ${cnt(k).reduce((s,e)=>s+qc(e),0)} preg.</span></h2><div class="grid">${cnt(k).map(card).join("")}</div>`:"").join(""):'<p class="mu">Aún no hay imágenes. Ve a Añadir.</p>'}
@@ -1939,7 +1942,7 @@ function validate(x,tema,edit){
  const r1=v=>+v.toFixed(1),up=edit?edit.fuente==="Imagen propia":String(x.pid).startsWith("up"),back=()=>edit?bankView():sview();
  app.innerHTML=`<div class="xt"><button class="x" id="vb" aria-label="Cancelar">✕</button><h2 style="margin:0;flex:1">${edit?"Editar imagen":"Preparar imagen"}</h2></div>
  <div class="stk"><div class="vwrap"><div id="vw"><img id="vp" src="${esc(x.thumb)}" alt=""><span id="dots"></span><div class="bx" id="bx" style="display:none"><i class="hdl" id="hd"></i></div></div></div></div>
- <div class="card"><b><span class="num">1</span>¿Qué tejido es?</b><p class="mu" style="margin:4px 0 8px">Para la pregunta "¿Qué tipo de tejido observas?". Los recuadros guía del paso 2 solo señalan dónde mirar.</p><select id="vs"><option value="">No hacer pregunta de tejido</option>${(()=>{const cur=edit?edit.subtipo:LB[tema][0],op=o=>`<option ${cur===o?"selected":""}>${o}</option>`;return tema==="ner"?`<optgroup label="Parte general (no sé la región exacta)">${NER_G.map(op).join("")}</optgroup><optgroup label="Región específica">${NER_E.map(op).join("")}</optgroup>`:LB[tema].map(op).join("")})()}</select></div>
+ <div class="card"><b><span class="num">1</span>¿Qué tejido es?</b><p class="mu" style="margin:4px 0 8px">${tema==="ner"?"Región específica, para la pregunta «¿Qué tipo de tejido observas?» (aquí nunca aparece «central» ni «periférico»).":"Para la pregunta \"¿Qué tipo de tejido observas?\"."} Los recuadros guía del paso 2 solo señalan dónde mirar.</p><select id="vs"><option value="">No hacer pregunta de tejido</option>${LB[tema].map(o=>`<option ${(edit?edit.subtipo:(tema==="ner"?"":LB[tema][0]))===o?"selected":""}>${o}</option>`).join("")}</select>${tema==="ner"?`<p class="mu" style="margin:12px 0 8px"><b>Pregunta aparte:</b> «¿Es sistema nervioso central o periférico?». Actívala solo si quieres que esta imagen la tenga; si no sabes la región exacta, deja el tejido en «No hacer» y usa solo esta.</p><select id="vd"><option value="">No hacer pregunta central/periférico</option>${DIVS.map(o=>`<option ${(edit?edit.division:"")===o?"selected":""}>${o}</option>`).join("")}</select>`:""}</div>
  <div class="card"><b><span class="num">2</span>Marcas y estructuras <span class="mu">(opcional)</span></b><p class="mu" style="margin:4px 0 8px">Célula y Estructura con recuadro generan preguntas. También puedes usar una flecha ya dibujada en la imagen con un programa externo: activa la casilla y escribe la respuesta correcta.</p><label class="ch" style="display:flex;margin:10px 0"><input id="ext-structure" type="checkbox" ${(edit&&(edit.estructuras||[]).some(m=>m.externa))?"checked":""}><span>➡️ Esta imagen ya tiene una flecha/marca externa para preguntar «¿Qué estructura se señala?»</span></label><input id="ext-answer" maxlength="100" placeholder="Respuesta correcta de la flecha (ej. Núcleo)" value="${esc(edit&&((edit.estructuras||[]).find(m=>m.externa)||{}).n||"")}" style="margin-bottom:12px"><div id="ctl"></div><div id="vl"></div></div>
  <div class="card"><b><span class="num">3</span>Guardar</b><br><br><input id="vr" placeholder="Pista de estudio (opcional)" value="${esc(edit?edit.rasgos:"")}"><p id="cn" class="mu"></p><p id="vm" class="r"></p><button class="btn" id="va">${edit?"Guardar cambios":"Guardar en el banco"}</button></div>`;
  const bx=$("#bx"),wr=$("#vw"),im=$("#vp"),paint=()=>{const b=DR.box;if(b)bx.style.cssText=`left:${b.x-b.w/2}%;top:${b.y-b.h/2}%;width:${b.w}%;height:${b.h}%`};
@@ -1951,7 +1954,7 @@ function validate(x,tema,edit){
   $("#dots").innerHTML=m==="crop"?"":all.map(k=>`<i class="bs" style="left:${k.x-k.w/2}%;top:${k.y-k.h/2}%;width:${k.w}%;height:${k.h}%"></i>`).join("")+DR.gui.map(gzh).join("");
   $("#vl").innerHTML=all.map((k,i)=>`<div class="tl"><span>${k.k==="cel"?"🔬 Célula":"🧩 Estructura"}: <b>${esc(k.n)}</b></span><button class="btn sm s" data-r="${i}">Quitar</button></div>`).join("");
   $("#vl").innerHTML+=DR.gui.map((k,i)=>`<div class="tl"><span>🧭 Guía sin nombre</span><button class="btn sm s" data-g="${i}">Quitar</button></div>`).join("");$$("[data-g]").forEach(b=>b.onclick=()=>{DR.gui.splice(+b.dataset.g,1);ui()});
-  $("#cn").textContent=`Esta imagen generará ${($("#vs").value?1:0)+all.length+($("#ext-structure").checked&&$("#ext-answer").value.trim()?1:0)} pregunta(s).${DR.gui.length?` ${DR.gui.length} guía(s) sin pregunta propia${$("#vs").value?"":" (elige un tejido para que se usen)"}.`:""}`;
+  $("#cn").textContent=`Esta imagen generará ${($("#vs").value?1:0)+($("#vd")&&$("#vd").value?1:0)+all.length+($("#ext-structure").checked&&$("#ext-answer").value.trim()?1:0)} pregunta(s).${DR.gui.length?` ${DR.gui.length} guía(s) sin pregunta propia${$("#vs").value?"":" (elige un tejido para que se usen)"}.`:""}`;
   $$("[data-r]").forEach(b=>b.onclick=()=>{const i=+b.dataset.r;if(i<DR.cel.length)DR.cel.splice(i,1);else DR.est.splice(i-DR.cel.length,1);ui()});
   const set=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
   const start=k=>{DR.mode=k;DR.box=k==="crop"?{x:50,y:50,w:90,h:90}:{x:50,y:50,w:12,h:+(12*im.clientWidth/Math.max(1,im.clientHeight)).toFixed(2)};msg();ui();paint()};
@@ -1970,11 +1973,11 @@ function validate(x,tema,edit){
  bx.onpointermove=e=>{if(!drag)return;const r=wr.getBoundingClientRect();DR.box=drag.hd?boxResize(drag.b,100*(e.clientX-r.left)/r.width,100*(e.clientY-r.top)/r.height):boxMove(drag.b,100*(e.clientX-drag.sx)/r.width,100*(e.clientY-drag.sy)/r.height);paint()};
  bx.onpointerup=bx.onpointercancel=()=>{drag=null};
  im.onclick=e=>{if(!DR.mode)return;const r=im.getBoundingClientRect();DR.box=boxMove({...DR.box,x:100*(e.clientX-r.left)/r.width,y:100*(e.clientY-r.top)/r.height},0,0);paint()};
- $("#vs").onchange=ui;$("#ext-structure").onchange=ui;$("#ext-answer").oninput=ui;$("#vb").onclick=back;ui();
- $("#va").onclick=()=>{const sub=$("#vs").value;
+ $("#vs").onchange=ui;if($("#vd"))$("#vd").onchange=ui;$("#ext-structure").onchange=ui;$("#ext-answer").oninput=ui;$("#vb").onclick=back;ui();
+ $("#va").onclick=()=>{const sub=$("#vs").value,div=$("#vd")?$("#vd").value:"";
   if(DR.mode)return msg("Termina o cancela la marca que estás haciendo.");
-  if(!sub&&!DR.cel.length&&!DR.est.some(m=>!m.externa)&&!($("#ext-structure").checked&&$("#ext-answer").value.trim()))return msg(DR.gui.length?"Las guías solo sirven con la pregunta de tejido: elige un tejido.":"Elige un tejido o añade al menos una marca.");
-  const externalOn=$("#ext-structure").checked,externalAnswer=$("#ext-answer").value.trim();if(externalOn&&!externalAnswer)return msg("Escribe la estructura que señala la flecha externa.");const structures=DR.est.filter(m=>!m.externa);if(externalOn)structures.push({n:externalAnswer,x:50,y:50,w:99.9,h:99.9,externa:true});const e={id:edit?edit.id:(up?"":"commons-")+x.pid,tema,url:x.thumb,_image_path:edit?edit._image_path||null:null,published:edit?edit.published!==false:true,fuente:edit?edit.fuente:up?"Imagen propia":"Wikimedia Commons",fuenteUrl:x.page||undefined,autor:x.autor,licencia:x.lic,rasgos:$("#vr").value.trim(),verificada:true,celulas:DR.cel,estructuras:structures};if(DR.gui.length)e.guias=DR.gui;if(sub)e.subtipo=sub;
+  if(!sub&&!div&&!DR.cel.length&&!DR.est.some(m=>!m.externa)&&!($("#ext-structure").checked&&$("#ext-answer").value.trim()))return msg(DR.gui.length?"Las guías solo sirven con una pregunta de tejido o de central/periférico: elige una.":(tema==="ner"?"Elige una pregunta (tejido o central/periférico) o añade al menos una marca.":"Elige un tejido o añade al menos una marca."));
+  const externalOn=$("#ext-structure").checked,externalAnswer=$("#ext-answer").value.trim();if(externalOn&&!externalAnswer)return msg("Escribe la estructura que señala la flecha externa.");const structures=DR.est.filter(m=>!m.externa);if(externalOn)structures.push({n:externalAnswer,x:50,y:50,w:99.9,h:99.9,externa:true});const e={id:edit?edit.id:(up?"":"commons-")+x.pid,tema,url:x.thumb,_image_path:edit?edit._image_path||null:null,published:edit?edit.published!==false:true,fuente:edit?edit.fuente:up?"Imagen propia":"Wikimedia Commons",fuenteUrl:x.page||undefined,autor:x.autor,licencia:x.lic,rasgos:$("#vr").value.trim(),verificada:true,celulas:DR.cel,estructuras:structures};if(DR.gui.length)e.guias=DR.gui;if(sub)e.subtipo=sub;if(div)e.division=div;
   if(!saveBank([e],e.id))return msg("No se pudo guardar: se requiere una sesión de administrador.");
   loadBank();if(edit)return bankView();SR=SR.filter(y=>y.pid!==x.pid);SMSG="✅ Guardada. Banco: "+BANK.length+" imágenes.";sview()}}
 
