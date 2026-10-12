@@ -1325,81 +1325,72 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation}
 
 </style>
 <style id="hp-landing">
-main:has(#landing){max-width:1240px}
+main:has(#landing){max-width:none;padding:0}
 body:not(.hasnav) #nav{display:none}
-.lp-hero{display:grid;gap:18px 48px;grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "fig" "copy";padding:8px 0 36px}
-.lp-title{grid-area:title;margin:0}
-.lp-name{display:flex;align-items:center;gap:12px;font-size:clamp(2.4rem,11vw,3.2rem);font-weight:800;letter-spacing:-.02em;line-height:1}
-.lp-name .ic{width:1em;height:1em;color:var(--g);flex:none}
+#landing{height:100vh;height:100dvh;overflow:hidden}
+.lp-wrap{height:100%;max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:clamp(10px,1.8dvh,16px);padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}
+.lp-title{order:1;margin:0;container-type:inline-size}
+.lp-name{display:flex;align-items:center;gap:.2em;white-space:nowrap;font-size:min(11cqw,3.4rem);font-weight:800;letter-spacing:-.02em;line-height:1}
+.lp-name .ic{width:.95em;height:.95em;color:var(--g);flex:none}
 .lp-name em{color:var(--g);font-style:normal}
-.lp-tag{display:block;margin-top:12px;font-size:clamp(1.15rem,4.6vw,1.5rem);line-height:1.25;font-weight:800}
-.lp-copy{grid-area:copy}
-.lp-copy p{font-size:1.05rem;margin:0 0 20px;max-width:34em}
-.lp-copy .btn{max-width:320px}
-.lp-fig{grid-area:fig;margin:0;display:flex;flex-direction:column;min-width:0}
-.lp-box{position:relative;aspect-ratio:4/3;border:2px solid var(--ln);border-radius:var(--r-lg);background:var(--sf);overflow:hidden;display:grid;place-items:center}
-.lp-box>.ic{width:26%;height:auto;color:var(--gt);opacity:.45}
+.lp-tag{display:block;margin-top:.55em;font-size:clamp(1rem,4.6cqw,1.5rem);line-height:1.25;font-weight:800}
+.lp-fig{order:2;position:relative;margin:0;flex:1 1 0;min-height:140px;min-width:0}
+.lp-box{position:absolute;inset:0;border:2px solid var(--ln);border-radius:var(--r-lg);background:var(--sf);overflow:hidden;display:grid;place-items:center}
+.lp-box>.ic{width:22%;height:auto;max-height:50%;color:var(--gt);opacity:.45}
 .lp-box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.lp-fig figcaption{font-size:var(--fs-xs);color:var(--mu);margin-top:8px;min-height:1.2em;overflow-wrap:anywhere}
-.lp-sec{padding:20px 0}
-.lp-sec h2{font-size:1.5rem;margin:0 0 12px}
-.lp-sec>p{margin:0 0 10px;max-width:46em}
-.lp-steps,.lp-tissues{list-style:none;padding:0;margin:0;display:grid;gap:12px}
-.lp-steps{counter-reset:s}
-.lp-steps li{counter-increment:s;position:relative;border:2px solid var(--ln);border-radius:var(--r-lg);background:var(--pn);padding:14px 16px 14px 62px}
-.lp-steps li::before{content:counter(s);position:absolute;left:16px;top:14px;width:32px;height:32px;border-radius:50%;background:var(--g);color:#fff;font-weight:800;display:grid;place-items:center}
-.lp-steps b{display:block;margin-bottom:2px}
-.lp-steps span{color:var(--mu);font-size:.95rem}
-.lp-tissues{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.lp-tissues li{display:flex;align-items:center;gap:10px;border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn);padding:12px 14px;font-weight:700;font-size:.95rem}
-.lp-tissues i{width:12px;height:12px;border-radius:50%;flex:none;background:var(--c)}
-.lp-faq{max-width:780px}
-.lp-faq details{border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn);margin:0 0 10px}
-.lp-faq summary{cursor:pointer;list-style:none;position:relative;padding:14px 46px 14px 16px;font-weight:800}
-.lp-faq summary::-webkit-details-marker{display:none}
-.lp-faq summary::after{content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:translateY(-70%) rotate(45deg);transition:transform .15s}
-.lp-faq details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
-.lp-faq details p{margin:0;padding:0 16px 14px;color:var(--mu)}
-.lp-foot{border-top:2px solid var(--ln);margin-top:28px;padding-top:14px;color:var(--mu);font-size:var(--fs-sm);text-align:center}
-@media(min-width:900px){
-.lp-hero{grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-areas:"title fig" "copy fig";grid-template-rows:auto 1fr;min-height:min(86vh,840px);padding-top:24px}
-.lp-name{font-size:clamp(3rem,5.2vw,4.8rem)}
-.lp-tag{font-size:clamp(1.4rem,2.2vw,1.9rem);margin-top:18px}
-.lp-copy{align-self:start}
-.lp-box{aspect-ratio:auto;flex:1;min-height:520px}
-.lp-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
-.lp-tissues{grid-template-columns:repeat(4,minmax(0,1fr))}
+.lp-fig figcaption{position:absolute;left:10px;bottom:10px;max-width:calc(100% - 20px);padding:4px 10px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-size:.7rem;line-height:1.3}
+.lp-copy{order:3}
+.lp-lab{margin:0 0 5px;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mu)}
+.lp-copy p{margin:0 0 clamp(10px,1.8dvh,16px);font-size:clamp(.88rem,2.3dvh,1.05rem);line-height:1.5}
+.lp-copy .btn{max-width:340px}
+.lp-how{order:4;display:none}
+.lp-how ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;counter-reset:s}
+.lp-how li{counter-increment:s;display:flex;align-items:flex-start;gap:8px;font-size:.8rem;font-weight:700;line-height:1.3}
+.lp-how li::before{content:counter(s);flex:none;width:22px;height:22px;border-radius:50%;background:var(--g);color:#fff;font-size:.75rem;font-weight:800;display:grid;place-items:center}
+.lp-tis{order:5}
+.lp-tis ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.lp-tis li{display:inline-flex;align-items:center;gap:7px;border:2px solid var(--ln);border-radius:999px;background:var(--pn);padding:4px 11px;font-size:.78rem;font-weight:700;line-height:1.3}
+.lp-tis i{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c)}
+.lp-faq{order:6}
+.lp-faq>summary{display:inline-flex;align-items:center;gap:8px;cursor:pointer;list-style:none;border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn);padding:9px 14px;font-weight:800;font-size:.88rem;color:var(--bt)}
+.lp-faq>summary::-webkit-details-marker{display:none}
+.lp-faq>summary::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg)}
+.lp-faq[open]::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:60}
+.lp-panel{position:fixed;z-index:61;left:0;right:0;bottom:0;max-height:78dvh;overflow:auto;overscroll-behavior:contain;background:var(--bg);border:2px solid var(--ln);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.35)}
+.lp-panel h2{margin:0 0 12px;font-size:1.2rem}
+.lp-close{position:absolute;top:10px;right:10px;width:38px;height:38px;border:0;border-radius:50%;background:var(--sf);color:var(--tx);font:inherit;font-size:1.3rem;line-height:1;cursor:pointer}
+.lp-panel details{border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn);margin:0 0 8px}
+.lp-panel summary{cursor:pointer;list-style:none;position:relative;padding:12px 40px 12px 14px;font-weight:800;font-size:.92rem}
+.lp-panel summary::-webkit-details-marker{display:none}
+.lp-panel summary::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:translateY(-70%) rotate(45deg);transition:transform .15s}
+.lp-panel details[open] summary::after{transform:translateY(-30%) rotate(225deg)}
+.lp-panel details p{margin:0;padding:0 14px 12px;color:var(--mu);font-size:.9rem}
+@media(max-width:899px){
+.lp-copy p{font-size:clamp(.82rem,2dvh,.95rem);line-height:1.45}
+.lp-tis ul{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-16px;padding-right:16px}
+.lp-tis ul::-webkit-scrollbar{display:none}
+.lp-tis li{flex:none;white-space:nowrap}
 }
+@media(min-width:700px) and (min-height:560px){.lp-how{display:block}}
+@media(min-width:900px){
+.lp-wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-rows:auto auto auto auto 1fr;column-gap:clamp(28px,4vw,56px);row-gap:clamp(10px,2.2dvh,20px);padding:max(24px,3dvh) 28px max(24px,3dvh)}
+.lp-title,.lp-copy,.lp-how,.lp-tis,.lp-faq{grid-column:1}
+.lp-title{grid-row:1}.lp-copy{grid-row:2}.lp-how{grid-row:3}.lp-tis{grid-row:4}.lp-faq{grid-row:5;align-self:end;justify-self:start}
+.lp-fig{grid-column:2;grid-row:1/-1;min-height:0}
+.lp-name{font-size:min(11cqw,4.2rem)}
+.lp-tag{font-size:clamp(1.05rem,3.3dvh,1.7rem)}
+.lp-panel{left:max(28px,calc((100vw - 1320px)/2 + 28px));right:auto;bottom:28px;width:min(480px,calc(100vw - 56px));max-height:72dvh;border-radius:var(--r-lg)}
+}
+@media(max-height:520px){#landing{height:auto;min-height:100dvh;overflow:visible}.lp-wrap{height:auto;min-height:100dvh}.lp-fig{min-height:240px}}
 </style>
-</head><body><main id="app" aria-busy="true"><div id="landing">
-<section class="lp-hero">
+</head><body><main id="app" aria-busy="true"><div id="landing"><div class="lp-wrap">
 <h1 class="lp-title"><span class="lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></span><span class="lp-tag">Practica la identificación de tejidos histológicos con imágenes reales</span></h1>
 <figure class="lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
-<div class="lp-copy"><p>Un simulador de histología pensado sobre todo para estudiantes de Medicina. Observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula con más seguridad.</p><button type="button" class="btn" data-enter>Entrar</button></div>
-</section>
-<section class="lp-sec">
-<h2>¿Qué es HistoPráctica?</h2>
-<p>HistoPráctica es una herramienta para practicar histología a partir de la observación. La plataforma te muestra una imagen real de un corte histológico y tú identificas qué tejido es, qué célula aparece o qué estructura señala la marca, según el modo de práctica que elijas.</p>
-<p>Las preguntas son de opción múltiple y funcionan como complemento de tu estudio: no sustituyen al libro de texto ni a las prácticas de laboratorio. Con tu cuenta, tu progreso se guarda.</p>
-</section>
-<section class="lp-sec">
-<h2>Cómo entrar</h2>
-<ol class="lp-steps">
-<li><b>Pulsa «Entrar»</b><span>Si ya tienes una sesión abierta, pasas directo a tu pantalla principal.</span></li>
-<li><b>Inicia sesión o crea tu cuenta</b><span>Lo haces desde la pantalla de acceso, con tu correo.</span></li>
-<li><b>Elige qué practicar</b><span>Selecciona los tejidos y empieza a responder.</span></li>
-</ol>
-</section>
-<section class="lp-sec">
-<h2>Tejidos que puedes practicar</h2>
-<ul class="lp-tissues"><li style="--c:#1cb0f6"><i></i>Tejido epitelial</li><li style="--c:#ff9600"><i></i>Tejido conjuntivo propiamente dicho</li><li style="--c:#d4a000"><i></i>Tejido adiposo</li><li style="--c:#ce82ff"><i></i>Tejido cartilaginoso</li><li style="--c:#9a7b4f"><i></i>Tejido óseo</li><li style="--c:#ff4b4b"><i></i>Tejido sanguíneo</li><li style="--c:#2fa000"><i></i>Tejido muscular</li><li style="--c:#7c5cff"><i></i>Tejido nervioso</li></ul>
-</section>
-<section class="lp-sec lp-faq">
-<h2>Preguntas frecuentes</h2>
-<details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso, que aparece al pulsar «Entrar».</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details>
-</section>
-<footer class="lp-foot">HistoPráctica · Herramienta de estudio de histología. Las imágenes externas conservan la atribución de su fuente.</footer>
-</div></main><nav id="nav"></nav>
+<section class="lp-copy"><h2 class="lp-lab">¿Qué es HistoPráctica?</h2><p>Un simulador de histología para estudiantes de Medicina: observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula.</p><button type="button" class="btn" data-enter>Entrar</button></section>
+<section class="lp-how"><h2 class="lp-lab">Cómo entrar</h2><ol><li>Pulsa «Entrar»</li><li>Inicia sesión o crea tu cuenta</li><li>Elige qué practicar</li></ol></section>
+<section class="lp-tis"><h2 class="lp-lab">Tejidos que puedes practicar</h2><ul><li style="--c:#1cb0f6"><i></i>Epitelial</li><li style="--c:#ff9600"><i></i>Conjuntivo propiamente dicho</li><li style="--c:#d4a000"><i></i>Adiposo</li><li style="--c:#ce82ff"><i></i>Cartilaginoso</li><li style="--c:#9a7b4f"><i></i>Óseo</li><li style="--c:#ff4b4b"><i></i>Sanguíneo</li><li style="--c:#2fa000"><i></i>Muscular</li><li style="--c:#7c5cff"><i></i>Nervioso</li></ul></section>
+<details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details>
+</div></div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
@@ -2075,6 +2066,9 @@ async function landingEnter(){
  }catch(e){console.error(e);LANDING_ACTIVE=false;authView("login",e.message||"No se pudo comprobar la sesión.")}
 }
 document.addEventListener("click",e=>{if(LANDING_ACTIVE&&e.target.closest&&e.target.closest("[data-enter]"))landingEnter()});
+/* Preguntas frecuentes: se cierran con la X, tocando fuera del panel o con Esc. */
+document.addEventListener("click",e=>{const d=$(".lp-faq[open]");if(d&&(e.target===d||(e.target.closest&&e.target.closest(".lp-close"))))d.open=false});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){const d=$(".lp-faq[open]");if(d)d.open=false}});
 /* Imagen de muestra: la elige el servidor (/api/landing-image) y solo devuelve una URL y su atribución; el banco no se consulta desde el navegador. Si falla, la portada queda con el logo. */
 async function loadLandingImage(){
  const img=$("#lp-img"),cap=$("#lp-cap");if(!img)return;
