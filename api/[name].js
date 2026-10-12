@@ -21,6 +21,7 @@ adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"]
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
 ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario","Sustancia blanca","Sustancia negra","Sustancia gris","Nervio periférico","Ganglio espinal","Ganglio autónomo"]};
 const DIVS=["Sistema nervioso central","Sistema nervioso periférico"];
+const NEUS=["Neurona multipolar","Neurona bipolar","Neurona pseudounipolar","Neurona anaxónica"];
 const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
 car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
 ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
@@ -29,7 +30,7 @@ car:["Condrocito","Laguna","Grupo isógeno","Matriz territorial","Matriz interte
 san:["Núcleo multilobulado","Gránulos citoplasmáticos","Palidez central","Núcleo arriñonado","Núcleo excéntrico","Halo perinuclear (Golgi)","Citoplasma basófilo"],mus:["Disco intercalar","Endomisio","Perimisio","Núcleo periférico","Fascículo muscular"],ner:["Soma","Dendritas","Axón","Plexo coroideo","Epitelio ependimario","Neuropilo"]};
 const REL={san:["con"],con:["san","adi"],adi:["con"],car:["oseo","con"],oseo:["car","con"],mus:["con"],ner:["epi"],epi:["con"]};
 
-module.exports={T,LB,CE,ES,REL,DIVS};
+module.exports={T,LB,CE,ES,REL,DIVS,NEUS};
 
 };
 
@@ -155,7 +156,7 @@ module.exports = { HttpError, rest, restAll, authenticate, parseBody, wrap, json
 __defs["_lib/quiz"] = function (module, exports, require) {
 // Lógica de preguntas en el servidor: respuesta correcta, clave de pregunta y opciones (con distractores).
 const crypto = require("crypto");
-const { LB, CE, ES, REL, DIVS } = require("./labels");
+const { LB, CE, ES, REL, DIVS, NEUS } = require("./labels");
 const { rest, HttpError, enc } = require("./supa");
 
 const norm = (s) => String(s == null ? "" : s).normalize("NFC").trim().toLowerCase();
@@ -183,6 +184,10 @@ function resolve(q, mode, target) {
     if (!q.division) throw new HttpError(400, "Esta imagen no tiene pregunta de central o periférico.");
     return { expected: q.division, key: `${q.id}|D|` };
   }
+  if (mode === "E") {
+    if (!q.neuron) throw new HttpError(400, "Esta imagen no tiene pregunta de tipo de neurona.");
+    return { expected: q.neuron, key: `${q.id}|E|` };
+  }
   if (mode !== "B" && mode !== "C") throw new HttpError(400, "Modalidad no válida.");
   const t = matchTarget(mode === "B" ? q.cells : q.structures, target);
   if (!t || !t.n) throw new HttpError(404, "No se encontró esa marca en la imagen.");
@@ -198,6 +203,7 @@ async function bankNames(theme, mode) {
 
 async function optionsFor(q, mode, expected) {
   // Modalidad D (sistema nervioso): solo central vs periférico.
+  if (mode === "E") return shuf([expected, ...distract(expected, [NEUS])]);
   if (mode === "D") return shuf([expected, ...DIVS.filter((x) => norm(x) !== norm(expected))]);
   const pool = mode === "A" ? LB : mode === "B" ? CE : ES;
   const mine = mode === "A" ? [] : await bankNames(q.theme, mode);
@@ -292,9 +298,9 @@ const mask = (list) => (Array.isArray(list) ? list : []).map((t) => ({ n: token(
 
 exports.handler = wrap(["GET"], async (event) => {
   const { isAdmin } = await authenticate(event);
-  const select = "id,theme,subtype,division,image_path,external_image_url,source,source_url,author,license,traits,verified,published,cells,structures,guides";
+  const select = "id,theme,subtype,division,neuron,image_path,external_image_url,source,source_url,author,license,traits,verified,published,cells,structures,guides";
   const rows = await restAll(`questions?select=${select}${isAdmin ? "" : "&published=eq.true&verified=eq.true"}&order=created_at.asc,id.asc`);
-  const questions = rows.map((r) => (isAdmin ? { ...r, has_subtype: !!r.subtype, has_division: !!r.division } : { ...r, subtype: null, division: null, has_subtype: !!r.subtype, has_division: !!r.division, cells: mask(r.cells), structures: mask(r.structures) }));
+  const questions = rows.map((r) => (isAdmin ? { ...r, has_subtype: !!r.subtype, has_division: !!r.division, has_neuron: !!r.neuron } : { ...r, subtype: null, division: null, neuron: null, has_subtype: !!r.subtype, has_division: !!r.division, has_neuron: !!r.neuron, cells: mask(r.cells), structures: mask(r.structures) }));
   return json(200, { questions });
 });
 
@@ -423,13 +429,13 @@ const { resolve, norm } = require("./_lib/quiz");
 const { T } = require("./_lib/labels");
 const { notify } = require("./_lib/notify");
 
-const MN = { A: "Tejido", B: "Célula", C: "Estructura", D: "Central o periférico" };
+const MN = { A: "Tejido", B: "Célula", C: "Estructura", D: "Central o periférico", E: "Tipo de neurona" };
 
 async function loadQuestions(ids, isAdmin) {
   const map = new Map();
   for (let i = 0; i < ids.length; i += 80) {
     const list = ids.slice(i, i + 80).map((x) => `"${x.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`).join(",");
-    const rows = await rest(`questions?id=${enc(`in.(${list})`)}&select=id,theme,subtype,division,cells,structures,published,verified`);
+    const rows = await rest(`questions?id=${enc(`in.(${list})`)}&select=id,theme,subtype,division,neuron,cells,structures,published,verified`);
     for (const r of rows || []) if (isAdmin || (r.published && r.verified)) map.set(r.id, r);
   }
   return map;
@@ -457,7 +463,7 @@ exports.handler = wrap(["POST"], async (event) => {
       const q = qs.get(String((d && d.question_id) || ""));
       let expected = null;
       try { if (q) expected = resolve(q, d.mode, d.target).expected; } catch (e) {}
-      const m = ["A", "B", "C", "D"].includes(d && d.mode) ? d.mode : "A", th = q ? q.theme : String((d && d.theme) || "");
+      const m = ["A", "B", "C", "D", "E"].includes(d && d.mode) ? d.mode : "A", th = q ? q.theme : String((d && d.theme) || "");
       const row = { question_id: String((d && d.question_id) || ""), mode: m, theme: th, target: (d && d.target) || null, selected: String((d && d.selected) || "").slice(0, 300), prompt: String((d && d.prompt) || "").slice(0, 300) };
       if (expected == null) { unanswered++; saved.push({ ...row, expected: null, is_correct: null }); continue; }
       const ok = norm(row.selected) === norm(expected);
