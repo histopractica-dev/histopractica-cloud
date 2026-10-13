@@ -296,12 +296,17 @@ const { wrap, json, authenticate, restAll, serviceKey } = require("./_lib/supa")
 const token = (n) => "g" + crypto.createHmac("sha256", serviceKey()).update(String(n || "").trim().toLowerCase()).digest("hex").slice(0, 10);
 const mask = (list) => (Array.isArray(list) ? list : []).map((t) => ({ n: token(t && t.n), x: t.x, y: t.y, w: t.w, h: t.h }));
 
+let studentCache = { at: 0, data: null };
+
 exports.handler = wrap(["GET"], async (event) => {
   const { isAdmin } = await authenticate(event);
+  if (!isAdmin && studentCache.data && Date.now() - studentCache.at < 30000) return json(200, studentCache.data);
   const select = "id,theme,subtype,division,neuron,image_path,external_image_url,source,source_url,author,license,traits,verified,published,cells,structures,guides";
   const rows = await restAll(`questions?select=${select}${isAdmin ? "" : "&published=eq.true&verified=eq.true"}&order=created_at.asc,id.asc`);
   const questions = rows.map((r) => (isAdmin ? { ...r, has_subtype: !!r.subtype, has_division: !!r.division, has_neuron: !!r.neuron } : { ...r, subtype: null, division: null, neuron: null, has_subtype: !!r.subtype, has_division: !!r.division, has_neuron: !!r.neuron, cells: mask(r.cells), structures: mask(r.structures) }));
-  return json(200, { questions });
+  const out = { questions };
+  if (!isAdmin) studentCache = { at: Date.now(), data: out };
+  return json(200, out);
 });
 
 };
@@ -374,37 +379,50 @@ exports.handler = wrap(["GET", "POST", "DELETE"], async (event) => {
 
 __defs["rank-stats"] = function (module, exports, require) {
 // Rankings complementarios: récord de racha y XP acumulado.
-const { wrap, json, authenticate, restAll } = require("./_lib/supa");
+// El cálculo lo hace la base de datos con la función SQL rank_stats() (rápido, escala bien) y el resultado se guarda 20 s en memoria.
+// ?fresh=1 salta la caché (la usa la página al terminar una práctica). Si la función SQL aún no existe, usa el método anterior (lento).
+const { wrap, json, authenticate, rest, restAll } = require("./_lib/supa");
 
-exports.handler = wrap(["GET"], async (event) => {
-  await authenticate(event);
-  const [profiles, answers] = await Promise.all([
-    restAll("profiles?select=id,display_name,best_streak,role&order=id.asc"),
-    restAll("practice_answers?select=id,user_id,is_correct,answered_at&order=user_id.asc,answered_at.asc,id.asc"),
-  ]);
+const TTL = 20000;
+let cache = { at: 0, data: null }, warned = false;
 
-  const byUser = new Map();
+async function statsFromDb() {
+  const rows = await rest("rpc/rank_stats", { method: "POST", body: {} });
+  const m = new Map();
+  for (const r of rows || []) if (r.uid) m.set(r.uid, { xp: Number(r.xp) || 0, best: Number(r.best_streak) || 0 });
+  return m;
+}
+
+async function statsFromRows() {
+  const answers = await restAll("practice_answers?select=id,user_id,is_correct,answered_at&order=user_id.asc,answered_at.asc,id.asc");
+  const byUser = new Map(), cur = new Map();
   for (const row of answers || []) {
     if (!row.user_id) continue;
     let s = byUser.get(row.user_id);
-    if (!s) { s = { current: 0, best: 0, xp: 0 }; byUser.set(row.user_id, s); }
-    if (row.is_correct === true) {
-      s.current++;
-      s.xp += 10;
-      if (s.current > s.best) s.best = s.current;
-    } else {
-      s.current = 0;
-    }
+    if (!s) { s = { xp: 0, best: 0 }; byUser.set(row.user_id, s); cur.set(row.user_id, 0); }
+    if (row.is_correct === true) { const c = cur.get(row.user_id) + 1; cur.set(row.user_id, c); s.xp += 10; if (c > s.best) s.best = c; }
+    else cur.set(row.user_id, 0);
   }
+  return byUser;
+}
 
-  const adminIds = new Set((profiles || []).filter((p) => p.role === "admin").map((p) => p.id));
-  const people = new Map((profiles || []).filter((p) => p.role !== "admin").map((p) => [p.id, {
+exports.handler = wrap(["GET"], async (event) => {
+  await authenticate(event);
+  const fresh = !!(event.queryStringParameters && event.queryStringParameters.fresh);
+  if (!fresh && cache.data && Date.now() - cache.at < TTL) return json(200, cache.data);
+
+  const [profiles, byUser] = await Promise.all([
+    restAll("profiles?select=id,display_name,best_streak&order=id.asc"),
+    statsFromDb().catch((e) => { if (!warned) { warned = true; console.warn("rank_stats() no disponible, uso el método lento:", e.message); } return statsFromRows(); }),
+  ]);
+
+  const people = new Map((profiles || []).map((p) => [p.id, {
     user_id: p.id,
     alias: String(p.display_name || "").trim() || "Estudiante",
     best_streak: Number(p.best_streak) || 0,
   }]));
   for (const id of byUser.keys()) {
-    if (!people.has(id) && !adminIds.has(id)) people.set(id, { user_id: id, alias: "Estudiante", best_streak: 0 });
+    if (!people.has(id)) people.set(id, { user_id: id, alias: "Estudiante", best_streak: 0 });
   }
 
   const best = [], xp = [];
@@ -416,7 +434,8 @@ exports.handler = wrap(["GET"], async (event) => {
   }
   const order = (a, b) => b.points - a.points || a.alias.localeCompare(b.alias, "es-MX");
   best.sort(order); xp.sort(order);
-  return json(200, { best, xp, admins: [...adminIds] });
+  cache = { at: Date.now(), data: { best, xp } };
+  return json(200, cache.data);
 });
 
 };
@@ -486,8 +505,14 @@ exports.handler = wrap(["POST"], async (event) => {
     catch (e) { if (!/duplicate|23505/i.test(e.message)) throw e; const again = await rest(`exam_attempts?user_id=eq.${enc(user.id)}&client_attempt_id=eq.${enc(b.attemptId)}&select=*&limit=1`); attempt = again && again[0]; }
   }
   if (!attempt) throw new HttpError(500, "No se pudo guardar el examen.");
+  if (attempt.notification_status === "sent") return json(200, { ok: true, emailSent: true, attemptId: attempt.id });
 
-  return json(200, { ok: true, emailSent: false, attemptId: attempt.id });
+  const bad = attempt._bad || (Array.isArray(attempt.details) ? attempt.details.filter((d) => d.is_correct === false).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected })) : []);
+  const result = await notify("exam_completed", {
+    attempt_id: attempt.id, ...emailInfo, score: Number(attempt.score), correct: attempt.correct_answers, incorrect: attempt.incorrect_answers, unanswered: attempt.unanswered, total: attempt.total_questions,
+    duration_seconds: attempt.duration_seconds, themes: (attempt.themes || []).map((k) => T[k] || k), at: attempt.completed_at, bad: bad.slice(0, 20),
+  });
+  return json(200, { ok: true, emailSent: result.ok === true, attemptId: attempt.id, ...(result.ok ? {} : { emailError: result.error }) });
 });
 
 };
@@ -508,12 +533,20 @@ exports.handler = wrap(["POST"], async (event) => {
   const stale = new Date(Date.now() - 10 * 60 * 1000).toISOString();
   const rows = (await rest(`notification_outbox?or=${enc(`(status.in.(pending,failed),and(status.eq.sending,created_at.lt.${stale}))`)}&attempts=lt.10&select=*&order=created_at.asc&limit=40`)) || [];
   for (const row of rows) {
-    const m = row.payload && row.payload.method;
-    if (row.event_type === "exam_completed" || (row.event_type === "login" && m !== "registro de cuenta" && m !== "enlace de correo")) continue;
     if (row.payload && row.payload.attempt_id) done.add(row.payload.attempt_id);
     const r = await deliver(row); r.ok ? sent++ : failed++;
   }
 
+  // Exámenes con correo sin confirmar que no están en la cola (por ejemplo, de versiones anteriores).
+  const old = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const atts = (await rest(`exam_attempts?notification_status=in.(pending,failed)&completed_at=lt.${enc(old)}&select=id,user_id,score,correct_answers,incorrect_answers,unanswered,total_questions,duration_seconds,themes,completed_at,details&order=completed_at.asc&limit=20`)) || [];
+  for (const a of atts) {
+    if (done.has(a.id)) continue;
+    const prof = ((await rest(`profiles?id=eq.${enc(a.user_id)}&select=email,display_name&limit=1`)) || [])[0] || {};
+    const bad = (Array.isArray(a.details) ? a.details : []).filter((d) => d.is_correct === false).slice(0, 20).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected }));
+    const r = await notify("exam_completed", { attempt_id: a.id, email: prof.email || "", name: prof.display_name || "", score: Number(a.score), correct: a.correct_answers, incorrect: a.incorrect_answers, unanswered: a.unanswered, total: a.total_questions, duration_seconds: a.duration_seconds, themes: (a.themes || []).map((k) => T[k] || k), at: a.completed_at, bad });
+    r.ok ? sent++ : failed++;
+  }
   return json(200, { sent, failed });
 });
 
@@ -521,17 +554,11 @@ exports.handler = wrap(["POST"], async (event) => {
 
 __defs["login-notify"] = function (module, exports, require) {
 // POST /.netlify/functions/login-notify → avisa a NOTIFICATION_EMAIL de un inicio de sesión (desde EMAIL_FROM, con Resend).
-const { wrap, json, authenticate, parseBody, rest, enc } = require("./_lib/supa");
+const { wrap, json, authenticate, parseBody } = require("./_lib/supa");
 const { notify } = require("./_lib/notify");
 
 exports.handler = wrap(["POST"], async (event) => {
   const { user } = await authenticate(event, { needProfile: false });
-  // Solo se avisa de cuentas nuevas: ni inicios de sesión normales ni recuperaciones de contraseña.
-  const method0 = String((parseBody(event) || {}).method || "").slice(0, 60);
-  if (method0 !== "registro de cuenta" && method0 !== "enlace de correo") return json(200, { ok: true, skipped: "solo se notifican cuentas nuevas" });
-  const recent = (v) => { const t = v ? Date.parse(v) : NaN; return !Number.isNaN(t) && Date.now() - t <= 10 * 60 * 1000; };
-  if (!recent(method0 === "registro de cuenta" ? user.created_at : user.email_confirmed_at)) return json(200, { ok: true, skipped: "no es una cuenta nueva" });
-  try { const prev = await rest(`notification_outbox?event_type=eq.login&payload->>email=eq.${enc(user.email || "")}&select=id&limit=1`); if (prev && prev.length) return json(200, { ok: true, skipped: "ya notificado" }); } catch (e) { /* si la consulta falla, se continúa */ }
   // Solo inicios de sesión reales y recientes (evita spam con tokens viejos).
   const last = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : NaN;
   if (!Number.isNaN(last) && Date.now() - last > 5 * 60 * 1000) return json(200, { ok: true, skipped: "sesión no reciente" });
