@@ -445,13 +445,12 @@ exports.handler = wrap(["GET"], async (event) => {
 };
 
 __defs["finish-exam"] = function (module, exports, require) {
-// POST /.netlify/functions/finish-exam → guarda el intento (exam_attempts) y envía el correo por Resend.
-// Es idempotente: si el intento ya existe no se duplica; si su correo no salió, se reintenta.
+// POST /.netlify/functions/finish-exam → guarda el intento (exam_attempts). Ya NO envía correo al terminar un examen.
+// Es idempotente: si el intento ya existe no se duplica.
 const crypto = require("crypto");
 const { wrap, json, authenticate, parseBody, rest, enc, UUID, HttpError } = require("./_lib/supa");
 const { resolve, norm } = require("./_lib/quiz");
 const { T } = require("./_lib/labels");
-const { notify } = require("./_lib/notify");
 
 const MN = { A: "Tejido", B: "Célula", C: "Estructura", D: "Central o periférico", E: "Tipo de neurona" };
 
@@ -466,13 +465,11 @@ async function loadQuestions(ids, isAdmin) {
 }
 
 exports.handler = wrap(["POST"], async (event) => {
-  const { user, profile, isAdmin } = await authenticate(event);
+  const { user, isAdmin } = await authenticate(event);
   const b = parseBody(event);
   if (!UUID.test(String(b.attemptId || ""))) throw new HttpError(400, "Identificador de intento no válido.");
   const details = Array.isArray(b.details) ? b.details.slice(0, 1000) : [];
   if (!details.length) throw new HttpError(400, "El examen no tiene respuestas.");
-
-  const emailInfo = { email: (profile && profile.email) || user.email || "", name: (profile && profile.display_name) || (user.user_metadata && user.user_metadata.display_name) || "" };
 
   // ¿Ya existe este intento?
   const found = await rest(`exam_attempts?user_id=eq.${enc(user.id)}&client_attempt_id=eq.${enc(b.attemptId)}&select=*&limit=1`);
@@ -509,48 +506,28 @@ exports.handler = wrap(["POST"], async (event) => {
     catch (e) { if (!/duplicate|23505/i.test(e.message)) throw e; const again = await rest(`exam_attempts?user_id=eq.${enc(user.id)}&client_attempt_id=eq.${enc(b.attemptId)}&select=*&limit=1`); attempt = again && again[0]; }
   }
   if (!attempt) throw new HttpError(500, "No se pudo guardar el examen.");
-  if (attempt.notification_status === "sent") return json(200, { ok: true, emailSent: true, attemptId: attempt.id });
-
-  const bad = attempt._bad || (Array.isArray(attempt.details) ? attempt.details.filter((d) => d.is_correct === false).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected })) : []);
-  const result = await notify("exam_completed", {
-    attempt_id: attempt.id, ...emailInfo, score: Number(attempt.score), correct: attempt.correct_answers, incorrect: attempt.incorrect_answers, unanswered: attempt.unanswered, total: attempt.total_questions,
-    duration_seconds: attempt.duration_seconds, themes: (attempt.themes || []).map((k) => T[k] || k), at: attempt.completed_at, bad: bad.slice(0, 20),
-  });
-  return json(200, { ok: true, emailSent: result.ok === true, attemptId: attempt.id, ...(result.ok ? {} : { emailError: result.error }) });
+  return json(200, { ok: true, attemptId: attempt.id });
 });
 
 };
 
 __defs["retry-notifications"] = function (module, exports, require) {
 // POST /.netlify/functions/retry-notifications (solo admin) → { sent, failed }
-// Reenvía los correos pendientes/fallidos de la cola y los exámenes con correo sin confirmar.
+// Reenvía solo los avisos de cuenta nueva (signup) que quedaron pendientes/fallidos. Los exámenes ya no generan correo.
 const { wrap, json, authenticate, rest, enc, HttpError } = require("./_lib/supa");
-const { deliver, notify } = require("./_lib/notify");
-const { T } = require("./_lib/labels");
+const { deliver } = require("./_lib/notify");
 
 exports.handler = wrap(["POST"], async (event) => {
   const { isAdmin } = await authenticate(event);
   if (!isAdmin) throw new HttpError(403, "Solo un administrador puede reintentar notificaciones.");
   let sent = 0, failed = 0;
-  const done = new Set();
 
   const stale = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-  const rows = (await rest(`notification_outbox?or=${enc(`(status.in.(pending,failed),and(status.eq.sending,created_at.lt.${stale}))`)}&attempts=lt.10&select=*&order=created_at.asc&limit=40`)) || [];
+  const rows = (await rest(`notification_outbox?event_type=eq.signup&or=${enc(`(status.in.(pending,failed),and(status.eq.sending,created_at.lt.${stale}))`)}&attempts=lt.10&select=*&order=created_at.asc&limit=40`)) || [];
   for (const row of rows) {
-    if (row.payload && row.payload.attempt_id) done.add(row.payload.attempt_id);
     const r = await deliver(row); r.ok ? sent++ : failed++;
   }
 
-  // Exámenes con correo sin confirmar que no están en la cola (por ejemplo, de versiones anteriores).
-  const old = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-  const atts = (await rest(`exam_attempts?notification_status=in.(pending,failed)&completed_at=lt.${enc(old)}&select=id,user_id,score,correct_answers,incorrect_answers,unanswered,total_questions,duration_seconds,themes,completed_at,details&order=completed_at.asc&limit=20`)) || [];
-  for (const a of atts) {
-    if (done.has(a.id)) continue;
-    const prof = ((await rest(`profiles?id=eq.${enc(a.user_id)}&select=email,display_name&limit=1`)) || [])[0] || {};
-    const bad = (Array.isArray(a.details) ? a.details : []).filter((d) => d.is_correct === false).slice(0, 20).map((d) => ({ prompt: d.prompt, selected: d.selected, expected: d.expected }));
-    const r = await notify("exam_completed", { attempt_id: a.id, email: prof.email || "", name: prof.display_name || "", score: Number(a.score), correct: a.correct_answers, incorrect: a.incorrect_answers, unanswered: a.unanswered, total: a.total_questions, duration_seconds: a.duration_seconds, themes: (a.themes || []).map((k) => T[k] || k), at: a.completed_at, bad });
-    r.ok ? sent++ : failed++;
-  }
   return json(200, { sent, failed });
 });
 
