@@ -233,6 +233,10 @@ function buildEmail(type, p) {
     const rows = [["Usuario", p.email || "—"], ["Nombre", p.name || "—"], ["Método", p.method || "—"], ["Fecha y hora", fmtDate(p.at)], ["IP", p.ip || "—"], ["Dispositivo", p.ua || "—"]];
     return { subject: `🔑 Inicio de sesión: ${p.email || "usuario"}`, html: wrapHtml("🔑 Nuevo inicio de sesión en HistoPráctica", table(rows)), text: "Nuevo inicio de sesión en HistoPráctica\n\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n") };
   }
+  if (type === "signup") {
+    const rows = [["Usuario", p.email || "—"], ["Nombre", p.name || "—"], ["Método", p.method || "—"], ["Fecha y hora", fmtDate(p.at)], ["IP", p.ip || "—"], ["Dispositivo", p.ua || "—"]];
+    return { subject: `🎉 Cuenta nueva: ${p.email || "usuario"}`, html: wrapHtml("🎉 Nueva cuenta en HistoPráctica", table(rows)), text: "Nueva cuenta en HistoPráctica\n\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n") };
+  }
   if (type === "exam_completed") {
     const secs = Math.max(0, Math.floor(p.duration_seconds || 0));
     const who = p.name ? `${p.name} (${p.email})` : p.email || "—";
@@ -553,8 +557,8 @@ exports.handler = wrap(["POST"], async (event) => {
 };
 
 __defs["login-notify"] = function (module, exports, require) {
-// POST /.netlify/functions/login-notify → avisa a NOTIFICATION_EMAIL de un inicio de sesión (desde EMAIL_FROM, con Resend).
-const { wrap, json, authenticate, parseBody } = require("./_lib/supa");
+// POST /.netlify/functions/login-notify → avisa a NOTIFICATION_EMAIL UNA sola vez por cuenta (al crearla o en su primer ingreso tras verificar el correo). Los inicios de sesión posteriores no envían nada.
+const { wrap, json, authenticate, parseBody, rest, enc } = require("./_lib/supa");
 const { notify } = require("./_lib/notify");
 
 exports.handler = wrap(["POST"], async (event) => {
@@ -563,12 +567,26 @@ exports.handler = wrap(["POST"], async (event) => {
   const last = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : NaN;
   if (!Number.isNaN(last) && Date.now() - last > 5 * 60 * 1000) return json(200, { ok: true, skipped: "sesión no reciente" });
 
+  // Solo cuentas nuevas, y solo una vez: si ya hay un aviso (login/signup) de este correo, no se envía otro.
+  const created = user.created_at ? Date.parse(user.created_at) : NaN;
+  if (!Number.isNaN(created) && Date.now() - created > 7 * 24 * 3600 * 1000) return json(200, { ok: true, skipped: "cuenta no nueva" });
+  if (!user.email) return json(200, { ok: true, skipped: "sin correo" });
+  let already;
+  try {
+    const prev = await rest(`notification_outbox?event_type=in.(login,signup)&payload->>email=eq.${enc(user.email)}&select=id&limit=1`);
+    already = !!(prev && prev.length);
+  } catch (e) {
+    console.error("login-notify: no se pudo revisar avisos previos:", e.message);
+    already = Number.isNaN(created) || Date.now() - created > 10 * 60 * 1000; // sin poder comprobar, solo avisa si la cuenta es de hace minutos
+  }
+  if (already) return json(200, { ok: true, skipped: "ya se avisó de esta cuenta" });
+
   const body = parseBody(event), h = event.headers || {};
-  const result = await notify("login", {
+  const result = await notify("signup", {
     email: user.email || "", name: (user.user_metadata && user.user_metadata.display_name) || "", method: String(body.method || "contraseña").slice(0, 60), at: new Date().toISOString(),
     ip: h["x-nf-client-connection-ip"] || String(h["x-forwarded-for"] || "").split(",")[0].trim() || "desconocida", ua: String(h["user-agent"] || "desconocido").slice(0, 300),
   });
-  if (!result.ok) { console.error("login-notify: no se pudo enviar:", result.error); return json(502, { ok: false, emailSent: false, error: result.error }); }
+  if (!result.ok) { console.error("login-notify: no se pudo enviar el aviso de cuenta nueva:", result.error); return json(502, { ok: false, emailSent: false, error: result.error }); }
   return json(200, { ok: true, emailSent: true });
 });
 
