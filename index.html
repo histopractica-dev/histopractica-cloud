@@ -1614,9 +1614,9 @@ const dark=()=>document.documentElement.dataset.theme==="dark",tgi=()=>`<span ar
 const themePref=()=>{try{const t=localStorage.getItem("hp_theme");return t==="dark"||t==="light"?t:"auto"}catch(e){return"auto"}};
 const setTheme=p=>{const h=document.documentElement;try{p==="auto"?localStorage.removeItem("hp_theme"):localStorage.setItem("hp_theme",p)}catch(e){}h.classList.add("tr");h.dataset.theme=p==="auto"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):p;$$(".tgl").forEach(b=>b.innerHTML=tgi());$$("[data-th]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.th===themePref())));setTimeout(()=>h.classList.remove("tr"),400)};
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themePref()==="auto")setTheme("auto")});
-document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
+document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout,#logout-m"))signOut();else if(e.target.closest("#prof"))perfilView()});
 new MutationObserver(()=>{window.scrollTo(0,0);app.classList.remove("hp-pop");void app.offsetWidth;app.classList.add("hp-pop")}).observe(app,{childList:true});
-const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div>${typeof hpBuzonBtn==="function"?hpBuzonBtn():""}<button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
+const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="lo-m" id="logout-m" type="button" aria-label="Cerrar sesión">${ic("logout")}</button>${typeof hpBuzonBtn==="function"?hpBuzonBtn():""}<button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
 const qc=e=>(e.subtipo?1:0)+(e.division?1:0)+(e.neurona?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
 const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
@@ -2188,6 +2188,17 @@ button:focus-visible{outline-offset:3px}
 .bz .ic{width:21px;height:21px}
 .bz:active{transform:scale(.94)}
 @media(hover:hover){.bz:hover{border-color:var(--b)}}
+.lo-m{display:none}
+@media(max-width:640px){
+.top{grid-template-columns:minmax(0,1fr) auto auto auto}
+.top>.lo-m{display:grid;place-items:center;grid-column:2;grid-row:1;width:42px;height:42px;padding:0;border:2px solid var(--ln);border-radius:50%;background:var(--pn);color:var(--tx);cursor:pointer;transition:border-color .15s,background-color .15s,transform .08s}
+.lo-m .ic{width:21px;height:21px}
+.lo-m:active{transform:scale(.94)}
+.top>.bz{grid-column:3}
+.top>.av{grid-column:4}
+.top .row #logout{display:none}
+.top>.row:not(:has(.ib:not(#logout))){display:none}
+}
 .bz-n{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--nd);color:#fff;font-size:.7rem;font-weight:800;line-height:1;display:grid;place-items:center}
 .bz-n[hidden]{display:none}
 .bz-list{display:grid;gap:8px}
