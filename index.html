@@ -20,7 +20,8 @@
 
 <meta name="theme-color" id="tc" content="#ffffff">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="icon" id="fav" type="image/svg+xml" sizes="any" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%222 0 64 64%22%3E%3Crect x=%222%22 width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23ffffff%22/%3E%3Cg fill=%22none%22 stroke=%22%2358cc02%22 stroke-width=%223.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22m25 8 13 7-12 22-13-7z%22/%3E%3Cpath d=%22m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9%22/%3E%3Ccircle cx=%2236%22 cy=%2229%22 r=%224%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -48,6 +49,8 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script>try{var t=localStorage.getItem("hp_theme");document.documentElement.dataset.theme=t==="dark"||t==="light"?t:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch(e){document.documentElement.dataset.theme="light"}</script>
+<script>(function(){var P='<path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/>';function s(bg){return'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 0 64 64"><rect x="2" width="64" height="64" rx="14" fill="'+bg+'"/><g fill="none" stroke="#58cc02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">'+P+'</g></svg>')}function f(){var l=document.getElementById("fav");if(l)l.href=s(document.documentElement.dataset.theme==="dark"?"#131820":"#ffffff")}f();new MutationObserver(f).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]})})()</script>
+
 <style>
 
 :root {
