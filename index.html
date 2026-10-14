@@ -1429,7 +1429,8 @@ body:not(.hasnav) #nav{display:none}
  var P={
   instagram:{n:"Instagram",d:'<rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/>'},
   facebook:{n:"Facebook",d:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'},
-  threads:{n:"Threads",d:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>'}
+  threads:{n:"Threads",d:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>'},
+  youtube:{n:"YouTube",d:'<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>'}
  };
  function svg(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+d+'</svg>'}
  function url(v){v=String(v||"").trim();return /^https:\/\/[^\s"'<>]+$/i.test(v)?v.replace(/&/g,"&amp;"):""}
@@ -1616,7 +1617,7 @@ const setTheme=p=>{const h=document.documentElement;try{p==="auto"?localStorage.
 matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{if(themePref()==="auto")setTheme("auto")});
 document.addEventListener("click",e=>{if(e.target.closest(".tgl")){setTheme(dark()?"light":"dark")}else if(e.target.closest("#pg"))bankView();else if(e.target.closest("#admin"))adminView();else if(e.target.closest("#logout"))signOut();else if(e.target.closest("#prof"))perfilView()});
 new MutationObserver(()=>{window.scrollTo(0,0);app.classList.remove("hp-pop");void app.offsetWidth;app.classList.add("hp-pop")}).observe(app,{childList:true});
-const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div><button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
+const head=t=>`<div class="top"><div class="logo">${LOGO}<span>Histo<em>Práctica</em></span></div>${typeof hpBuzonBtn==="function"?hpBuzonBtn():""}<button class="av" id="prof" aria-label="Abrir perfil">${inits()}</button><div class="row">${isAdmin()?(`<button class="ib" id="admin" aria-label="Panel administrativo"><span>${ic("chart")}</span><b>Panel</b></button><button class="ib" id="pg" aria-label="Banco de imágenes"><span>${ic("folder")}</span><b>Banco</b></button>`):""}<button class="ib" id="logout" aria-label="Cerrar sesión"><span>${ic("logout")}</span><b>Salir</b></button></div></div><p class="header-meta">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||CURRENT_USER?.email||"")}</p>${t?`<p class="mu" style="margin:0 0 8px">${t}</p>`:""}`;
 const qc=e=>(e.subtipo?1:0)+(e.division?1:0)+(e.neurona?1:0)+(e.celulas||[]).length+(e.estructuras||[]).length;
 const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}},ST=()=>REMOTE_STATS||rd("hp_st",{}),ERR=()=>REMOTE_ERRORS||rd("hp_err",[]);
 const itKey=it=>it.e.id+"|"+it.m+"|"+(it.t?`${it.t.x},${it.t.y},${it.t.w},${it.t.h}`:"");
@@ -1739,7 +1740,7 @@ function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({tema
  <div class="tgrid">${[["XP",v(st.xp||0)],["Mejor racha",v(st.best||0)],["Prácticas",v(st.s||0)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
  <div id="sync-status">${syncStatus()}</div>
  <div class="sub">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag">${ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}</div>
- <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div>${hpSocialBlock()}</div>
+ <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div></div>
  <p class="hint">Cada pregunta cuenta una sola vez en «contestadas»; los aciertos y el XP conservan todos tus intentos.</p><button class="btn s" id="rs">Reiniciar progreso</button></div>`;
  syncUI();$("#bk").onclick=home;$$("[data-th]").forEach(b=>b.onclick=()=>setTheme(b.dataset.th));
  $("#av-b").onclick=()=>$("#av-f").click();$("#av-f").onchange=async e=>{const f=e.target.files[0],m=$("#av-m"),btn=$("#av-b");e.target.value="";if(!f)return;if(!/^image\//.test(f.type)){m.textContent="Elige un archivo de imagen.";return}if(f.size>8*1024*1024){m.textContent="La imagen debe pesar menos de 8 MB.";return}if(!SUPA||!CURRENT_USER){m.textContent="Inicia sesión para cambiar tu foto.";return}btn.disabled=true;m.className="mu";m.textContent="Guardando foto de perfil…";
@@ -2102,8 +2103,8 @@ async function saveFinishedExam(){
  }catch(error){setMessage("No se pudo confirmar el guardado del examen: "+(error.message||"error de conexión"),true)}
 }
 async function adminView(){
- if(!isAdmin()){home();return}nav("i");app.innerHTML=head("Panel administrativo")+`<p class="mu">Consultas protegidas por Supabase RLS. El correo de cuenta nueva se envía por una función del servidor.</p><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="card"><h2 style="margin-top:0">Usuarios</h2><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div><div class="card"><h2 style="margin-top:0">Exámenes recientes</h2><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div><div class="row"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p>`;
- $("#admin-refresh").onclick=()=>adminView();
+ if(!isAdmin()){home();return}nav("i");app.innerHTML=head("Panel administrativo")+`<p class="mu">Consultas protegidas por Supabase RLS. El correo de cuenta nueva se envía por una función del servidor.</p><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="card" id="bz-admin"></div><div class="card"><h2 style="margin-top:0">Usuarios</h2><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div><div class="card"><h2 style="margin-top:0">Exámenes recientes</h2><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div><div class="row"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p>`;
+ $("#admin-refresh").onclick=()=>adminView();if(typeof hpBuzonAdminInit==="function")hpBuzonAdminInit();
  $("#admin-retry-notifications").onclick=async()=>{const btn=$("#admin-retry-notifications"),status=$("#admin-retry-status");btn.disabled=true;status.textContent="Reintentando notificaciones…";try{const {data}=await SUPA.auth.getSession();const response=await fetch("/api/retry-notifications",{method:"POST",headers:{Authorization:`Bearer ${data.session?.access_token||""}`}});const result=await response.json();if(!response.ok)throw new Error(result.error||"Error");const summary=`Correos enviados: ${result.sent}. Fallidos: ${result.failed}.`;await adminView();const updatedStatus=$("#admin-retry-status");if(updatedStatus)updatedStatus.textContent=summary}catch(error){status.textContent="No se pudo reintentar: "+(error.message||"error")}finally{btn.disabled=false}};
  try{
   const [userResult,examCount,attemptResult]=await Promise.all([
@@ -2179,6 +2180,34 @@ button:focus-visible{outline-offset:3px}
 .hp-pill{display:inline-flex;align-items:center;border-radius:99px;padding:3px 9px;background:var(--bl);color:var(--bt);font-size:.75rem;font-weight:800}
 @media(min-width:640px){.hp-social-grid{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){.hp-confetti,.hp-pop,.hp-fail{animation:none!important}}
+</style>
+<style id="hp-buzon">
+.top{grid-template-columns:minmax(0,1fr) auto auto}
+.top>.bz{grid-column:2;grid-row:1}
+.top>.av{grid-column:3}
+.bz{position:relative;display:grid;place-items:center;flex:none;width:42px;height:42px;padding:0;border:2px solid var(--ln);border-radius:50%;background:var(--pn);color:var(--tx);cursor:pointer;transition:border-color .15s,background-color .15s,transform .08s}
+.bz .ic{width:21px;height:21px}
+.bz:active{transform:scale(.94)}
+@media(hover:hover){.bz:hover{border-color:var(--b)}}
+.bz-n{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;border:2px solid var(--bg);background:var(--nd);color:#fff;font-size:.7rem;font-weight:800;line-height:1;display:grid;place-items:center}
+.bz-n[hidden]{display:none}
+.bz-list{display:grid;gap:8px}
+.bz-item{display:flex;align-items:center;gap:12px;width:100%;min-height:var(--h-md);padding:10px 14px;border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn);color:var(--tx);font:inherit;text-align:left;cursor:pointer}
+.bz-item i{flex:none;width:10px;height:10px;border-radius:50%;background:transparent}
+.bz-item.un{border-color:var(--b);background:var(--bl)}
+.bz-item.un i{background:var(--b)}
+.bz-item span{display:grid;gap:2px;min-width:0}
+.bz-item b{overflow-wrap:anywhere}
+.bz-item small{color:var(--mu);font-size:var(--fs-xs)}
+@media(hover:hover){.bz-item:hover{border-color:var(--b)}}
+.bz-item:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+.bz-sent{display:grid;gap:8px}
+.bz-sent-i{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:2px solid var(--ln);border-radius:var(--r-md);background:var(--pn)}
+.bz-sent-i span{display:grid;gap:2px;min-width:0}
+.bz-sent-i b{overflow-wrap:anywhere}
+.bz-sent-i small{color:var(--mu);font-size:var(--fs-xs)}
+.bz-sent-i .btn{flex:none}
+.bz-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
 </style>
 <div id="hp-effects" aria-hidden="true"></div>
 <script id="hp-pro-upgrades">
@@ -2298,6 +2327,92 @@ async function hpCheckOvertakes(){
    hpShowNotification(title,msg(passed[0].alias),icon,'ranking');
   }
  }catch(e){console.warn('No se pudo comprobar el cambio de ranking',e)}
+}
+</script>
+<script id="hp-buzon">
+/* Buzón de mensajes: avisos del administrador a los usuarios (tablas admin_notifications y admin_notification_reads). */
+const BZ={msgs:[],reads:new Set(),ok:false,err:false,t:0,busy:false,uid:null};
+const BZ_ICON='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>';
+function hpBuzonVisible(){return BZ.msgs}
+function hpBuzonUnread(){return hpBuzonVisible().filter(m=>!BZ.reads.has(m.id)).length}
+function hpBuzonLabel(n){return n?`Buzón de mensajes, ${n} sin leer`:"Buzón de mensajes"}
+function hpBuzonBtn(){const n=hpBuzonUnread();return `<button class="bz" id="buzon" type="button" aria-haspopup="dialog" aria-label="${hpBuzonLabel(n)}">${BZ_ICON}<span class="bz-n"${n?"":" hidden"}>${n>99?"99+":n}</span></button>`}
+function hpBuzonPaint(){const b=document.getElementById("buzon");if(!b)return;const n=hpBuzonUnread(),c=b.querySelector(".bz-n");if(c){c.textContent=n>99?"99+":String(n);c.hidden=!n}b.setAttribute("aria-label",hpBuzonLabel(n))}
+function hpBuzonDate(d){try{return new Date(d).toLocaleString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return""}}
+async function hpBuzonLoad(force){
+ if(typeof SUPA==="undefined"||!SUPA||!CURRENT_USER||BZ.busy)return;
+ if(BZ.uid!==CURRENT_USER.id){BZ.msgs=[];BZ.reads=new Set();BZ.ok=false;BZ.err=false;BZ.uid=CURRENT_USER.id;BZ.t=0}
+ if(!force&&Date.now()-BZ.t<45000)return;
+ BZ.busy=true;
+ try{
+  const [m,r]=await Promise.all([
+   SUPA.from("admin_notifications").select("id,title,body,created_at").order("created_at",{ascending:false}).limit(50),
+   SUPA.from("admin_notification_reads").select("notification_id").eq("user_id",CURRENT_USER.id)
+  ]);
+  if(m.error)throw m.error;if(r.error)throw r.error;
+  BZ.msgs=m.data||[];BZ.reads=new Set((r.data||[]).map(x=>x.notification_id));BZ.ok=true;BZ.err=false
+ }catch(e){BZ.err=true;console.warn("Buzón: no se pudo cargar",e)}
+ finally{BZ.busy=false;BZ.t=Date.now();hpBuzonPaint();if(document.querySelector('.bz-modal[data-loading="1"]'))hpBuzonList()}
+}
+async function hpBuzonMarkRead(id){
+ if(BZ.reads.has(id))return;BZ.reads.add(id);hpBuzonPaint();
+ try{await SUPA.from("admin_notification_reads").insert({notification_id:id,user_id:CURRENT_USER.id,read_at:new Date().toISOString()})}catch(e){}
+}
+function hpBuzonList(){
+ const rows=hpBuzonVisible(),loading=!BZ.ok&&!BZ.err;let body;
+ if(loading)body='<p class="mu">Cargando…</p>';
+ else if(BZ.err&&!BZ.ok)body='<p class="r">No se pudo cargar el buzón. Inténtalo de nuevo en unos minutos.</p>';
+ else if(!rows.length)body='<p class="mu">Aún no tienes mensajes.</p>';
+ else body='<div class="bz-list">'+rows.map(m=>{const u=!BZ.reads.has(m.id);return `<button type="button" class="bz-item${u?" un":""}" data-bz="${esc(m.id)}"><i aria-hidden="true"></i><span><b>${esc(m.title)}</b><small>${esc(hpBuzonDate(m.created_at))}${u?" · Nuevo":""}</small></span></button>`}).join("")+"</div>";
+ const mm=modal(`<h2 style="margin-top:0">Buzón de mensajes</h2>${body}${typeof hpSocialBlock==="function"?hpSocialBlock():""}<button class="btn s" id="bz-x" style="margin-top:14px">Cerrar</button>`);
+ mm.classList.add("bz-modal");mm.dataset.view="list";if(loading)mm.dataset.loading="1";
+ mm.querySelector("#bz-x").onclick=()=>mm.remove();
+ mm.querySelectorAll("[data-bz]").forEach(b=>b.onclick=()=>hpBuzonDetail(b.dataset.bz));
+}
+function hpBuzonDetail(id){
+ const m=BZ.msgs.find(x=>x.id===id);if(!m){hpBuzonList();return}
+ hpBuzonMarkRead(id);
+ const mm=modal(`<h2 style="margin:0 0 4px">${esc(m.title)}</h2><p class="mu" style="margin:0 0 12px">${esc(hpBuzonDate(m.created_at))}</p><div class="bz-body">${esc(m.body)}</div><div class="row" style="margin-top:16px"><button class="btn s sm" id="bz-back" type="button">← Mensajes</button><button class="btn sm" id="bz-x" type="button">Cerrar</button></div>`);
+ mm.classList.add("bz-modal");mm.dataset.view="detail";
+ mm.querySelector("#bz-x").onclick=()=>mm.remove();mm.querySelector("#bz-back").onclick=hpBuzonList;
+}
+function hpBuzonOpen(){hpBuzonList();hpBuzonLoad(true)}
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#buzon"))hpBuzonOpen()});
+new MutationObserver(()=>{if(document.getElementById("buzon")){hpBuzonPaint();hpBuzonLoad(false)}}).observe(document.getElementById("app"),{childList:true});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&document.getElementById("buzon"))hpBuzonLoad(false)});
+setInterval(()=>{if(!document.hidden&&document.getElementById("buzon"))hpBuzonLoad(true)},60000);
+
+/* Panel administrativo: redactar y gestionar los mensajes enviados (siempre a todos los usuarios). */
+async function hpBuzonAdminInit(){
+ const box=document.getElementById("bz-admin");if(!box||!isAdmin())return;
+ box.innerHTML=`<h2 style="margin-top:0">Enviar mensaje a usuarios</h2><p class="mu">Llega al buzón de todos los usuarios, con una insignia de «sin leer».</p><label class="mu" for="bza-t">Título</label><input id="bza-t" type="text" maxlength="80" autocomplete="off" placeholder="Ej. Nuevas imágenes en el banco"><label class="mu" for="bza-b" style="display:block;margin-top:10px">Mensaje</label><textarea id="bza-b" rows="5" maxlength="1500" placeholder="Escribe el mensaje…"></textarea><p id="bza-m" role="status" class="mu"></p><button class="btn" id="bza-go" type="button">Enviar mensaje</button><h3 style="margin:18px 0 8px">Enviados</h3><div id="bza-list" class="admin-table-wrap">Cargando…</div>`;
+ async function loadSent(){
+  const w=document.getElementById("bza-list");if(!w)return;
+  try{
+   const r=await SUPA.from("admin_notifications").select("id,title,created_at").order("created_at",{ascending:false}).limit(30);
+   if(r.error)throw r.error;
+   const rows=r.data||[];
+   w.innerHTML=rows.length?`<div class="bz-sent">${rows.map(m=>`<div class="bz-sent-i"><span><b>${esc(m.title)}</b><small>${esc(hpBuzonDate(m.created_at))}</small></span><button type="button" class="btn s sm" data-bzdel="${esc(m.id)}" aria-label="Eliminar mensaje ${esc(m.title)}">Eliminar</button></div>`).join("")}</div>`:"Aún no has enviado mensajes.";
+   w.querySelectorAll("[data-bzdel]").forEach(b=>b.onclick=async()=>{
+    if(!confirm("¿Eliminar este mensaje? Dejará de verse en el buzón de los usuarios."))return;
+    b.disabled=true;
+    const d=await SUPA.from("admin_notifications").delete().eq("id",b.dataset.bzdel);
+    if(d.error){b.disabled=false;alert("No se pudo eliminar: "+d.error.message);return}
+    await loadSent();hpBuzonLoad(true)
+   })
+  }catch(e){w.innerHTML='<span class="r">No se pudieron cargar los mensajes enviados.</span>'}
+ }
+ document.getElementById("bza-go").onclick=async()=>{
+  const btn=document.getElementById("bza-go"),m=document.getElementById("bza-m"),title=document.getElementById("bza-t").value.trim(),body=document.getElementById("bza-b").value.trim();
+  if(title.length<2||body.length<2){m.className="r";m.textContent="Escribe un título y un mensaje.";return}
+  btn.disabled=true;m.className="mu";m.textContent="Enviando…";
+  const r=await SUPA.from("admin_notifications").insert({title,body,created_by:CURRENT_USER.id});
+  btn.disabled=false;
+  if(r.error){m.className="r";m.textContent="No se pudo enviar: "+(r.error.message||"error");return}
+  document.getElementById("bza-t").value="";document.getElementById("bza-b").value="";m.className="g";m.textContent="Mensaje enviado.";
+  await loadSent();hpBuzonLoad(true)
+ };
+ loadSent();
 }
 </script>
 </body></html>
