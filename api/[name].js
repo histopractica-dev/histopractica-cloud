@@ -207,14 +207,17 @@ async function bankNames(theme, mode) {
 async function optionsFor(q, mode, expected) {
   // Modalidad D (sistema nervioso): solo central vs periférico.
   if (mode === "E") return shuf([expected, ...distract(expected, [NEUS])]);
+  if (mode === "D" && /^\[piel\]/.test(q.traits || "")) return shuf((SKG.A.find((g) => g.some((x) => norm(x) === norm(expected))) || SKG.A[0]).slice());
   if (mode === "D") return shuf([expected, ...DIVS.filter((x) => norm(x) !== norm(expected))]);
   const pool = mode === "A" ? LB : mode === "B" ? CE : ES;
   // Respuesta propia de la piel: solo compite con las de su mismo grupo.
   const skinOf = (m, a) => (SKG[m] || []).find((g) => g.some((x) => norm(x) === norm(a))) || null;
   const skinGroup = skinOf(mode, expected);
   if (skinGroup) return shuf(skinGroup);
-  const mine = mode === "A" ? [] : (await bankNames(q.theme, mode)).filter((n) => !skinOf(mode, n));
-  const same = (pool[q.theme] || []).concat(mine), rel = (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
+  // Imagen de piel (marca «[piel]» al inicio de traits): las opciones salen de todo epitelial, conjuntivo y adiposo.
+  const skinImg = /^\[piel\]/.test(q.traits || ""), pk = skinImg ? ["epi", "con", "adi"] : [q.theme];
+  const mine = mode === "A" ? [] : (await Promise.all(pk.map((k) => bankNames(k, mode)))).flat().filter((n) => !skinOf(mode, n));
+  const same = [].concat(...pk.map((k) => pool[k] || [])).concat(mine), rel = skinImg ? [] : (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
   // «Tejido» en sistema nervioso solo compite con regiones específicas (nunca con central/periférico ni con otros tejidos).
   const tiers = mode === "A" && q.theme === "ner" ? [same] : [same, rel, all];
   return shuf([expected, ...distract(expected, tiers)]);
