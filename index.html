@@ -1389,9 +1389,15 @@ body:not(.hasnav) #nav{display:none}
 /* Pantallas bajas: la portada se desplaza en vez de recortar los iconos */
 @media(max-width:899px) and (max-height:640px){#landing{height:auto;min-height:100dvh;overflow:visible}.lp-wrap{height:auto;min-height:100dvh}.lp-fig{min-height:200px}}
 .lp-credit .soc-c{min-height:36px;padding:0 12px}
-.hm-soc{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:20px}
+.hm-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;margin-top:12px}
+.hm-foot #sync-status{min-width:0}
+.hm-foot #sync-status>*{margin-top:0;margin-bottom:0}
+.hm-soc{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-left:auto}
 .hm-soc:empty{display:none}
-.hm-soc .soc{justify-content:flex-end;gap:10px}
+.hm-soc .soc{gap:8px}
+.hm-soc .soc-i{width:34px;height:34px}
+.hm-soc .soc-i svg{width:17px;height:17px}
+.hm-soc .soc-c{min-height:34px;margin:0}
 .soc-set{margin-top:14px;padding-top:12px;border-top:2px solid var(--ln)}
 .soc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .soc-lab{font-weight:800;font-size:var(--fs-sm)}
@@ -1674,7 +1680,7 @@ function question(it,r=Math.random){
 const DESC={epi:"Revestimiento de superficies y cavidades, sin glándulas.",con:"Soporte: fibras, sustancia fundamental y células.",adi:"Reserva de energía: grasa blanca y parda.",car:"Hialino, elástico y fibrocartílago.",oseo:"Hueso compacto y esponjoso.",san:"Frotis sanguíneo y sus células.",mus:"Estriado esquelético, cardiaco y liso.",ner:"Neuronas, neuroglia y epéndimo."};
 function home(){nav("i");
  app.innerHTML=head()+`<h1 class="hero">¡Vamos a practicar!</h1><p class="mu" style="margin:0 0 16px">Entrena tu ojo clínico, una microfotografía a la vez.</p>
- ${(()=>{const r=SYNC_READY,st=Object.entries(T).map(([k,v])=>{const col=questionItems({temas:[k],mod:"M"},BANK),qn=col.length,done=col.filter(it=>ANSWERED.has(itKey(it))).length;return{k,v,qn,done,pct:acc(done,qn)}}),act=st.filter(x=>x.qn),low=r&&act.length>1?act.reduce((p,c)=>c.pct<p.pct?c:p):null,lowK=low&&act.some(x=>x.pct>low.pct)?low.k:null;return `<div class="tgrid">${st.map(({k,v,qn,done,pct})=>{const fin=r&&qn>0&&done===qn;return `<button class="tc${fin?" done":""}" style="--c:${COL[k]}" data-t="${k}"><span class="ti">${EM[k]}</span><span class="tx"><b>${v}${fin?`<span class="bdg">${ic("check")} Completado</span>`:""}${k===lowK?'<span class="bdg b">Menor avance</span>':""}</b><small>${DESC[k]}</small><span class="pb" role="progressbar" aria-label="Preguntas contestadas de ${v}" aria-valuemin="0" aria-valuemax="100" ${r?`aria-valuenow="${pct}"`:'aria-busy="true"'}><i style="width:${r?pct:0}%"></i></span><small>${r?`${pct}% contestadas · ${done}/${qn} preguntas`:SYNC_ERROR?"Progreso sin sincronizar":SK}</small></span></button>`}).join("")}</div>`})()}<div id="sync-status">${syncStatus()}</div><div class="hm-soc">${typeof hpSocialHome==="function"?hpSocialHome():""}</div>
+ ${(()=>{const r=SYNC_READY,st=Object.entries(T).map(([k,v])=>{const col=questionItems({temas:[k],mod:"M"},BANK),qn=col.length,done=col.filter(it=>ANSWERED.has(itKey(it))).length;return{k,v,qn,done,pct:acc(done,qn)}}),act=st.filter(x=>x.qn),low=r&&act.length>1?act.reduce((p,c)=>c.pct<p.pct?c:p):null,lowK=low&&act.some(x=>x.pct>low.pct)?low.k:null;return `<div class="tgrid">${st.map(({k,v,qn,done,pct})=>{const fin=r&&qn>0&&done===qn;return `<button class="tc${fin?" done":""}" style="--c:${COL[k]}" data-t="${k}"><span class="ti">${EM[k]}</span><span class="tx"><b>${v}${fin?`<span class="bdg">${ic("check")} Completado</span>`:""}${k===lowK?'<span class="bdg b">Menor avance</span>':""}</b><small>${DESC[k]}</small><span class="pb" role="progressbar" aria-label="Preguntas contestadas de ${v}" aria-valuemin="0" aria-valuemax="100" ${r?`aria-valuenow="${pct}"`:'aria-busy="true"'}><i style="width:${r?pct:0}%"></i></span><small>${r?`${pct}% contestadas · ${done}/${qn} preguntas`:SYNC_ERROR?"Progreso sin sincronizar":SK}</small></span></button>`}).join("")}</div>`})()}<div class="hm-foot"><div id="sync-status">${syncStatus()}</div><div class="hm-soc">${typeof hpSocialHome==="function"?hpSocialHome():""}</div></div>
 `;
  syncUI();
  $$("[data-t]").forEach(b=>b.onclick=()=>cfgView([b.dataset.t]))}
