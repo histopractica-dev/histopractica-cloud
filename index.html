@@ -1383,6 +1383,29 @@ body:not(.hasnav) #nav{display:none}
 }
 @media(max-height:520px){#landing{height:auto;min-height:100dvh;overflow:visible}.lp-wrap{height:auto;min-height:100dvh}.lp-fig{min-height:240px}}
 </style>
+<style id="hp-social">
+.soc{display:flex;align-items:center;gap:6px}
+.soc-i{display:inline-grid;place-items:center;width:var(--h-sm);height:var(--h-sm);border:2px solid var(--ln);border-radius:50%;background:var(--pn);color:var(--tx);text-decoration:none;transition:border-color .15s,color .15s,background-color .15s,transform .08s}
+.soc-i svg{width:20px;height:20px}
+.soc-i:active{transform:scale(.94)}
+.soc-c{display:inline-flex;align-items:center;gap:7px;min-height:var(--h-sm);color:var(--mu);font-size:var(--fs-sm);font-weight:700;text-decoration:none}
+.soc-c svg{width:16px;height:16px;flex:none}
+.soc-i:focus-visible,.soc-c:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+@media(hover:hover){.soc-i:hover{border-color:var(--b);color:var(--bt);background:var(--bl)}.soc-c:hover{color:var(--tx);text-decoration:underline}}
+.lp-bar{order:6;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0 10px}
+.lp-bar .lp-faq{order:1}
+.lp-bar .soc{order:2;margin-left:auto}
+.lp-bar .lp-credit{order:3}
+.lp-bar .soc:empty,.lp-bar .lp-credit:empty{display:none}
+@media(max-width:899px){.lp-bar{row-gap:2px}.lp-bar .lp-faq{flex-basis:100%}.lp-bar .soc{margin-left:0}.lp-bar .lp-credit{margin-left:auto}}
+/* Pantallas bajas: la portada se desplaza en vez de recortar los iconos */
+@media(max-width:899px) and (max-height:640px){#landing{height:auto;min-height:100dvh;overflow:visible}.lp-wrap{height:auto;min-height:100dvh}.lp-fig{min-height:200px}}
+@media(min-width:900px){.lp-bar{grid-column:1;grid-row:5;align-self:end}.lp-bar .lp-credit{flex-basis:100%}.lp-credit .soc-c{min-height:36px}}
+.soc-set{margin-top:14px;padding-top:12px;border-top:2px solid var(--ln)}
+.soc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.soc-lab{font-weight:800;font-size:var(--fs-sm)}
+.soc-set .soc-c{margin-top:2px}
+</style>
 <!-- Vercel Speed Insights -->
 <script>
   window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
@@ -1394,11 +1417,39 @@ body:not(.hasnav) #nav{display:none}
 <section class="lp-copy"><h2 class="lp-lab">¿Qué es HistoPráctica?</h2><p>Un simulador de histología para estudiantes de Medicina: observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula.</p><button type="button" class="btn" data-enter>Entrar</button></section>
 <section class="lp-how"><h2 class="lp-lab">Cómo entrar</h2><ol><li>Pulsa «Entrar»</li><li>Inicia sesión o crea tu cuenta</li><li>Elige qué practicar</li></ol></section>
 <section class="lp-tis"><h2 class="lp-lab">Tejidos que puedes practicar</h2><ul><li style="--c:#1cb0f6"><i></i>Epitelial</li><li style="--c:#ff9600"><i></i>Conjuntivo propiamente dicho</li><li style="--c:#d4a000"><i></i>Adiposo</li><li style="--c:#ce82ff"><i></i>Cartilaginoso</li><li style="--c:#9a7b4f"><i></i>Óseo</li><li style="--c:#ff4b4b"><i></i>Sanguíneo</li><li style="--c:#2fa000"><i></i>Muscular</li><li style="--c:#7c5cff"><i></i>Nervioso</li></ul></section>
-<details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details>
+<div class="lp-bar"><details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details><div class="soc" id="lp-soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica"></div><div class="lp-credit" id="lp-credit"></div></div>
 </div></div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,division (solo nervioso: "Sistema nervioso central"|"Sistema nervioso periférico"),neurona (solo nervioso: "Neurona multipolar"|"Neurona bipolar"|…),url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
+<script src="/hp-social.js"></script>
+<script>
+/* Redes sociales: las URLs viven en /hp-social.js. Solo se muestran las que tengan https://. */
+(function(){
+ var P={
+  instagram:{n:"Instagram",d:'<rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/>'},
+  facebook:{n:"Facebook",d:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'},
+  threads:{n:"Threads",d:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>'}
+ };
+ function svg(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+d+'</svg>'}
+ function url(v){v=String(v||"").trim();return /^https:\/\/[^\s"'<>]+$/i.test(v)?v.replace(/&/g,"&amp;"):""}
+ function esc(t){return String(t).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
+ function parts(){
+  var c=window.HP_SOCIAL||{},icons="",k,u;
+  for(k in P){u=url(c[k]);if(u)icons+='<a class="soc-i" href="'+u+'" target="_blank" rel="noopener noreferrer" aria-label="'+P[k].n+' oficial de HistoPráctica (se abre en una pestaña nueva)" title="'+P[k].n+'">'+svg(P[k].d)+'</a>'}
+  u=url(c.creator);
+  var lab=esc(c.creatorLabel||"Conoce al creador");
+  return{icons:icons,creator:u?'<a class="soc-c" href="'+u+'" target="_blank" rel="noopener noreferrer" aria-label="'+lab+': Instagram del creador (se abre en una pestaña nueva)">'+svg(P.instagram.d)+'<span>'+lab+'</span></a>':""}
+ }
+ /* Bloque para Ajustes y ayuda (lo usa la pantalla de perfil). */
+ window.hpSocialBlock=function(){
+  var p=parts();if(!p.icons&&!p.creator)return"";
+  return'<div class="soc-set">'+(p.icons?'<div class="soc-row"><span class="soc-lab">Síguenos</span><span class="soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica">'+p.icons+'</span></div>':"")+p.creator+'</div>'
+ };
+ var a=document.getElementById("lp-soc"),b=document.getElementById("lp-credit"),p=parts();
+ if(a)a.innerHTML=p.icons;if(b)b.innerHTML=p.creator;
+})();
+</script>
 <script>
 const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
 const EM={epi:"🧫",con:"🧵",adi:"🧈",car:"👂",oseo:"🦴",san:"🩸",mus:"💪",ner:"🧠"};
@@ -1411,10 +1462,10 @@ con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjun
 adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
 ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario","Sustancia blanca","Sustancia negra","Sustancia gris","Nervio periférico","Ganglio nervioso"]};
-const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito","Célula mesenquimatosa"],adi:["Adipocito","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
+const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito unilocular","Célula mesenquimatosa"],adi:["Adipocito unilocular","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
 car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
 ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria","Célula de Schwann","Célula satélite","Célula de Purkinje","Neurona piramidal","Neurona pseudounipolar"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
-const ES={epi:["Membrana basal","Luz","Tejido conectivo subyacente","Cilios","Microvellosidades (borde en cepillo)","Estrato córneo"],con:["Fibras colágenas","Sustancia fundamental","Núcleo de fibroblasto"],adi:["Adipocito","Capilar","Núcleo del adipocito"],
+const ES={epi:["Membrana basal","Luz","Tejido conectivo subyacente","Cilios","Microvellosidades (borde en cepillo)","Estrato córneo"],con:["Fibras colágenas","Sustancia fundamental","Núcleo de fibroblasto"],adi:["Adipocito unilocular","Capilar","Núcleo del adipocito unilocular"],
 car:["Condrocito","Laguna","Grupo isógeno","Matriz territorial","Matriz interterritorial","Pericondrio"],oseo:["Osteona","Conducto de Havers","Sistemas intersticiales","Periostio","Endostio","Laguna"],
 san:["Núcleo multilobulado","Gránulos citoplasmáticos","Palidez central","Núcleo arriñonado","Núcleo excéntrico","Halo perinuclear (Golgi)","Citoplasma basófilo"],mus:["Disco intercalar","Endomisio","Perimisio","Núcleo periférico","Fascículo muscular"],ner:["Soma","Dendritas","Axón","Plexo coroideo","Epitelio ependimario","Neuropilo","Cuerpos de Nissl","Nucléolo","Vaina de mielina","Nodo de Ranvier","Endoneuro","Perineuro","Epineuro","Conducto central","Sustancia gris","Sustancia blanca","Asta anterior","Capa molecular","Capa granulosa","Capa de células de Purkinje"]};
 /* Temas afines: de aquí salen distractores solo si el propio tema no da para 3 opciones */
@@ -1688,7 +1739,7 @@ function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({tema
  <div class="tgrid">${[["XP",v(st.xp||0)],["Mejor racha",v(st.best||0)],["Prácticas",v(st.s||0)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
  <div id="sync-status">${syncStatus()}</div>
  <div class="sub">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag">${ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}</div>
- <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div></div>
+ <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div>${hpSocialBlock()}</div>
  <p class="hint">Cada pregunta cuenta una sola vez en «contestadas»; los aciertos y el XP conservan todos tus intentos.</p><button class="btn s" id="rs">Reiniciar progreso</button></div>`;
  syncUI();$("#bk").onclick=home;$$("[data-th]").forEach(b=>b.onclick=()=>setTheme(b.dataset.th));
  $("#av-b").onclick=()=>$("#av-f").click();$("#av-f").onchange=async e=>{const f=e.target.files[0],m=$("#av-m"),btn=$("#av-b");e.target.value="";if(!f)return;if(!/^image\//.test(f.type)){m.textContent="Elige un archivo de imagen.";return}if(f.size>8*1024*1024){m.textContent="La imagen debe pesar menos de 8 MB.";return}if(!SUPA||!CURRENT_USER){m.textContent="Inicia sesión para cambiar tu foto.";return}btn.disabled=true;m.className="mu";m.textContent="Guardando foto de perfil…";
