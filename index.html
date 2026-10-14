@@ -2024,7 +2024,7 @@ async function smRun(){
  const m=$("#sm-m"),n=$("#sm-n").value.trim();let fs=[...SM_FILES],skipped=0;
  if(!n){m.textContent="Escribe el nombre de la fuente.";return}
  if(!fs.length){m.textContent="Elige los archivos originales.";return}
- const rule=/histology[\s_-]*guide/i.test(n)?{t:"984 × 678 px",f:(w,h)=>w===984&&h===678}:/digital[\s_-]*histology/i.test(n)?{t:"lado largo de 1750 px o más, lado corto de 1300 px o menos y entre 2,1 y 2,2 MP",f:(w,h)=>{const a=Math.max(w,h),b=Math.min(w,h),mp=w*h/1e6;return a>=1750&&b<=1300&&mp>=2.05&&mp<=2.25}}:/zaragoza/i.test(n)?{t:"700 × 450 px",f:(w,h)=>Math.max(w,h)===700&&Math.min(w,h)===450}:null;
+ const rule=/histology[\s_-]*guide/i.test(n)?{t:"984 × 678 px o cerca de 0,8 MP",f:(w,h)=>(w===984&&h===678)||(w*h/1e6>=.75&&w*h/1e6<=.85)}:/digital[\s_-]*histology/i.test(n)?{t:"lado largo de 1750 px o más, lado corto de 1300 px o menos y entre 2,1 y 2,2 MP",f:(w,h)=>{const a=Math.max(w,h),b=Math.min(w,h),mp=w*h/1e6;return a>=1750&&b<=1300&&mp>=2.05&&mp<=2.25}}:/zaragoza/i.test(n)?{t:"700 × 450 px",f:(w,h)=>Math.max(w,h)===700&&Math.min(w,h)===450}:null;
  if(rule){SM_RULE=rule.t;$$("#app button").forEach(b=>b.disabled=true);m.className="mu";let c=0;const ok=[];await smPool(fs,4,async f=>{try{const bm=await createImageBitmap(f),good=rule.f(bm.width,bm.height);if(bm.close)bm.close();if(good)ok.push(f)}catch(x){}m.textContent=`Revisando tamaños… ${++c}/${fs.length}`});skipped=fs.length-ok.length;fs=ok;if(!fs.length){smView("Ningún archivo cumple el tamaño de esta fuente ("+rule.t+").");return}}
  const ref={n,u:$("#sm-u").value.trim(),a:$("#sm-a").value.trim(),l:$("#sm-l").value.trim()},over=$("#sm-o").checked;
  $$("#app button").forEach(b=>b.disabled=true);m.className="mu";
