@@ -1392,6 +1392,8 @@ body:not(.hasnav) #nav{display:none}
 /* Pantallas bajas: la portada se desplaza en vez de recortar los iconos */
 @media(max-width:899px) and (max-height:640px){#landing{height:auto;min-height:100dvh;overflow:visible}.lp-wrap{height:auto;min-height:100dvh}.lp-fig{min-height:200px}}
 .lp-credit .soc-c{min-height:36px;padding:0 12px}
+.src-refs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+.src-refs .btn{min-height:var(--h-md);text-transform:none;letter-spacing:0}
 .hm-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;margin-top:12px}
 .hm-foot #sync-status{min-width:0}
 .hm-foot #sync-status>*{margin-top:0;margin-bottom:0}
@@ -1932,6 +1934,57 @@ async function fin(){
  syncUI();
  $("#hm").onclick=home;if(bad.length)$("#rv").onclick=()=>run(Object.assign({},S.c,{cor:"i"}),{items:bad.map(x=>x.q.it),spare:[],short:false,avail:bad.length});saveFinishedExam()}
 
+/* ---------- Asignar fuentes (estilo "Tinder"): una foto, un botón por referencia ---------- */
+const SRC_KEY="hp_src_refs";
+const srcRefs=()=>{try{const a=JSON.parse(localStorage.getItem(SRC_KEY)||"[]");return Array.isArray(a)?a.filter(r=>r&&r.n):[]}catch(e){return[]}};
+const srcParse=txt=>String(txt).split("\n").map(l=>l.split("|").map(s=>s.trim())).filter(p=>p[0]).map(p=>({n:p[0],u:p[1]||"",a:p[2]||"",l:p[3]||""}));
+const srcLine=r=>{const a=[r.n,r.u,r.a,r.l];while(a.length>1&&!a[a.length-1])a.pop();return a.join(" | ")};
+const srcPend=e=>!e.fuente||/^(subida propia|sin especificar|imagen propia|propia)$/i.test(String(e.fuente).trim());
+let SRC_ALL=false,SRC_HIST=[],SRC_SEEN=new Set(),SRC_BUSY=false,SRC_KEYFN=null;
+function srcSetup(msg){
+ const refs=srcRefs();
+ app.innerHTML=head("Asignar fuentes")+`<div class="card"><p class="mu" style="margin:0 0 10px">Escribe <b>una referencia por línea</b>. Formato: <b>Nombre | URL | Autor | Licencia</b>. Solo el nombre es obligatorio; lo demás, si lo pones, también se guarda en la imagen. Se creará un botón por cada referencia.</p><textarea id="sr-t" rows="8" placeholder="Histology Guide | https://… | Autor | CC BY-NC-SA&#10;Wikimedia Commons&#10;Atlas propio" spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.85rem;resize:vertical">${esc(refs.map(srcLine).join("\n"))}</textarea><p class="mu r" id="sr-m" role="status">${esc(msg||"")}</p><button class="btn" id="sr-go">Guardar y empezar</button><button class="btn s" id="sr-bk" style="margin-top:10px">Volver al banco</button></div>`;
+ $("#sr-go").onclick=()=>{const r=srcParse($("#sr-t").value);if(!r.length){$("#sr-m").textContent="Escribe al menos una referencia.";return}try{localStorage.setItem(SRC_KEY,JSON.stringify(r))}catch(e){}SRC_HIST=[];SRC_SEEN=new Set();srcView(r)};
+ $("#sr-bk").onclick=()=>bankView();
+}
+async function srcWrite(e,fields){
+ const {error}=await SUPA.from("questions").update({...fields,updated_at:new Date().toISOString()}).eq("id",e.id);
+ if(error)throw error;
+ const map={source:"fuente",source_url:"fuenteUrl",author:"autor",license:"licencia"};
+ [e,REMOTE_BANK.find(x=>x.id===e.id)].forEach(o=>{if(o)Object.entries(fields).forEach(([k,v])=>{o[map[k]]=(k==="source"||k==="license")?v:(v||undefined)})});
+}
+function srcView(passed){
+ if(!isAdmin()){home();return}
+ nav("i");
+ const refs=passed||srcRefs();if(!refs.length){srcSetup();return}
+ const list=BANK.filter(e=>(SRC_ALL||srcPend(e))&&!SRC_SEEN.has(e.id));
+ const done=SRC_HIST.length;
+ if(!list.length){app.innerHTML=head("Asignar fuentes")+`<div class="card"><div class="big"><div class="pop" style="font-size:3rem">🎉</div><b>¡Listo!</b><span class="mu">${SRC_ALL?"Ya viste todas las imágenes.":"No quedan imágenes pendientes de fuente."}${done?` Asignaste ${done} en esta sesión.`:""}</span></div><button class="btn" id="sr-bk">Volver al banco</button>${SRC_ALL?"":'<button class="btn s" id="sr-all" style="margin-top:10px">Ver también las que ya tienen fuente</button>'}<button class="btn s" id="sr-ed" style="margin-top:10px">⚙ Editar referencias</button></div>`;
+  $("#sr-bk").onclick=async()=>{try{await refreshRemoteBank()}catch(e){}bankView()};if($("#sr-all"))$("#sr-all").onclick=()=>{SRC_ALL=true;srcView(refs)};$("#sr-ed").onclick=()=>srcSetup();return}
+ const e=list[0];
+ app.innerHTML=head("Asignar fuentes")+`<p class="mu" id="src-st" role="status" style="margin:0 0 8px">${SRC_ALL?"Todas":"Faltan"}: ${list.length} · ${done} asignadas · ${EM[e.tema]||""} ${esc(T[e.tema]||"")}</p>
+<div class="card" id="src-card" style="padding:10px"><img id="src-img" src="${esc(e.url)}" alt="Imagen del banco" style="width:100%;max-height:min(56vh,520px);object-fit:contain;border-radius:12px;background:#080a0d;display:block"><p style="margin:8px 0 0;font-size:.85rem"><b>${esc([e.subtipo,e.division,e.neurona].filter(Boolean).join(" · ")||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:2px 0 0;font-size:.78rem">Fuente actual: ${esc(e.fuente||"—")}</p></div>
+<div class="src-refs">${refs.map((r,i)=>`<button class="btn s" data-r="${i}">${i<9?`<b style="opacity:.55">${i+1}</b> `:""}${esc(r.n)}</button>`).join("")}</div>
+<div class="row" style="margin-top:10px"><button class="btn sm s" id="sr-un" ${SRC_HIST.length?"":"disabled"}>↩ Deshacer</button><button class="btn sm s" id="sr-sk">Saltar →</button><button class="btn sm s" id="sr-ed">⚙ Referencias</button><button class="btn sm s" id="sr-all">${SRC_ALL?"Solo pendientes":"Ver todas"}</button><button class="btn sm" id="sr-bk">Terminar</button></div>`;
+ if(list[1]){const pre=new Image();pre.src=list[1].url}
+ const st=m=>{const s=$("#src-st");if(s){s.textContent=m;s.className="mu r"}};
+ const pick=async i=>{if(SRC_BUSY)return;SRC_BUSY=true;$$("#app button,main button").forEach(b=>b.disabled=true);const r=refs[i];
+  const prev={source:e.fuente||"Sin especificar",source_url:e.fuenteUrl||null,author:e.autor||null,license:e.licencia||null};
+  const f={source:r.n};if(r.u)f.source_url=r.u;if(r.a)f.author=r.a;if(r.l)f.license=r.l;
+  try{await srcWrite(e,f);SRC_HIST.push({e,prev});SRC_SEEN.add(e.id);SRC_BUSY=false;srcView(refs)}catch(err){SRC_BUSY=false;srcView(refs);setTimeout(()=>{const s=$("#src-st");if(s){s.textContent="No se pudo guardar: "+(err.message||err);s.className="mu r"}},0)}};
+ const skip=()=>{if(SRC_BUSY)return;SRC_SEEN.add(e.id);srcView(refs)};
+ const undo=async()=>{if(SRC_BUSY||!SRC_HIST.length)return;SRC_BUSY=true;const h=SRC_HIST[SRC_HIST.length-1];
+  try{await srcWrite(h.e,h.prev);SRC_HIST.pop();SRC_SEEN.delete(h.e.id);SRC_BUSY=false;srcView(refs)}catch(err){SRC_BUSY=false;st("No se pudo deshacer: "+(err.message||err))}};
+ $$("[data-r]").forEach(b=>b.onclick=()=>pick(+b.dataset.r));
+ $("#sr-sk").onclick=skip;$("#sr-un").onclick=undo;$("#sr-ed").onclick=()=>srcSetup();
+ $("#sr-all").onclick=()=>{SRC_ALL=!SRC_ALL;SRC_SEEN=new Set(SRC_HIST.map(h=>h.e.id));srcView(refs)};
+ $("#sr-bk").onclick=async()=>{try{await refreshRemoteBank()}catch(x){}bankView()};
+ if(SRC_KEYFN)document.removeEventListener("keydown",SRC_KEYFN);
+ SRC_KEYFN=ev=>{if(!$("#src-card")){document.removeEventListener("keydown",SRC_KEYFN);return}if(ev.target.matches&&ev.target.matches("input,textarea,select"))return;const n=+ev.key;
+  if(n>=1&&n<=9&&refs[n-1])pick(n-1);else if(ev.key==="ArrowRight"||ev.key==="s")skip();else if(ev.key==="Backspace"||ev.key==="z")undo()};
+ document.addEventListener("keydown",SRC_KEYFN);
+}
+
 /* ---------- Banco ---------- */
 let BF="all";
 function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage.getItem("hp_lastbk")||0;const cnt=k=>BANK.filter(e=>e.tema===k),vis=Object.keys(T).filter(k=>BF==="all"||BF===k),extN=BANK.filter(e=>!e._image_path).length;
@@ -1939,12 +1992,12 @@ function bankView(){if(!isAdmin()){home();return}nav("i");const lb=+localStorage
   return `<div class="card" style="margin:0"><div class="img" style="cursor:default"><div><img loading="lazy" data-qid="${esc(e.id)}" src="${esc(e.url)}" alt="">${mk.filter(m=>m.w&&!m.externa).map(m=>`<span class="bx f" style="left:${m.x-m.w/2}%;top:${m.y-m.h/2}%;width:${m.w}%;height:${m.h}%"></span>`).join("")}${(e.guias||[]).map(gzh).join("")}</div></div>
   <p style="margin:8px 0 2px;font-size:.85rem"><b>${esc([e.subtipo,e.division,e.neurona].filter(Boolean).join(" · ")||"Sin pregunta de tejido")}</b></p><p class="mu" style="margin:0;font-size:.78rem">${mk.map(m=>`${m.externa?"➡️ Estructura señalada externamente: ":""}${esc(m.n)}`).join(" · ")||"Sin marcas"}</p><p class="mu" style="font-size:.75rem">${qc(e)} pregunta(s)${(e.guias||[]).length?" · "+e.guias.length+" guía(s)":""}${e._image_path?"":" · ⚠️ enlace externo"}</p>
   <div class="row"><button class="btn sm s" data-e="${esc(e.id)}">✏️ Editar</button><button class="btn sm s" data-pub="${esc(e.id)}">${e.published===false?"Publicar":"Ocultar"}</button><button class="btn sm w" data-d="${esc(e.id)}">🗑</button></div></div>`};
- app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><button class="btn s" id="rp" style="margin-top:10px">🛠 Reparar imágenes${extN?` (${extN} con enlace externo)`:""}</button><pre id="rp-out"></pre><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
+ app.innerHTML=head("Tus imágenes, ordenadas por tema.")+`<p id="bank-admin-status" class="mu">Los cambios se sincronizan con Supabase.</p><button class="btn" id="ad">＋ Añadir imágenes</button><button class="btn s" id="srcw" style="margin-top:10px">🏷 Asignar fuentes${BANK.filter(srcPend).length?` (${BANK.filter(srcPend).length} sin fuente)`:""}</button><button class="btn s" id="rp" style="margin-top:10px">🛠 Reparar imágenes${extN?` (${extN} con enlace externo)`:""}</button><pre id="rp-out"></pre><div class="sub">Filtrar</div><div class="row">${[["all","Todos ("+BANK.length+")"],...Object.entries(T).map(([k,v])=>[k,EM[k]+" "+cnt(k).length])].map(([v,l])=>`<label class="ch"><input type="radio" name="bf" value="${v}" ${v===BF?"checked":""}><span style="padding:8px 12px">${l}</span></label>`).join("")}</div>
  ${BANK.length?vis.map(k=>cnt(k).length?`<h2>${EM[k]} ${T[k]} <span class="mu">· ${cnt(k).length} img · ${cnt(k).reduce((s,e)=>s+qc(e),0)} preg.</span></h2><div class="grid">${cnt(k).map(card).join("")}</div>`:"").join(""):'<p class="mu">Aún no hay imágenes. Ve a Añadir.</p>'}
  <div class="sub">Seguridad de imágenes</div><div class="card"><p class="mu" style="margin:0 0 10px">Cada foto tiene una copia dentro de la base de datos de Supabase. Si falta el archivo, se restaura desde esa copia (también una vez al día, con aviso por correo).</p><button class="btn" id="gk">🛡 Revisar y restaurar ahora</button><label class="btn s" style="display:block;margin-top:8px;cursor:pointer;text-align:center">Cargar copias desde un respaldo JSON<input id="gj" type="file" accept=".json,application/json" hidden></label><pre id="gk-out"></pre></div>
  <div class="sub">Copia de seguridad</div><div class="card"><p class="mu" style="margin:0 0 10px">Guarda un respaldo JSON del banco de imágenes y sus marcas. <b id="lb" class="${lb&&Date.now()-lb<6048e5||!LOCAL.length?"":"r"}">Última copia: ${lb?new Date(lb).toLocaleDateString("es"):"nunca"}.</b></p><div class="row"><button class="btn" id="ex" style="flex:1">Guardar copia</button><label class="btn s" style="flex:1;cursor:pointer">Restaurar copia<input id="rf" type="file" accept=".json,application/json" hidden></label></div><pre id="out"></pre><button class="btn sm w" id="clr" style="margin-top:8px">Vaciar mis imágenes</button></div>
  <div class="sub">Importar JSON</div><div class="card"><p class="mu" style="margin:0 0 10px">Pega un JSON con muchas imágenes a la vez: <b>{"bank":[…]}</b> o una lista <b>[…]</b>.</p><textarea id="pj" rows="6" placeholder='{"bank":[{"id":"…","tema":"epi","subtipo":"…","url":"https://…","fuente":"…","licencia":"…","verificada":true}]}' spellcheck="false" style="font-family:ui-monospace,monospace;font-size:.8rem;resize:vertical"></textarea><br><br><button class="btn" id="pi">📋 Importar imágenes</button><pre id="po"></pre></div>`;
- $("#ad").onclick=()=>sview();$$("[name=bf]").forEach(r=>r.onchange=()=>{BF=r.value;bankView()});
+ $("#ad").onclick=()=>sview();$("#srcw").onclick=()=>{SRC_HIST=[];SRC_SEEN=new Set();srcView()};$$("[name=bf]").forEach(r=>r.onchange=()=>{BF=r.value;bankView()});
  $("#gk").onclick=async()=>{const b=$("#gk"),o=$("#gk-out");b.disabled=true;o.textContent="Revisando… puede tardar unos segundos.";try{o.textContent=guardSummary(await guardRequest({action:"check"}))}catch(err){o.textContent="Error: "+(err.message||err)}finally{b.disabled=false}};
  $("#gj").onchange=async ev=>{const f=ev.target.files[0];if(!f)return;const o=$("#gk-out");try{const j=JSON.parse(await f.text()),list=(Array.isArray(j)?j:j&&j.bank||[]).filter(x=>x&&x.id&&String(x.url||"").startsWith("data:image/")),bad=[];let ok=0;for(let i=0;i<list.length;i++){o.textContent=`Guardando copias ${i+1}/${list.length}…`;const x=list[i];try{const blob=await (await fetch(x.url)).blob();await guardRequest({action:"store",questionId:String(x.id),contentType:blob.type||"image/jpeg",data:await blobToB64(blob)});ok++}catch(err){bad.push(x.id+": "+(err.message||err))}}o.textContent=`Copias guardadas: ${ok}/${list.length}.`+(bad.length?"\nNo se guardaron:\n"+bad.join("\n"):"")+"\nAhora pulsa «Revisar y restaurar ahora».";}catch(err){o.textContent="Error: "+(err.message||err)}finally{ev.target.value=""}};
  $("#rp").onclick=async()=>{const b=$("#rp");b.disabled=true;try{await repairImages($("#bank-admin-status"),$("#rp-out"))}catch(err){b.disabled=false;$("#rp-out").textContent="Error: "+(err.message||err)}};
