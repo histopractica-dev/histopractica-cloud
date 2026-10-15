@@ -224,7 +224,6 @@ async function optionsFor(q, mode, expected) {
   // Imagen de piel (marca «[piel]» al inicio de traits): las opciones salen de todo epitelial, conjuntivo y adiposo.
   const skinImg = /^\[piel\]/.test(q.traits || ""), pk = skinImg ? ["epi", "con", "adi"] : [q.theme];
   const same = [].concat(...pk.map((k) => pool[k] || [])), rel = skinImg ? [] : (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
-  const same = [].concat(...pk.map((k) => pool[k] || [])).concat(mine), rel = skinImg ? [] : (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
   // «Tejido» en sistema nervioso solo compite con regiones específicas (nunca con central/periférico ni con otros tejidos).
   const tiers = mode === "A" && q.theme === "ner" ? [same] : [same, rel, all];
   return shuf([expected, ...distract(expected, tiers)]);
