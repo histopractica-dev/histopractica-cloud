@@ -2,8 +2,8 @@
    - Navegación: red primero, con la última versión guardada como respaldo sin conexión.
    - Recursos estáticos (iconos, fuentes, librería): caché con actualización en segundo plano.
    - Datos (API propia, Supabase, Wikimedia) y peticiones que no son GET: siempre directo a la red, sin caché. */
-const VERSION = "hp-v2";
-const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png"];
+const VERSION = "hp-v3";
+const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/hp-motion.js?v=3", "/vendor/gsap.min.js", "/vendor/ScrollTrigger.min.js", "/vendor/DrawSVGPlugin.min.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

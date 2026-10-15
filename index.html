@@ -1423,6 +1423,62 @@ body:not(.hasnav) #nav{display:none}
   window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/speed-insights/script.js"></script>
+<style id="hp-design">
+/* HistoPráctica · capa de diseño y movimiento: mismos colores, Nunito y relieve de la marca; solo más acabado */
+:root{--ez:cubic-bezier(.22,1,.36,1);--gx:#4a9c00}
+html #app.hp-pop{animation:none}
+html .btn,html .opt,html .tc,html .ch span,html .ib,html #nav button,html .av,html .bz{transition:transform .2s var(--ez),box-shadow .2s var(--ez),border-color .18s,background-color .18s,color .18s,filter .18s}
+html .btn{box-shadow:0 5px 0 var(--gd)}html .btn:active:not(:disabled){transform:translateY(5px);box-shadow:0 0 0 var(--gd)}
+html .btn.s{box-shadow:0 3px 0 var(--ln)}html .btn.s:active{transform:translateY(3px);box-shadow:none}
+html .btn.w{box-shadow:0 5px 0 var(--ndd)}html .btn:disabled{box-shadow:none}
+html .tc,html .tc.done,html .tc.sug{border-width:2px;box-shadow:0 4px 0 var(--ln)}
+html .tc:active{transform:translateY(4px);box-shadow:0 0 0 var(--ln)}
+html .tc.done{border-color:var(--g);box-shadow:0 4px 0 var(--g)}
+html .tc .ti{transition:transform .35s var(--ez)}
+@media(hover:hover){html .tc:hover{transform:translateY(-3px);box-shadow:0 7px 0 var(--ln)}html .tc:hover .ti{transform:scale(1.1) rotate(-4deg)}html .tc.done:hover{box-shadow:0 7px 0 var(--g)}}
+html .opt{border-width:2px;box-shadow:0 3px 0 var(--ln)}html .opt:active:not(:disabled){transform:translateY(3px);box-shadow:none}
+html .opt.sel{box-shadow:0 3px 0 var(--b)}html .opt.sel kbd{background:var(--b);border-color:var(--b);color:#fff}
+html .opt.ok{box-shadow:0 3px 0 var(--g);animation:hpOk .55s var(--ez)}html .opt.no{box-shadow:0 3px 0 var(--nd);animation:hpNo .45s ease-in-out}
+html .ch input:checked+span{animation:hpChip .3s var(--ez)}
+html #nav button.on i{animation:hpNav .45s var(--ez)}
+html .bar i{transition:width .8s var(--ez)}html .pb i{border-radius:6px}
+html .sheet.ok,html .sheet.no{animation:hpUp .5s var(--ez)}
+html .img{border-width:3px;box-shadow:0 4px 0 var(--ln)}
+html .toast{animation:hpToast .55s var(--ez)}html .dlg{animation:hpDlg .4s var(--ez)}
+.mk,.bx.f{animation:hpRing 1.4s ease-out 3 .5s}
+/* Banda verde de marca (inicio): misma superficie, círculos claros y relieve que los posts */
+.hb{position:relative;overflow:hidden;margin:6px 0 18px;padding:22px 20px 20px;border-radius:var(--r-lg);background:#58cc02;color:#fff;box-shadow:0 5px 0 var(--gd)}
+.hb .c{position:absolute;border-radius:50%;background:rgba(255,255,255,.16);pointer-events:none}
+.hb .hero{position:relative;margin:0 0 4px;color:#fff;font-size:clamp(1.7rem,6.6vw,2.4rem);line-height:1.1}
+.hb p{position:relative;margin:0;color:#fff;font-weight:800}
+.hb-st{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.hb-st span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:#fff;color:var(--gx);font-weight:800;font-size:.85rem;box-shadow:0 3px 0 rgba(0,0,0,.14)}
+/* Resultados: anillo de puntaje */
+.rg{position:relative;width:min(210px,60vw);margin:4px auto 0}.rg svg{display:block;width:100%;transform:rotate(-90deg)}
+.rg circle{fill:none;stroke-width:13;stroke-linecap:round}.rg .t{stroke:var(--ln)}.rg .v{stroke:var(--g)}.rg.lo .v{stroke:var(--o)}
+.rg strong{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.7rem;font-weight:800;color:var(--tx)}
+.big .pop{font-size:2.2rem!important}.tlb{height:6px;margin:-2px 0 8px}
+/* Efectos y salida de vista */
+.hp-fx{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
+.hp-fx i{position:absolute;border-radius:50%;margin:-4px 0 0 -4px}.hp-fx i.cf{left:0;top:0;width:8px;height:12px;border-radius:2px;margin:0}
+.hp-xp{position:absolute;font-weight:800;font-size:1.4rem;color:var(--o)}
+.hp-pill2{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:0;right:0;margin:auto;width:max-content;max-width:90%;padding:8px 16px;border-radius:99px;background:var(--o);color:#1b1b1b;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.hp-ghost{position:fixed;z-index:15;pointer-events:none;overflow:hidden}
+.btn:disabled#auth-submit::after{content:"";display:inline-block;width:.9em;height:.9em;margin-left:.6em;vertical-align:-.1em;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:hpSpin .7s linear infinite}
+html.hpm #landing .lp-title,html.hpm #landing .lp-fig,html.hpm #landing .lp-copy,html.hpm #landing .lp-bar{opacity:0}
+@keyframes hpOk{0%{transform:scale(.96)}50%{transform:scale(1.035)}100%{transform:scale(1)}}
+@keyframes hpNo{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@keyframes hpChip{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes hpNav{0%{transform:scale(.7)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes hpUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes hpToast{from{transform:translateY(-26px) scale(.92);opacity:0}}
+@keyframes hpDlg{from{transform:translateY(24px) scale(.96);opacity:0}}
+@keyframes hpRing{0%{box-shadow:0 0 0 2px #000,0 0 0 0 rgba(255,225,77,.75)}100%{box-shadow:0 0 0 2px #000,0 0 0 18px rgba(255,225,77,0)}}
+@keyframes hpSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.hp-fx,.hp-ghost{display:none}html.hpm #landing *{opacity:1!important}}
+</style>
+<script>try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("hpm");setTimeout(function(){document.documentElement.classList.remove("hpm")},2500)}}catch(e){}</script>
+<script defer src="/vendor/gsap.min.js"></script><script defer src="/vendor/ScrollTrigger.min.js"></script><script defer src="/vendor/DrawSVGPlugin.min.js"></script><script defer src="/hp-motion.js?v=3"></script>
 </head><body><main id="app" aria-busy="true"><div id="landing"><div class="lp-wrap">
 <h1 class="lp-title"><span class="lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></span><span class="lp-tag">Practica la identificación de tejidos histológicos con imágenes reales</span></h1>
 <figure class="lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
@@ -1717,9 +1773,9 @@ const DESC={epi:"Revestimiento de superficies y cavidades, sin glándulas.",con:
 function home(){nav("i");
  const sec=(id,title,body)=>{let open=true;try{open=localStorage.getItem("hp_sec_"+id)!=="0"}catch(e){}return `<details class="hm-sec" data-sec="${id}"${open?" open":""}><summary>${title}</summary>${body}</details>`};
  const stats=temas=>{const col=questionItems({temas,mod:"M"},BANK),qn=col.length,done=col.filter(it=>ANSWERED.has(itKey(it))).length;return{qn,done,pct:acc(done,qn)}};
- app.innerHTML=head()+`<h1 class="hero">¡Vamos a practicar!</h1><p class="mu" style="margin:0 0 16px">Entrena tu ojo clínico, una microfotografía a la vez.</p>
+ app.innerHTML=head()+`<section class="hb"><i class="c" style="width:130px;height:130px;right:-34px;top:-44px"></i><i class="c" style="width:74px;height:74px;right:78px;bottom:-38px"></i><h1 class="hero">¡Vamos a practicar!</h1><p>Entrena tu ojo clínico, una microfotografía a la vez.</p>${SYNC_READY?(()=>{const z=ST()||{};return `<div class="hb-st"><span>⭐ <b data-count="${z.xp||0}">${z.xp||0}</b> XP</span><span>🔥 <b data-count="${z.best||0}">${z.best||0}</b> mejor racha</span></div>`})():""}</section>
  ${(()=>{const r=SYNC_READY,st=Object.entries(T).map(([k,v])=>({k,v,...stats([k])})),act=st.filter(x=>x.qn),low=r&&act.length>1?act.reduce((p,c)=>c.pct<p.pct?c:p):null,lowK=low&&act.some(x=>x.pct>low.pct)?low.k:null;
- const card=(key,attr,col,em,name,desc,qn,done,pct,extra)=>{const fin=r&&qn>0&&done===qn;return `<button class="tc${fin?" done":""}" style="--c:${col}" ${attr}="${key}"><span class="ti">${em}</span><span class="tx"><b>${name}${fin?`<span class="bdg">${ic("check")} Completado</span>`:""}${extra||""}</b><small>${desc}</small><span class="pb" role="progressbar" aria-label="Preguntas contestadas de ${name}" aria-valuemin="0" aria-valuemax="100" ${r?`aria-valuenow="${pct}"`:'aria-busy="true"'}><i style="width:${r?pct:0}%"></i></span><small>${r?`${pct}% contestadas · ${done}/${qn} preguntas`:SYNC_ERROR?"Progreso sin sincronizar":SK}</small></span></button>`};
+ const card=(key,attr,col,em,name,desc,qn,done,pct,extra)=>{const fin=r&&qn>0&&done===qn;return `<button class="tc${fin?" done":""}" style="--c:${col}" ${attr}="${key}"><span class="ti">${em}</span><span class="tx"><b>${name}${fin?`<span class="bdg">${ic("check")} Completado</span>`:""}${extra||""}</b><small>${desc}</small><span class="pb" role="progressbar" aria-label="Preguntas contestadas de ${name}" aria-valuemin="0" aria-valuemax="100" ${r?`aria-valuenow="${pct}"`:'aria-busy="true"'}><i style="width:${r?pct:0}%"></i></span><small>${r?`<span data-count="${pct}">${pct}</span>% contestadas · ${done}/${qn} preguntas`:SYNC_ERROR?"Progreso sin sincronizar":SK}</small></span></button>`};
  const tis=`<div class="tgrid">${st.map(({k,v,qn,done,pct})=>card(k,"data-t",COL[k],EM[k],v,DESC[k],qn,done,pct,k===lowK?'<span class="bdg b">Menor avance</span>':"")).join("")}</div>`;
  const orgs=`<div class="tgrid">${Object.entries(ORG).map(([k,o])=>{const x=stats([k]);return card(k,"data-o",o.col,o.em,o.n,o.desc,x.qn,x.done,x.pct)}).join("")}</div>`;
  return sec("t","Tejidos",tis)+sec("o","Órganos",orgs)})()}<div class="hm-foot"><div id="sync-status">${syncStatus()}</div><div class="hm-soc">${typeof hpSocialHome==="function"?hpSocialHome():""}</div></div>
@@ -1780,7 +1836,7 @@ function checkAch(){if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;const key
 function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({temas:ALLK,mod:"M"},BANK),done=items.filter(it=>ANSWERED.has(itKey(it))).length,r=SYNC_READY,v=x=>r?x:SK,ac=achList(),got=ac.filter(x=>x.ok).length;
  app.innerHTML=`<div id="perfil"><div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h1 class="hero" style="margin:0;flex:1;font-size:1.5rem">Perfil</h1></div>
  <div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:76px;height:76px;font-size:1.5rem;cursor:default">${inits()}</span><div style="flex:1;min-width:160px"><b style="font-size:1.2rem">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||"Estudiante")}</b><div class="mu">${isAdmin()?"Administrador":"Estudiante"}</div><div class="row" style="margin-top:8px"><button class="btn sm s" id="av-b" type="button">Cambiar foto</button>${avGet()?'<button class="btn sm s" id="av-d" type="button">Quitar</button>':""}</div></div><input type="file" id="av-f" accept="image/*" hidden><p id="av-m" class="r" role="alert" style="width:100%;margin:0"></p></div>
- <div class="tgrid">${[["XP",v(st.xp||0)],["Mejor racha",v(st.best||0)],["Prácticas",v(st.s||0)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
+ <div class="tgrid">${[["XP",v(`<span data-count="${st.xp||0}">${st.xp||0}</span>`)],["Mejor racha",v(`<span data-count="${st.best||0}">${st.best||0}</span>`)],["Prácticas",v(`<span data-count="${st.s||0}">${st.s||0}</span>`)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
  <div id="sync-status">${syncStatus()}</div>
  <div class="sub">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag">${ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}</div>
  <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div></div>
@@ -1966,8 +2022,8 @@ document.addEventListener("keydown",e=>{if(!S||!$("#ck")&&!$("#nx")||/INPUT|SELE
 async function fin(){
  if(S.finished)return;S.finished=true;
  const a=S.ans,ok=a.filter(x=>x.ok).length,u=new Set(a.map(x=>x.q.it.e.id)).size,bad=a.filter(x=>!x.ok);nav("i");{const st=ST();st.s=(st.s||0)+1;put("hp_st",st)}
- const by=f=>{const m={};a.forEach(x=>{const k=f(x);(m[k]=m[k]||[0,0])[1]++;if(x.ok)m[k][0]++});return Object.entries(m).map(([k,v])=>`<div class="tl"><span>${k}</span><b>${v[0]}/${v[1]} · ${acc(v[0],v[1])}%</b></div>`).join("")};
- app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><b>${acc(ok,a.length)}%</b><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
+ const by=f=>{const m={};a.forEach(x=>{const k=f(x);(m[k]=m[k]||[0,0])[1]++;if(x.ok)m[k][0]++});return Object.entries(m).map(([k,v])=>`<div class="tl"><span>${k}</span><b>${v[0]}/${v[1]} · ${acc(v[0],v[1])}%</b></div><span class="pb tlb"><i style="width:${acc(v[0],v[1])}%"></i></span>`).join("")};
+ app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><div class="rg${acc(ok,a.length)<50?" lo":""}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="t" cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52" data-p="${acc(ok,a.length)}"/></svg><strong><span data-count="${acc(ok,a.length)}">${acc(ok,a.length)}</span>%</strong></div><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
  <div class="card"><div class="sub" style="margin-top:0">Por tema</div>${by(x=>T[x.q.it.e.tema])}<div class="sub">Por modalidad</div>${by(x=>MN[x.q.it.m])}</div>
  ${bad.length?`<div class="sub">Preguntas falladas (${bad.length})</div><div class="wrong-list">${bad.map(wrongQuestionCard).join("")}</div><button class="btn" id="rv">Repasar errores</button><br>`:""}<p class="mu" id="finish-status" role="status">Guardando el resultado y enviando notificación…</p><div id="sync-status">${syncStatus()}</div><button class="btn s" id="hm">Inicio</button>`;
  syncUI();
