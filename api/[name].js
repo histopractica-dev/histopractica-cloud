@@ -15,25 +15,39 @@ const __makeRequire = (dir) => (p) => {
 __defs["_lib/labels"] = function (module, exports, require) {
 // Catálogos de etiquetas para generar distractores (copia de los de la página).
 const T={epi:"Tejido epitelial",con:"Tejido conjuntivo",adi:"Tejido adiposo",car:"Tejido cartilaginoso",oseo:"Tejido óseo",san:"Sangre",mus:"Tejido muscular",ner:"Tejido nervioso"};
+const DIVS=["Sistema nervioso central","Sistema nervioso periférico"];
+const NEUS=["Neurona multipolar","Neurona bipolar","Neurona pseudounipolar","Neurona anaxónica"];
 const LB={epi:["Epitelio simple plano","Epitelio simple cúbico","Epitelio simple cilíndrico","Epitelio plano estratificado queratinizado","Epitelio plano estratificado no queratinizado","Epitelio plano estratificado paraqueratinizado","Epitelio cúbico estratificado","Epitelio cilíndrico estratificado","Epitelio pseudoestratificado","Urotelio (epitelio de transición)"],
-con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso"],
+con:["Tejido conjuntivo laxo","Tejido conjuntivo denso irregular","Tejido conjuntivo denso regular","Mesénquima","Tejido conjuntivo mucoso","Tejido conjuntivo elástico","Tejido conjuntivo reticular"],
 adi:["Tejido adiposo blanco (unilocular)","Tejido adiposo pardo (multilocular)"],car:["Cartílago hialino","Cartílago elástico","Fibrocartílago"],
 oseo:["Hueso compacto","Hueso esponjoso"],san:["Frotis sanguíneo"],mus:["Músculo estriado esquelético","Músculo estriado cardiaco","Músculo liso"],
 ner:["Corteza cerebral","Corteza cerebelosa","Epitelio ependimario","Sustancia blanca","Sustancia negra","Sustancia gris","Nervio periférico","Ganglio nervioso"]};
-const DIVS=["Sistema nervioso central","Sistema nervioso periférico"];
-const NEUS=["Neurona multipolar","Neurona bipolar","Neurona pseudounipolar","Neurona anaxónica"];
-const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito unilocular","Célula mesenquimatosa"],adi:["Adipocito unilocular","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago"],
-car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa"],
-ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial"]};
-const ES={epi:["Membrana basal","Luz","Tejido conectivo subyacente","Cilios","Microvellosidades (borde en cepillo)","Estrato córneo"],con:["Fibras colágenas","Sustancia fundamental","Núcleo de fibroblasto"],adi:["Adipocito unilocular","Capilar","Núcleo del adipocito unilocular"],
-car:["Condrocito","Laguna","Grupo isógeno","Matriz territorial","Matriz interterritorial","Pericondrio"],oseo:["Osteona","Conducto de Havers","Sistemas intersticiales","Periostio","Endostio","Laguna"],
-san:["Núcleo multilobulado","Gránulos citoplasmáticos","Palidez central","Núcleo arriñonado","Núcleo excéntrico","Halo perinuclear (Golgi)","Citoplasma basófilo"],mus:["Disco intercalar","Endomisio","Perimisio","Núcleo periférico","Fascículo muscular"],ner:["Soma","Dendritas","Axón","Plexo coroideo","Epitelio ependimario","Neuropilo"]};
+const CE={san:["Eritrocito","Neutrófilo","Eosinófilo","Basófilo","Linfocito","Monocito","Plaqueta","Célula plasmática","Neutrófilo en banda","Reticulocito"],con:["Fibroblasto","Fibrocito","Macrófago","Mastocito","Célula plasmática","Adipocito unilocular","Célula mesenquimatosa","Célula reticular"],adi:["Adipocito unilocular","Adipocito multilocular","Fibroblasto","Célula endotelial","Macrófago","Mastocito","Pericito","Preadipocito"],
+car:["Condrocito","Condroblasto","Célula condrogénica","Fibroblasto"],oseo:["Osteocito","Osteoblasto","Osteoclasto","Célula osteoprogenitora","Célula de revestimiento óseo"],mus:["Fibra muscular esquelética","Cardiomiocito","Célula muscular lisa","Miofibroblasto","Pericito","Célula miosatélite"],
+ner:["Neurona","Astrocito","Oligodendrocito","Microglía","Célula ependimaria","Célula de Schwann","Célula satélite","Célula de Purkinje","Neurona piramidal","Neurona pseudounipolar"],epi:["Célula epitelial","Célula caliciforme","Célula basal","Célula ciliada","Célula en paraguas (urotelio)","Célula endotelial","Enterocito","Célula enteroendocrina","Célula de Paneth","Neumocito tipo II"]};
+const ES={epi:["Membrana basal","Luz","Tejido conectivo subyacente","Cilios","Microvellosidades (borde en cepillo)","Estrato córneo"],con:["Fibras colágenas","Sustancia fundamental","Núcleo de fibroblasto","Fibras elásticas","Fibras reticulares","Capilar","Tejido conjuntivo laxo","Tejido conjuntivo denso irregular"],adi:["Adipocito unilocular","Adipocito multilocular","Capilar","Núcleo del adipocito unilocular","Núcleo del adipocito multilocular","Gotas de grasa (lagunas)","Septo de tejido conjuntivo"],
+car:["Condrocito","Laguna","Grupo isógeno","Matriz territorial","Matriz interterritorial","Pericondrio","Tejido conectivo adyacente","Epitelio adyacente","Fibras elásticas","Cartílago elástico"],oseo:["Osteona","Conducto de Havers","Sistemas intersticiales","Periostio","Endostio","Laguna","Trabéculas","Conducto de Volkmann","Osteona en resorción","Osteoide","Vaso sanguíneo"],
+san:["Núcleo multilobulado","Gránulos citoplasmáticos","Palidez central","Núcleo arriñonado","Núcleo excéntrico","Halo perinuclear (Golgi)","Citoplasma basófilo"],mus:["Disco intercalar","Endomisio","Perimisio","Epimisio","Núcleo periférico","Fascículo muscular","Fibra muscular esquelética","Núcleo de fibra muscular esquelética","Núcleo de cardiomiocito","Miofibrillas","Estriaciones","Sarcómeros","Bandas A","Bandas I","Bandas H","Líneas Z","Líneas M","Vaso sanguíneo"],ner:["Soma","Núcleo","Dendritas","Axón","Plexo coroideo","Epitelio ependimario","Neuropilo","Cuerpos de Nissl","Nucléolo","Vaina de mielina","Nodo de Ranvier","Endoneuro","Perineuro","Epineuro","Conducto central","Sustancia gris","Sustancia blanca","Asta anterior","Capa molecular","Capa granulosa","Capa de células de Purkinje"]};
 const REL={san:["con"],con:["san","adi"],adi:["con"],car:["oseo","con"],oseo:["car","con"],mus:["con"],ner:["epi"],epi:["con"]};
 
-// Etiquetas propias de la piel (grupos que no se mezclan). A = tipo de piel, B = células, C = estructuras.
-const SKG={A:[["Piel gruesa","Piel delgada"]],B:[["Queratinocito","Melanocito","Célula de Langerhans","Célula de Merkel"]],C:[["Estrato basal","Estrato espinoso","Estrato granuloso","Estrato lúcido","Estrato córneo"],["Desmosomas","Hemidesmosomas","Uniones estrechas (ocluyentes)","Uniones comunicantes (nexos)"],["Epidermis","Dermis","Hipodermis"],["Dermis papilar","Dermis reticular"]]};
+// Etiquetas propias de la piel (grupos). A = tipo de piel, B = células, C = estructuras.
+const SKG={A:[["Piel gruesa","Piel delgada"]],B:[["Queratinocito","Melanocito","Célula de Langerhans","Célula de Merkel"]],C:[["Estrato basal","Estrato espinoso","Estrato granuloso","Estrato lúcido","Estrato córneo"],["Desmosomas","Hemidesmosomas","Uniones estrechas (ocluyentes)","Uniones comunicantes (nexos)"],["Epidermis","Dermis","Hipodermis"],["Dermis papilar","Dermis reticular"],["Cresta epidérmica","Papila epidérmica","Papila dérmica","Gránulos de melanina"]]};
 
-module.exports={T,LB,CE,ES,REL,DIVS,NEUS,SKG};
+// Jerarquías: hijo → padre (o lista de padres). Etiquetas emparentadas nunca salen juntas en una pregunta.
+const PAR={"dermis papilar":"Dermis","dermis reticular":"Dermis","estrato basal":"Epidermis","estrato espinoso":"Epidermis","estrato granuloso":"Epidermis","estrato lúcido":"Epidermis","estrato córneo":"Epidermis","cresta epidérmica":"Epidermis","papila epidérmica":"Epidermis","papila dérmica":"Dermis papilar","gránulos de melanina":"Melanocito","tejido adiposo":"Hipodermis",
+"queratinocito":"Célula epitelial","célula de merkel":"Célula epitelial","célula caliciforme":"Célula epitelial","célula basal":"Célula epitelial","célula ciliada":"Célula epitelial","célula en paraguas (urotelio)":"Célula epitelial","célula endotelial":"Célula epitelial","enterocito":"Célula epitelial","célula enteroendocrina":"Célula epitelial","célula de paneth":"Célula epitelial","neumocito tipo ii":"Célula epitelial",
+"neurona piramidal":"Neurona","neurona pseudounipolar":"Neurona","célula de purkinje":"Neurona","neurona multipolar":"Neurona","neurona bipolar":"Neurona","neurona anaxónica":"Neurona",
+"neutrófilo en banda":"Neutrófilo","reticulocito":"Eritrocito","célula plasmática":"Linfocito","célula reticular":"Fibroblasto","fibrocito":"Fibroblasto",
+"corteza cerebral":"Sustancia gris","corteza cerebelosa":"Sustancia gris","asta anterior":"Sustancia gris","capa molecular":"Corteza cerebelosa","capa granulosa":"Corteza cerebelosa","capa de células de purkinje":"Corteza cerebelosa",
+"conducto de havers":"Osteona","osteona en resorción":"Osteona","cuerpos de nissl":"Soma","núcleo":"Soma","nucléolo":["Núcleo","Soma"],"nodo de ranvier":"Axón","vaina de mielina":"Axón",
+"núcleo del adipocito unilocular":"Adipocito unilocular","núcleo del adipocito multilocular":"Adipocito multilocular","gotas de grasa (lagunas)":["Adipocito unilocular","Adipocito multilocular"],"condrocito":"Laguna","laguna":"Grupo isógeno","pericondrio":"Tejido conectivo adyacente","cartílago elástico":"Fibras elásticas",
+"capilar":"Vaso sanguíneo","núcleo de fibra muscular esquelética":"Fibra muscular esquelética","miofibrillas":"Fibra muscular esquelética","núcleo periférico":"Fibra muscular esquelética","sarcómeros":"Miofibrillas","estriaciones":"Miofibrillas","bandas a":["Sarcómeros","Estriaciones"],"bandas i":["Sarcómeros","Estriaciones"],"bandas h":"Bandas A","líneas m":"Bandas H","líneas z":"Bandas I"};
+const SKX=["Epidermis","Dermis","Hipodermis","Tejido adiposo","Dermis papilar","Dermis reticular","Membrana basal"];
+const skN=(x)=>String(x==null?"":x).trim().toLowerCase();
+const anc=(x)=>{const o=[],q=[skN(x)];while(q.length&&o.length<16){const c=q.shift();for(const p of [].concat(PAR[c]||[])){const n=skN(p);if(!o.includes(n)){o.push(n);q.push(n)}}}return o};
+const conf=(a,b)=>{const x=skN(a),y=skN(b);return x===y||anc(a).includes(y)||anc(b).includes(x)};
+
+module.exports={T,LB,CE,ES,REL,DIVS,NEUS,SKG,SKX,PAR,conf};
 
 };
 
@@ -159,12 +173,12 @@ module.exports = { HttpError, rest, restAll, authenticate, parseBody, wrap, json
 __defs["_lib/quiz"] = function (module, exports, require) {
 // Lógica de preguntas en el servidor: respuesta correcta, clave de pregunta y opciones (con distractores).
 const crypto = require("crypto");
-const { LB, CE, ES, REL, DIVS, NEUS, SKG } = require("./labels");
+const { LB, CE, ES, REL, DIVS, NEUS, SKG, SKX, conf } = require("./labels");
 const { rest, HttpError, enc } = require("./supa");
 
 const norm = (s) => String(s == null ? "" : s).normalize("NFC").trim().toLowerCase();
 const shuf = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = crypto.randomInt(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const distract = (ans, tiers) => { const seen = new Set([norm(ans)]), out = []; for (const t of tiers) for (const x of shuf(t)) if (out.length < 3 && !seen.has(norm(x))) { seen.add(norm(x)); out.push(x); } return out; };
+const distract = (ans, tiers) => { const seen = new Set([norm(ans)]), out = []; for (const t of tiers) for (const x of shuf(t)) if (out.length < 3 && !seen.has(norm(x)) && !conf(ans, x)) { seen.add(norm(x)); out.push(x); } return out; }; // máx. 3 señuelos = 4 opciones; nunca emparentados con la respuesta
 
 const sameNum = (a, b) => (a == null && b == null) || (a != null && b != null && Math.abs(Number(a) - Number(b)) < 1e-6);
 const matchTarget = (list, t) => (t && Array.isArray(list) ? list.find((c) => c && sameNum(c.x, t.x) && sameNum(c.y, t.y) && sameNum(c.w, t.w) && sameNum(c.h, t.h)) || null : null);
@@ -197,13 +211,6 @@ function resolve(q, mode, target) {
   return { expected: t.n, key: `${q.id}|${mode}|${t.x},${t.y},${t.w},${t.h}` };
 }
 
-const cache = new Map();
-async function bankNames(theme, mode) {
-  let e = cache.get(theme);
-  if (!e || Date.now() - e.t > 60000) { e = { t: Date.now(), rows: (await rest(`questions?theme=eq.${enc(theme)}&published=eq.true&verified=eq.true&select=cells,structures`)) || [] }; cache.set(theme, e); }
-  return e.rows.flatMap((r) => (mode === "B" ? r.cells : r.structures) || []).map((m) => m && m.n).filter(Boolean);
-}
-
 async function optionsFor(q, mode, expected) {
   // Modalidad D (sistema nervioso): solo central vs periférico.
   if (mode === "E") return shuf([expected, ...distract(expected, [NEUS])]);
@@ -213,10 +220,10 @@ async function optionsFor(q, mode, expected) {
   // Respuesta propia de la piel: solo compite con las de su mismo grupo.
   const skinOf = (m, a) => (SKG[m] || []).find((g) => g.some((x) => norm(x) === norm(a))) || null;
   const skinGroup = skinOf(mode, expected);
-  if (skinGroup) return shuf(skinGroup);
+  if (skinGroup) return mode === "A" ? shuf(skinGroup) : shuf([expected, ...distract(expected, mode === "C" ? [skinGroup, SKX] : [skinGroup])]); // tipo de piel: 2 opciones; lo demás, 4
   // Imagen de piel (marca «[piel]» al inicio de traits): las opciones salen de todo epitelial, conjuntivo y adiposo.
   const skinImg = /^\[piel\]/.test(q.traits || ""), pk = skinImg ? ["epi", "con", "adi"] : [q.theme];
-  const mine = mode === "A" ? [] : (await Promise.all(pk.map((k) => bankNames(k, mode)))).flat().filter((n) => !skinOf(mode, n));
+  const same = [].concat(...pk.map((k) => pool[k] || [])), rel = skinImg ? [] : (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
   const same = [].concat(...pk.map((k) => pool[k] || [])).concat(mine), rel = skinImg ? [] : (REL[q.theme] || []).flatMap((k) => pool[k] || []), all = [].concat(...Object.values(pool));
   // «Tejido» en sistema nervioso solo compite con regiones específicas (nunca con central/periférico ni con otros tejidos).
   const tiers = mode === "A" && q.theme === "ner" ? [same] : [same, rel, all];
