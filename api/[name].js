@@ -314,7 +314,7 @@ const crypto = require("crypto");
 const { wrap, json, authenticate, restAll, serviceKey } = require("./_lib/supa");
 
 const token = (n) => "g" + crypto.createHmac("sha256", serviceKey()).update(String(n || "").trim().toLowerCase()).digest("hex").slice(0, 10);
-const mask = (list) => (Array.isArray(list) ? list : []).map((t) => ({ n: token(t && t.n), x: t.x, y: t.y, w: t.w, h: t.h }));
+const mask = (list) => (Array.isArray(list) ? list : []).map((t) => ({ n: token(t && t.n), x: t.x, y: t.y, w: t.w, h: t.h, ...(t && t.externa === true ? { externa: true } : {}) }));
 
 let studentCache = { at: 0, data: null };
 
