@@ -1,8 +1,8 @@
 /* HistoPráctica – service worker
    - Navegación: red primero, con la última versión guardada como respaldo sin conexión.
    - Recursos estáticos (iconos, fuentes, librería): caché con actualización en segundo plano.
-   - Datos (Supabase, Wikimedia) y peticiones que no son GET: siempre directo a la red, sin caché. */
-const VERSION = "hp-v1";
+   - Datos (API propia, Supabase, Wikimedia) y peticiones que no son GET: siempre directo a la red, sin caché. */
+const VERSION = "hp-v2";
 const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -25,6 +25,8 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (NO_CACHE_HOSTS.some(r => r.test(url.hostname))) return;
+  // La API (progreso, banco, preguntas) va SIEMPRE directo a la red: la caché guarda por dirección, no por usuario, y mostraba datos viejos o de otra cuenta.
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
 
   // Páginas: red primero, caché como respaldo
   if (req.mode === "navigate") {
