@@ -881,9 +881,53 @@ exports.adminMeta = wrap(["GET"], async (event) => {
   return json(200, { users: profiles.map((p) => { const x = m.get(p.id) || {}; return { id: p.id, email: p.email || "", name: p.display_name || "", role: p.role, created_at: p.created_at, org: x.organization || "", other: x.organization_other || "", how: x.how_found || "", detail: x.how_found_detail || "", city: x.city || "", country: x.country || "" }; }) });
 });
 
+// POST (solo administrador) → completa la ciudad de los usuarios que ya existían, usando la IP guardada en notification_outbox
+// (aviso de cuenta nueva). Solo llena a quienes aún no tienen ciudad. Consulta ipwho.is (HTTPS, sin clave) una vez por IP distinta.
+const PRIVATE_IP = /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|::1$|f[cd][0-9a-f]{2}:)/i;
+async function lookupIp(ip) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 4000);
+  try {
+    const r = await fetch("https://ipwho.is/" + encodeURIComponent(ip) + "?fields=success,city,region_code,country_code", { signal: ctl.signal });
+    const d = await r.json();
+    return d && d.success && d.city ? { city: clean(d.city, 80), region: clean(d.region_code, 20) || null, country: clean(d.country_code, 4).toUpperCase() || null } : null;
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+exports.backfillGeo = wrap(["POST"], async (event) => {
+  const { isAdmin } = await authenticate(event);
+  if (!isAdmin) return json(403, { error: "Solo el administrador puede hacer esto." });
+  const [rows, profiles, metas] = await Promise.all([
+    restAll("notification_outbox?event_type=in.(signup,login)&select=event_type,payload,created_at&order=created_at.asc"),
+    restAll("profiles?select=id,email&order=id.asc"),
+    restAll("user_meta?select=user_id,city&order=user_id.asc"),
+  ]);
+  const ipBy = new Map(); // el aviso de cuenta nueva manda; un inicio de sesión solo sirve si no hay otro
+  for (const r of rows) {
+    const pl = r.payload || {}, email = String(pl.email || "").trim().toLowerCase(), ip = String(pl.ip || "").trim();
+    if (!email || !/^[0-9a-f:.]{3,45}$/i.test(ip) || PRIVATE_IP.test(ip)) continue;
+    if (r.event_type === "signup" || !ipBy.has(email)) ipBy.set(email, ip);
+  }
+  const done = new Set(metas.filter((m) => m.city).map((m) => m.user_id));
+  const todo = profiles.filter((p) => p.email && !done.has(p.id));
+  const ips = [...new Set(todo.map((p) => ipBy.get(String(p.email).toLowerCase())).filter(Boolean))];
+  const geo = new Map(), deadline = Date.now() + 8000;
+  for (let i = 0; i < ips.length && Date.now() < deadline; i += 5) {
+    await Promise.all(ips.slice(i, i + 5).map(async (ip) => { const g = await lookupIp(ip); if (g) geo.set(ip, g); }));
+  }
+  const now = new Date().toISOString(), out = [];
+  let noIp = 0;
+  for (const p of todo) {
+    const ip = ipBy.get(String(p.email).toLowerCase());
+    if (!ip) { noIp++; continue; }
+    const g = geo.get(ip);
+    if (g) out.push({ user_id: p.id, city: g.city, region: g.region, country: g.country, geo_updated_at: now });
+  }
+  if (out.length) await rest("user_meta?on_conflict=user_id", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: out });
+  return json(200, { filled: out.length, noIp, failed: todo.length - noIp - out.length });
+});
+
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta };
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta, "admin-backfill-geo": __makeRequire("")("./user-meta").backfillGeo };
 
 module.exports = async (req, res) => {
   try {
