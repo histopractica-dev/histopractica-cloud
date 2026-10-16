@@ -844,8 +844,10 @@ exports.geo = wrap(["POST"], async (event) => {
 const SOCIALS = ["Instagram", "Facebook", "Threads", "YouTube", "TikTok"];
 const HOWS = ["Redes sociales", "Conozco al creador", "Recomendación de un amigo", "Búsqueda en Google", "Publicidad"];
 const nf = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
-const GIVEN = ["luis", "luis fernando", "luis f", "luis fer"], SUR = ["sanchez", "cruz", "sanchez cruz"];
-const CREATOR = new Set([...GIVEN, ...GIVEN.flatMap((g) => SUR.map((x) => g + " " + x)), ...GIVEN.flatMap((g) => SUR.map((x) => x + " " + g))]);
+const GIVEN = (() => { const F = ["fernando", "fernado", "fernan", "fer", "f"], g = new Set(["luis", "luisito", "fernando", "fernado", "fernan", "fer"]); for (const f of F) g.add("luis " + f); return [...g]; })();
+const SUR = ["sanchez", "sanches", "cruz", "sanchez cruz", "sanches cruz", "sanchez c", "sanches c", "sc"];
+const CREATOR_LIST = [...new Set([...GIVEN, ...SUR, ...GIVEN.flatMap((g) => SUR.flatMap((x) => [g + " " + x, x + " " + g]))])];
+const CREATOR = new Set(CREATOR_LIST.map((x) => x.replace(/ /g, ""))); // se compara sin espacios: «luisfernando» = «Luis  Fernando»
 
 exports.how = wrap(["POST"], async (event) => {
   const { user } = await authenticate(event, { needProfile: false });
@@ -858,7 +860,7 @@ exports.how = wrap(["POST"], async (event) => {
     if (!detail) return json(400, { error: "Elige la red social." });
   } else if (method === "Conozco al creador") {
     detail = clean(body.detail, 80);
-    if (!CREATOR.has(nf(detail))) return json(400, { error: "No es correcto. Revisa cómo se llama el creador." });
+    if (!CREATOR.has(nf(detail).replace(/ /g, ""))) return json(400, { error: "No es correcto. Revisa cómo se llama el creador." });
   } else if (method === "Recomendación de un amigo") {
     detail = clean(body.detail, 80);
     if (detail.length < 2) return json(400, { error: "Escribe quién te recomendó HistoPráctica." });
