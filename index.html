@@ -4,6 +4,7 @@
 
 <!-- TÍTULO Y DESCRIPCIÓN OPTIMIZADOS PARA BÚSQUEDAS EN GOOGLE -->
 <title>HistoPráctica | Simulador de histología: practica la identificación de tejidos</title>
+<meta name="author" content="Luis Fernando Sanchez">
 <meta name="description" content="Entrena tu ojo histológico con quizzes interactivos, cuestionarios de práctica y preguntas de exámenes de histología médica en cualquier dispositivo. Ideal para estudiantes de medicina y biología.">
 <!-- Datos estructurados para buscadores -->
 <script type="application/ld+json">
@@ -14,7 +15,36 @@
   "url": "https://histopractica.online",
   "description": "Plataforma interactiva de quizzes y cuestionarios de histología médica.",
   "educationalUse": "Quiz",
-  "interactivityType": "active"
+  "interactivityType": "active",
+  "inLanguage": "es",
+  "author": { "@id": "https://histopractica.online/#creador" },
+  "creator": { "@id": "https://histopractica.online/#creador" },
+  "publisher": { "@id": "https://histopractica.online/#creador" },
+  "sameAs": [
+    "https://instagram.com/histopractica",
+    "https://www.facebook.com/share/1HfvmgFadC/",
+    "https://www.threads.com/@histopractica",
+    "https://youtube.com/@histopractica"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://histopractica.online/#creador",
+  "name": "Luis Fernando Sanchez",
+  "jobTitle": "Creador de HistoPráctica",
+  "description": "Estudiante de Medicina en el Centro Universitario de la Costa de la Universidad de Guadalajara y creador de HistoPráctica.",
+  "affiliation": {
+    "@type": "CollegeOrUniversity",
+    "name": "Centro Universitario de la Costa, Universidad de Guadalajara",
+    "parentOrganization": { "@type": "CollegeOrUniversity", "name": "Universidad de Guadalajara" }
+  },
+  "knowsAbout": ["Medicina", "Histología"],
+  "url": "https://histopractica.online",
+  "sameAs": [ "https://instagram.com/luisf.sc" ],
+  "owns": { "@type": "EducationalWebSite", "name": "HistoPráctica", "url": "https://histopractica.online" }
 }
 </script>
 
@@ -1845,18 +1875,39 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")$(".modal")?.remove(
 function hpNotificationSound(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=window.__hpNoticeAudio||(window.__hpNoticeAudio=new C());const play=()=>{const o=c.createOscillator(),g=c.createGain(),t=c.currentTime;o.type="sine";o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1175,t+.09);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.11,t+.025);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.25)};if(c.state==="suspended")c.resume().then(play).catch(()=>{});else play()}catch(e){}}
 function hpShowNotification(title,detail,icon='🔔',action='profile'){let b=$("#toasts");if(!b){b=document.createElement("div");b.id="toasts";b.setAttribute("role","status");document.body.appendChild(b)}const d=document.createElement("button");d.type="button";d.className="toast hp-notice";d.setAttribute("aria-label",title+". Haz click para ver.");d.innerHTML=`<span class="toast-emoji" aria-hidden="true">${icon}</span><span class="hp-notice-copy"><b>${esc(title)}</b><small>${esc(detail||"Haz click para ver")}</small><u>Haz click para ver</u></span>`;d.style.pointerEvents="auto";d.onclick=()=>{d.remove();if(action==='ranking'&&typeof rankView==='function')rankView();else if(typeof perfilView==='function')perfilView()};b.appendChild(d);hpNotificationSound();setTimeout(()=>{d.classList.add("out");setTimeout(()=>d.remove(),350)},7000)}
 function toast(t){hpShowNotification(t,"Consulta tu progreso y logros","🏆","profile")}
-function achList(){const it=questionItems({temas:ALLK,mod:"M"},BANK),dn=it.filter(x=>ANSWERED.has(itKey(x))).length,tis=Object.entries({...T,piel:"Piel"}).map(([k,v])=>{const c=it.filter(x=>(x.e.organo==="piel"?"piel":x.e.tema)===k);return{k,v,qn:c.length,ok:c.length>0&&c.every(x=>ANSWERED.has(itKey(x)))}}).filter(x=>x.qn);
- return [["a1","Primera respuesta","Contesta una pregunta",dn>=1,"🌱"],["a10","10 preguntas","Contesta 10 preguntas distintas",dn>=10,"🎯"],["a100","100 preguntas","Contesta 100 preguntas distintas",dn>=100,"💯"],["tw","Primer tejido completado","Contesta todas las preguntas de un tejido",tis.some(x=>x.ok),"🧠"],["all","Banco completo","Contesta todas las preguntas de todos los temas",it.length>0&&dn===it.length,"🏅"]].map(([id,t,d,ok,emoji])=>({id,t,d,ok,emoji,c:"var(--o)"})).concat(tis.map(x=>({id:"t-"+x.k,t:`Dominio: ${x.v}`,d:`Contesta las ${x.qn} preguntas`,ok:x.ok,emoji:EM[x.k],c:COL[x.k]})))}
-function checkAch(){if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;const key="hp_ach_"+CURRENT_USER.id,got=achList().filter(x=>x.ok),seen=rd(key,null);if(seen===null){put(key,got.map(x=>x.id));return}const nw=got.filter(x=>!seen.includes(x.id));if(nw.length){put(key,seen.concat(nw.map(x=>x.id)));nw.forEach(x=>hpShowNotification("¡Logro conseguido!",x.t+" · "+x.d,"🏆","profile"))}}
+let HP_SOC={f:0,m:0,uid:null,t:0,busy:false};
+async function hpSocStats(force){
+ if(typeof SUPA==="undefined"||!SUPA||!CURRENT_USER||HP_SOC.busy)return;
+ if(HP_SOC.uid!==CURRENT_USER.id){HP_SOC={f:0,m:0,uid:CURRENT_USER.id,t:0,busy:false}}
+ if(!force&&Date.now()-HP_SOC.t<60000)return;
+ HP_SOC.busy=true;
+ try{
+  const me=CURRENT_USER.id;
+  const [fr,ms]=await Promise.all([
+   SUPA.from("friendships").select("user_id,friend_id").or(`user_id.eq.${me},friend_id.eq.${me}`),
+   SUPA.from("direct_messages").select("id",{count:"exact",head:true}).eq("sender_id",me)
+  ]);
+  if(!fr.error)HP_SOC.f=new Set((fr.data||[]).map(x=>x.user_id===me?x.friend_id:x.user_id)).size;
+  if(!ms.error&&typeof ms.count==="number")HP_SOC.m=ms.count
+ }catch(e){}
+ finally{HP_SOC.busy=false;HP_SOC.t=Date.now();if(typeof checkAch==="function")checkAch();if(typeof paintAch==="function")paintAch()}
+}
+function paintAch(){const g=document.getElementById("ach-g");if(!g||!SYNC_READY)return;const ac=achList();g.innerHTML=achGrid(ac,true);const t=document.getElementById("ach-t");if(t)t.textContent="Logros · "+ac.filter(x=>x.ok).length+"/"+ac.length}
+function achGrid(ac,r){return ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}
+function achList(){const st=ST(),it=questionItems({temas:ALLK,mod:"M"},BANK),dn=it.filter(x=>ANSWERED.has(itKey(x))).length,tis=Object.entries({...T,piel:"Piel"}).map(([k,v])=>{const c=it.filter(x=>(x.e.organo==="piel"?"piel":x.e.tema)===k);return{k,v,qn:c.length,ok:c.length>0&&c.every(x=>ANSWERED.has(itKey(x)))}}).filter(x=>x.qn);
+ return [["a1","Primera respuesta","Contesta una pregunta",dn>=1,"🌱"],["a10","10 preguntas","Contesta 10 preguntas distintas",dn>=10,"🎯"],["a100","100 preguntas","Contesta 100 preguntas distintas",dn>=100,"💯"],["tw","Primer tejido completado","Contesta todas las preguntas de un tejido",tis.some(x=>x.ok),"🧠"],["all","Banco completo","Contesta todas las preguntas de todos los temas",it.length>0&&dn===it.length,"🏅"],
+ ["f1","Primer amigo","Haz tu primera amistad en Social",HP_SOC.f>=1,"🤝"],["f3","Círculo de estudio","Ten 3 amigos en Social",HP_SOC.f>=3,"👥"],["m1","Rompehielos","Envía tu primer mensaje",HP_SOC.m>=1,"💬"],["m10","Conversador","Envía 10 mensajes",HP_SOC.m>=10,"🗣️"],["bz","Buzón al día","Abre un mensaje de tu buzón",(()=>{try{return BZ.reads.size>=1}catch(e){return false}})(),"📬"],
+ ["ph","Cara conocida","Pon una foto en tu perfil",!!(avGet()||CURRENT_USER?.user_metadata?.avatar_url),"📸"],["r5","En racha","Llega a 5 aciertos seguidos",(st.best||0)>=5,"🔥"],["r15","Imparable","Llega a 15 aciertos seguidos",(st.best||0)>=15,"⚡"],["ojo","Ojo de águila","Alcanza 90 % de acierto con al menos 50 respuestas",(st.n||0)>=50&&acc(st.a||0,st.n||0)>=90,"🦅"],["xp","Mil puntos","Reúne 1000 XP",(st.xp||0)>=1000,"⭐"],["s10","Constancia","Completa 10 prácticas",(st.s||0)>=10,"🏃"]].map(([id,t,d,ok,emoji])=>({id,t,d,ok,emoji,c:"var(--o)"})).concat(tis.map(x=>({id:"t-"+x.k,t:`Dominio: ${x.v}`,d:`Contesta las ${x.qn} preguntas`,ok:x.ok,emoji:EM[x.k],c:COL[x.k]})))}
+function checkAch(){if(!SYNC_READY||!CURRENT_USER||!BANK.length)return;hpSocStats();const key="hp_ach_"+CURRENT_USER.id,got=achList().filter(x=>x.ok),seen=rd(key,null);if(seen===null){put(key,got.map(x=>x.id));return}const nw=got.filter(x=>!seen.includes(x.id));if(nw.length){put(key,seen.concat(nw.map(x=>x.id)));nw.length>3?hpShowNotification("¡Logros conseguidos!","Desbloqueaste "+nw.length+" logros nuevos","🏆","profile"):nw.forEach(x=>hpShowNotification("¡Logro conseguido!",x.t+" · "+x.d,"🏆","profile"))}}
 function perfilView(){nav("u");const st=ST(),n=st.n||0,items=questionItems({temas:ALLK,mod:"M"},BANK),done=items.filter(it=>ANSWERED.has(itKey(it))).length,r=SYNC_READY,v=x=>r?x:SK,ac=achList(),got=ac.filter(x=>x.ok).length;
  app.innerHTML=`<div id="perfil"><div class="xt"><button class="x" id="bk" aria-label="Volver">←</button><h1 class="hero" style="margin:0;flex:1;font-size:1.5rem">Perfil</h1></div>
  <div class="card pf" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:76px;height:76px;font-size:1.5rem;cursor:default">${inits()}</span><div style="flex:1;min-width:160px"><b style="font-size:1.2rem">${esc(CURRENT_PROFILE?.display_name||CURRENT_USER?.user_metadata?.display_name||"Estudiante")}</b><div class="mu">${isAdmin()?"Administrador":"Estudiante"}</div><div class="row" style="margin-top:8px"><button class="btn sm s" id="av-b" type="button">Cambiar foto</button>${avGet()?'<button class="btn sm s" id="av-d" type="button">Quitar</button>':""}</div></div><input type="file" id="av-f" accept="image/*" hidden><p id="av-m" class="r" role="alert" style="width:100%;margin:0"></p></div>
  <div class="tgrid">${[["XP",v(`<span data-count="${st.xp||0}">${st.xp||0}</span>`)],["Mejor racha",v(`<span data-count="${st.best||0}">${st.best||0}</span>`)],["Prácticas",v(`<span data-count="${st.s||0}">${st.s||0}</span>`)],["Preguntas contestadas",v(done+"/"+items.length)],["Aciertos",v((st.a||0)+" de "+n)],["Porcentaje de acierto",v(acc(st.a||0,n)+"%")]].map(([l,x])=>`<div class="card" style="margin:0;text-align:center"><b style="font-size:1.4rem">${x}</b><div class="mu">${l}</div></div>`).join("")}</div>
  <div id="sync-status">${syncStatus()}</div>
- <div class="sub">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag">${ac.map(x=>`<div class="ab ${x.ok?"":"lock"}" style="--c:${x.c}"><span class="ai emoji-icon" aria-hidden="true">${x.ok?(x.emoji||"🏆"):"🔒"}</span><b>${esc(x.t)}</b><small>${x.d}</small><span class="mu">${r?(x.ok?"Desbloqueado":"Pendiente"):"Cargando…"}</span></div>`).join("")}</div>
+ <div class="sub" id="ach-t">Logros${r?" · "+got+"/"+ac.length:""}</div><div class="ag" id="ach-g">${achGrid(ac,r)}</div>
  <div class="sub">Ajustes y ayuda</div><div class="card"><div class="tl" style="flex-wrap:wrap"><span>Tema</span><span class="row">${[["auto","⚙️ Automático"],["light","☀️ Claro"],["dark","🌙 Oscuro"]].map(([v,l])=>`<button class="btn sm s" data-th="${v}" aria-pressed="${themePref()===v}">${l}</button>`).join("")}</span></div><div class="row" style="margin-top:12px"><button class="btn sm s" id="p-tu">Ver tutorial</button><button class="btn sm s" id="p-hl">Ayuda</button><button class="btn sm s" id="p-pv">Privacidad</button><button class="btn sm" id="p-suggest">💡 Enviar sugerencia</button></div></div>
  <p class="hint">Cada pregunta cuenta una sola vez en «contestadas»; los aciertos y el XP conservan todos tus intentos.</p><button class="btn s" id="rs">Reiniciar progreso</button></div>`;
- syncUI();$("#bk").onclick=home;$$("[data-th]").forEach(b=>b.onclick=()=>setTheme(b.dataset.th));
+ syncUI();hpSocStats(true);$("#bk").onclick=home;$$("[data-th]").forEach(b=>b.onclick=()=>setTheme(b.dataset.th));
  $("#av-b").onclick=()=>$("#av-f").click();$("#av-f").onchange=async e=>{const f=e.target.files[0],m=$("#av-m"),btn=$("#av-b");e.target.value="";if(!f)return;if(!/^image\//.test(f.type)){m.textContent="Elige un archivo de imagen.";return}if(f.size>8*1024*1024){m.textContent="La imagen debe pesar menos de 8 MB.";return}if(!SUPA||!CURRENT_USER){m.textContent="Inicia sesión para cambiar tu foto.";return}btn.disabled=true;m.className="mu";m.textContent="Guardando foto de perfil…";
   try{const bm=await createImageBitmap(f),z=Math.min(bm.width,bm.height),c=document.createElement("canvas");c.width=c.height=192;c.getContext("2d").drawImage(bm,(bm.width-z)/2,(bm.height-z)/2,z,z,0,0,192,192);const blob=await new Promise((resolve,reject)=>c.toBlob(v=>v?resolve(v):reject(new Error("No se pudo procesar la imagen.")),"image/jpeg",.78));const path=`${CURRENT_USER.id}/avatar.jpg`;const {error:uploadError}=await SUPA.storage.from("avatars").upload(path,blob,{upsert:true,contentType:"image/jpeg",cacheControl:"3600"});if(uploadError)throw uploadError;const {data:publicData}=SUPA.storage.from("avatars").getPublicUrl(path);const avatarUrl=`${publicData.publicUrl}?v=${Date.now()}`;const {data,error}=await SUPA.auth.updateUser({data:{avatar_url:avatarUrl}});if(error)throw error;CURRENT_USER=data.user||{...CURRENT_USER,user_metadata:{...CURRENT_USER.user_metadata,avatar_url:avatarUrl}};const rankingAlias=String(CURRENT_PROFILE?.display_name||CURRENT_USER.user_metadata?.display_name||CURRENT_USER.email?.split("@")[0]||"Estudiante").trim();const {error:avatarRowError}=await SUPA.from("profile_avatars").upsert({user_id:CURRENT_USER.id,alias:rankingAlias,avatar_url:avatarUrl,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(avatarRowError)throw avatarRowError;try{localStorage.removeItem(avKey())}catch(x){}perfilView();toast("Foto de perfil actualizada")}
   catch(x){m.className="r";m.textContent=(x?.message||"No se pudo guardar la foto.")+(/bucket|storage|policy|permission|row-level|not found/i.test(x?.message||"")?" Comprueba que ejecutaste la configuración SQL del almacenamiento de avatares.":"");btn.disabled=false}};
@@ -2514,7 +2565,7 @@ async function hpLoadFriends(){
  return HP_FRIENDS;
 }
 function socialView(){
- nav('s');app.innerHTML=head('Conecta con otros estudiantes')+`<section class="hb sm bl"><i class="c" style="width:120px;height:120px;right:-30px;top:-40px"></i><i class="c" style="width:64px;height:64px;right:76px;bottom:-30px"></i><span class="hb-e" aria-hidden="true">💬</span><h1 class="hero">Comunidad</h1><p>Añade compañeros, conversa por privado y celebra el progreso juntos.</p></section>
+ nav('s');app.innerHTML=head()+`<section class="hb sm bl"><i class="c" style="width:120px;height:120px;right:-30px;top:-40px"></i><i class="c" style="width:64px;height:64px;right:76px;bottom:-30px"></i><span class="hb-e" aria-hidden="true">💬</span><h1 class="hero">Social</h1><p>Añade compañeros, conversa por privado y celebra el progreso juntos.</p></section>
  <div class="card"><h2 style="margin-top:0">Buscar estudiantes</h2><div class="row"><input id="hp-friend-search" type="search" placeholder="Nombre del estudiante" maxlength="80" aria-label="Buscar estudiantes"><button class="btn sm" id="hp-search-btn" style="flex:0 0 auto">Buscar</button></div><p id="hp-search-status" class="hp-status" role="status"></p><div id="hp-search-results"></div></div>
  <div class="hp-social-grid"><section class="card"><h2 style="margin-top:0">Amigos y solicitudes</h2><div id="hp-friends">Cargando…</div></section><section class="card"><h2 style="margin-top:0">Mensajes directos</h2><div id="hp-chat-empty" class="empty"><span style="font-size:2rem">💬</span><b>Tu bandeja privada</b><span>Selecciona un amigo para abrir la conversación.</span></div><div id="hp-chat" hidden></div></section></div>`;
  $("#hp-search-btn").onclick=hpSearchPeople;$("#hp-friend-search").onkeydown=e=>{if(e.key==='Enter')hpSearchPeople()};
@@ -2529,17 +2580,17 @@ async function hpSearchPeople(){
  }catch(e){status.textContent='No se pudo buscar. Ejecuta la migración social de Supabase y revisa las políticas RLS.'}
 }
 async function hpSendFriend(id,b){b.disabled=true;try{const r=await SUPA.from('friend_requests').insert({sender_id:CURRENT_USER.id,receiver_id:id,status:'pending'});if(r.error)throw r.error;hpToast('Solicitud de amistad enviada','🤝');await hpRenderFriends();await hpSearchPeople()}catch(e){hpToast(e.code==='23505'?'Ya existe una solicitud entre ustedes.':'No se pudo enviar la solicitud.','⚠️');b.disabled=false}}
-async function hpAcceptFriend(f){try{const a=await SUPA.rpc('accept_friend_request',{request_id:f.requestId});if(a.error)throw a.error;hpToast('¡Ahora son amigos!','🤝');hpRenderFriends()}catch(e){hpToast('No se pudo aceptar. Comprueba la migración SQL.','⚠️')}}
+async function hpAcceptFriend(f){try{const a=await SUPA.rpc('accept_friend_request',{request_id:f.requestId});if(a.error)throw a.error;hpToast('¡Ahora son amigos!','🤝');hpRenderFriends();hpSocStats(true)}catch(e){hpToast('No se pudo aceptar. Comprueba la migración SQL.','⚠️')}}
 async function hpRenderFriends(){
  const box=$('#hp-friends');if(!box)return;box.textContent='Cargando…';
  try{await hpLoadFriends();box.innerHTML=HP_FRIENDS.length?HP_FRIENDS.map(f=>`<div class="tl"><div class="hp-person"><span class="rank-avatar">👤</span><span><b>${hpSafe(f.name)}</b><small class="mu" style="display:block">${f.state==='friend'?'Amigo':f.state==='incoming'?'Solicitud recibida':'Solicitud enviada'}</small></span></div><div class="row">${f.state==='friend'?`<button class="btn sm" data-hp-chat="${hpSafe(f.id)}">Mensaje</button>`:f.state==='incoming'?`<button class="btn sm" data-hp-accept="${hpSafe(f.id)}">Aceptar</button>`:'<span class="hp-pill">Pendiente</span>'}</div></div>`).join(''):'<div class="empty"><span style="font-size:2rem">🤝</span><b>Aún no hay amigos</b><span>Busca estudiantes por su nombre para enviar una solicitud.</span></div>';
  box.querySelectorAll('[data-hp-chat]').forEach(b=>b.onclick=()=>hpOpenChat(b.dataset.hpChat));box.querySelectorAll('[data-hp-accept]').forEach(b=>b.onclick=()=>hpAcceptFriend(HP_FRIENDS.find(f=>f.id===b.dataset.hpAccept)));
- }catch(e){box.innerHTML='<p class="mu">No se pudo cargar la comunidad. Abre la migración <b>supabase-social.sql</b> y ejecútala en Supabase SQL Editor.</p>'}
+ }catch(e){box.innerHTML='<p class="mu">No se pudo cargar la sección Social. Abre la migración <b>supabase-social.sql</b> y ejecútala en Supabase SQL Editor.</p>'}
 }
 async function hpOpenChat(id){
  const friend=HP_FRIENDS.find(f=>f.id===id);if(!friend||friend.state!=='friend')return;
  HP_ACTIVE_CHAT=id;$('#hp-chat-empty').hidden=true;const box=$('#hp-chat');box.hidden=false;box.innerHTML=`<div class="hp-person"><span class="rank-avatar">👤</span><b>${hpSafe(friend.name)}</b></div><div id="hp-msg-list" class="hp-message-list" aria-live="polite">Cargando mensajes…</div><form id="hp-msg-form" class="row"><input id="hp-msg-input" maxlength="2000" required placeholder="Escribe un mensaje…" aria-label="Mensaje" style="flex:1;min-width:0"><button class="btn sm" type="submit">Enviar</button></form><p id="hp-msg-status" class="hp-status"></p>`;
- await hpLoadMessages(id);$('#hp-msg-form').onsubmit=async e=>{e.preventDefault();const input=$('#hp-msg-input'),body=input.value.trim();if(!body)return;const send=e.submitter;send.disabled=true;try{const r=await SUPA.from('direct_messages').insert({sender_id:CURRENT_USER.id,receiver_id:id,body});if(r.error)throw r.error;input.value='';await hpLoadMessages(id)}catch(err){$('#hp-msg-status').textContent='No se pudo enviar. Comprueba la migración y las políticas RLS.'}finally{send.disabled=false;input.focus()}};
+ await hpLoadMessages(id);$('#hp-msg-form').onsubmit=async e=>{e.preventDefault();const input=$('#hp-msg-input'),body=input.value.trim();if(!body)return;const send=e.submitter;send.disabled=true;try{const r=await SUPA.from('direct_messages').insert({sender_id:CURRENT_USER.id,receiver_id:id,body});if(r.error)throw r.error;input.value='';await hpLoadMessages(id);hpSocStats(true)}catch(err){$('#hp-msg-status').textContent='No se pudo enviar. Comprueba la migración y las políticas RLS.'}finally{send.disabled=false;input.focus()}};
  try{if(HP_SOCIAL_CHANNEL)SUPA.removeChannel(HP_SOCIAL_CHANNEL);HP_SOCIAL_CHANNEL=SUPA.channel('hp-dm-'+[CURRENT_USER.id,id].sort().join('-')).on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},payload=>{if(HP_ACTIVE_CHAT===id&&(payload.new.sender_id===id||payload.new.sender_id===CURRENT_USER.id))hpLoadMessages(id)}).subscribe()}catch(e){}
 }
 async function hpLoadMessages(id){
@@ -2612,7 +2663,7 @@ async function hpBuzonLoad(force){
  finally{BZ.busy=false;BZ.t=Date.now();hpBuzonPaint();if(document.querySelector('.bz-modal[data-loading="1"]'))hpBuzonList()}
 }
 async function hpBuzonMarkRead(id){
- if(BZ.reads.has(id))return;BZ.reads.add(id);hpBuzonPaint();
+ if(BZ.reads.has(id))return;BZ.reads.add(id);hpBuzonPaint();if(typeof checkAch==="function")checkAch();
  try{await SUPA.from("admin_notification_reads").insert({notification_id:id,user_id:CURRENT_USER.id,read_at:new Date().toISOString()})}catch(e){}
 }
 function hpBuzonList(){
