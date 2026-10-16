@@ -24,7 +24,8 @@
     "https://instagram.com/histopractica",
     "https://www.facebook.com/share/1HfvmgFadC/",
     "https://www.threads.com/@histopractica",
-    "https://youtube.com/@histopractica"
+    "https://youtube.com/@histopractica",
+    "https://www.tiktok.com/@histopractica"
   ]
 }
 </script>
@@ -1193,6 +1194,15 @@ body.mo { overflow: hidden; }
 .hp-geo-det ul { margin: 8px 0 2px; padding-left: 18px; }
 .hp-geo-det li { margin: 3px 0; overflow-wrap: anywhere; }
 
+.adm-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 0 0 14px; padding-bottom: 4px; }
+.adm-tab { flex: none; min-height: var(--h-sm); padding: 0 16px; border: 2px solid var(--ln); border-radius: 99px; background: var(--pn); color: var(--mu); font: inherit; font-weight: 800; font-size: var(--fs-sm); cursor: pointer; }
+.adm-tab.on { border-color: var(--b); background: var(--bl); color: var(--bt); }
+.adm-bar { display: grid; grid-template-columns: minmax(90px, 36%) 1fr auto; gap: 10px; align-items: center; margin: 8px 0; font-size: .85rem; }
+.adm-bar .t { height: 10px; border-radius: 99px; background: var(--sf); overflow: hidden; }
+.adm-bar .t i { display: block; height: 100%; border-radius: 99px; background: var(--b); }
+.adm-pane .card h2 { margin: 0 0 8px; font-size: 1.05rem; }
+.adm-pane .card + .card { margin-top: 12px; }
+
 /* Avisos (logros, confirmaciones) */
 #toasts { position: fixed; left: 0; right: 0; top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 70; display: grid; gap: 8px; justify-items: center; padding: 0 12px; pointer-events: none; }
 .toast { display: flex; align-items: center; gap: 10px; max-width: 420px; padding: 10px 16px; border-radius: var(--r-md); background: var(--tx); color: var(--bg); font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; box-shadow: 0 6px 24px rgba(0, 0, 0, .25); animation: tin .25s ease-out; transition: opacity .3s; }
@@ -1549,7 +1559,8 @@ html .lp-box{border-width:3px;box-shadow:0 5px 0 var(--ln)}
   instagram:{n:"Instagram",d:'<rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/>'},
   facebook:{n:"Facebook",d:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'},
   threads:{n:"Threads",d:'<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>'},
-  youtube:{n:"YouTube",d:'<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>'}
+  youtube:{n:"YouTube",d:'<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>'},
+  tiktok:{n:"TikTok",d:'<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>'}
  };
  function svg(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+d+'</svg>'}
  function url(v){v=String(v||"").trim();return /^https:\/\/[^\s"'<>]+$/i.test(v)?v.replace(/&/g,"&amp;"):""}
@@ -1970,7 +1981,7 @@ async function rankView(){
 const TUT=[["🎯","Elige un tejido","En Inicio toca un tejido y pulsa «Empezar a practicar». Cada tarjeta muestra cuántas preguntas has contestado."],["👀","Responde y aprende","Observa la imagen, elige una opción y pulsa «Comprobar». Verás «Respuesta correcta» o «Respuesta incorrecta» y la explicación."],["👤","Sigue tu avance","En tu perfil (el círculo de la parte superior) están tus estadísticas, logros y ajustes. La pestaña Ranking compara la racha actual, la racha máxima y los XP de los estudiantes."]];
 function tutorial(i=0){const key="hp_tut_"+(CURRENT_USER?.id||""),end=()=>{put(key,1);$(".modal")?.remove()},[emoji,t,d]=TUT[i];modal(`<div class="obi emoji-icon" aria-hidden="true">${emoji}</div><div class="stp" role="img" aria-label="Paso ${i+1} de ${TUT.length}">${TUT.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><h2 style="text-align:center;margin-top:0">${t}</h2><p style="text-align:center">${d}</p><div class="row" style="justify-content:space-between;margin-top:16px"><button class="btn s sm" id="t-p" ${i?"":"disabled"}>Anterior</button><button class="btn s sm" id="t-s">Omitir</button><button class="btn sm" id="t-n">${i<TUT.length-1?"Siguiente":"Terminar"}</button></div>`);$("#t-p").onclick=()=>tutorial(i-1);$("#t-s").onclick=end;$("#t-n").onclick=()=>i<TUT.length-1?tutorial(i+1):end()}
 function helpModal(){modal(`<h2 style="margin-top:0">Ayuda</h2>${[["Cómo elegir tejidos","En Inicio toca una tarjeta de tejido; en «Practicar» puedes combinar varios."],["Cómo responder","Elige una opción y pulsa «Comprobar». Puedes ampliar la imagen con «Ampliar imagen»."],["Cómo interpretar el progreso","El porcentaje es de preguntas contestadas (acertadas o no), no de aciertos."],["Perfil, logros y clasificación","Tu perfil reúne estadísticas, logros y ajustes. En Ranking puedes comparar racha actual, racha máxima y XP."],["Cómo reportar una pregunta","Tras comprobar una respuesta, usa «Reportar pregunta»."]].map(([q,a])=>`<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join("")}<button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
-function privacyModal(){modal(`<div class="legal"><h2 style="margin-top:0;font-size:1.25rem">Política de privacidad</h2><p>HistoPráctica guarda solo lo necesario para que puedas estudiar y llevar tu progreso.</p><ul><li>Cuenta: tu correo, tu contraseña (la gestiona Supabase Auth) y, si lo indicas, tu nombre.</li><li>Progreso: tus respuestas, XP, errores y prácticas se guardan en tu cuenta.</li><li>Organización y ciudad: tu universidad (la eliges tú) y tu ciudad aproximada según tu conexión; no guardamos tu dirección IP.</li><li>Avisos: al crear tu cuenta se envía un correo de aviso al administrador de la app.</li><li>Ranking: los demás estudiantes ven el nombre de tu perfil, tu foto si añades una y tus puntos.</li><li>Reportes: al reportar una pregunta, el administrador recibe tu correo, la pregunta, el motivo y tu comentario.</li><li>En tu navegador se guardan el tema, el tutorial y una copia de tus estadísticas.</li></ul></div><button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
+function privacyModal(){modal(`<div class="legal"><h2 style="margin-top:0;font-size:1.25rem">Política de privacidad</h2><p>HistoPráctica guarda solo lo necesario para que puedas estudiar y llevar tu progreso.</p><ul><li>Cuenta: tu correo, tu contraseña (la gestiona Supabase Auth) y, si lo indicas, tu nombre.</li><li>Progreso: tus respuestas, XP, errores y prácticas se guardan en tu cuenta.</li><li>Organización, ciudad y cómo nos conociste: tu universidad y cómo conociste la app (las eliges tú) y tu ciudad aproximada según tu conexión; no guardamos tu dirección IP.</li><li>Avisos: al crear tu cuenta se envía un correo de aviso al administrador de la app.</li><li>Ranking: los demás estudiantes ven el nombre de tu perfil, tu foto si añades una y tus puntos.</li><li>Reportes: al reportar una pregunta, el administrador recibe tu correo, la pregunta, el motivo y tu comentario.</li><li>En tu navegador se guardan el tema, el tutorial y una copia de tus estadísticas.</li></ul></div><button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
 const RPT=new Set();
 function suggestionModal(){
  const m=modal(`<h2 style="margin-top:0">Buzón de sugerencias 💡</h2><p class="mu">¿Cómo podemos mejorar HistoPráctica? Tus ideas llegarán al equipo.</p><label class="mu" for="sg-kind">Tipo de sugerencia</label><select id="sg-kind"><option>Mejora de la aplicación</option><option>Nuevas funciones</option><option>Contenido de histología</option><option>Diseño y accesibilidad</option><option>Otro</option></select><label class="mu" for="sg-text" style="display:block;margin-top:10px">Tu sugerencia</label><textarea id="sg-text" rows="5" maxlength="2000" placeholder="Cuéntanos tu idea…" required></textarea><p id="sg-m" role="status" class="mu"></p><div class="row"><button class="btn s sm" id="sg-no">Cancelar</button><button class="btn sm" id="sg-go">Enviar sugerencia</button></div>`);
@@ -2370,7 +2381,7 @@ async function enterApp(session){
  if(!profileResult.data){const {error}=await SUPA.from("profiles").insert({id:CURRENT_USER.id,email:CURRENT_USER.email||null,display_name:CURRENT_USER.user_metadata?.display_name||null});if(error&&error.code!=="23505")throw new Error("No se pudo crear tu perfil. Comprueba la migración y las políticas RLS.");profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle()}
  if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;
  try{await refreshRemoteBank()}catch(error){throw new Error("No se pudo cargar el banco de Supabase. Verifica la migración SQL, las políticas RLS y el bucket histology-images. Detalle: "+(error.message||"error"))}
- ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();hpTrackGeo(session);home();await hpOrgGate(session);if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
+ ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();hpTrackGeo(session);home();await hpOnboarding(session);if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
 }
 async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
 /* Portada pública: se muestra siempre al abrir el sitio. Solo se omite si se llega desde un enlace de correo (confirmación, recuperación o error de enlace). */
@@ -2407,56 +2418,88 @@ async function saveFinishedExam(){
   await syncProgress();if(typeof hpCheckOvertakes==="function")await hpCheckOvertakes();setMessage("Resultado guardado.");
  }catch(error){setMessage("No se pudo confirmar el guardado del examen: "+(error.message||"error de conexión"),true)}
 }
-/* Organización: se pide una sola vez a cada cuenta (nuevas y existentes). Si el servidor no responde o la tabla aún no existe, no se bloquea a nadie. */
-async function hpOrgGate(session){
- const uid=session?.user?.id,tok=session?.access_token;if(!uid||!tok)return;
- const key="hp_org_"+uid;if(rd(key,0))return;
- const auth={Authorization:`Bearer ${tok}`};
- let st;try{const r=await fetch("/api/org",{headers:auth,cache:"no-store"});if(!r.ok)return;st=await r.json()}catch(e){return}
- if(!st||!st.ready)return;if(st.answered){put(key,1);return}
+/* Cuestionarios de bienvenida (organización y «cómo conociste HistoPráctica»): una sola vez por cuenta, antes del tutorial. Si el servidor no responde o la tabla aún no existe, no se bloquea a nadie. */
+function hpAsk(o,auth){
  return new Promise(done=>{
   const ov=document.createElement("div");ov.className="hp-orgov";
-  ov.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="org-t"><h2 id="org-t" style="margin-top:0;text-align:center">Tu organización</h2><p class="mu" style="text-align:center;margin:0">Universidad a la que perteneces</p><div class="hp-org-opts">${["UDG CUCOSTA","UTBB","Otra","Ninguna"].map(o=>`<label class="ch"><input type="radio" name="hp-org" value="${o}"><span>${o}</span></label>`).join("")}</div><div class="hp-org-other" id="org-o" hidden><input type="text" id="org-ot" maxlength="80" placeholder="¿Cuál?" aria-label="Nombre de tu organización" autocomplete="off"></div><p id="org-m" class="mu" role="status" style="min-height:1.2em;margin:0 0 8px"></p><button class="btn" id="org-go" type="button" style="width:100%" disabled>Continuar</button></div>`;
+  ov.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="org-t"><h2 id="org-t" style="margin-top:0;text-align:center">${o.title}</h2>${o.sub?`<p class="mu" style="text-align:center;margin:0">${o.sub}</p>`:""}<div class="hp-org-opts">${o.opts.map(x=>`<label class="ch"><input type="radio" name="hp-q" value="${x}"><span>${x}</span></label>`).join("")}</div><div class="hp-org-other" id="org-o" hidden></div><p id="org-m" class="mu" role="status" style="min-height:1.2em;margin:0 0 8px"></p><button class="btn" id="org-go" type="button" style="width:100%" disabled>Continuar</button></div>`;
   document.body.appendChild(ov);
-  const go=ov.querySelector("#org-go"),msg=ov.querySelector("#org-m"),box=ov.querySelector("#org-o"),txt=ov.querySelector("#org-ot");
-  const val=()=>ov.querySelector("input[name=hp-org]:checked")?.value||"";
-  const upd=()=>{const v=val();box.hidden=v!=="Otra";go.disabled=!v||(v==="Otra"&&txt.value.trim().length<2)};
-  ov.querySelectorAll("input[name=hp-org]").forEach(i=>i.onchange=()=>{upd();if(val()==="Otra")txt.focus()});txt.oninput=upd;
+  const go=ov.querySelector("#org-go"),msg=ov.querySelector("#org-m"),box=ov.querySelector("#org-o");let field=null;
+  const val=()=>ov.querySelector("input[name=hp-q]:checked")?.value||"";
+  const upd=()=>{go.disabled=!val()||!!(field&&(field.tagName==="SELECT"?!field.value:field.value.trim().length<2))};
+  ov.querySelectorAll("input[name=hp-q]").forEach(i=>i.onchange=()=>{
+   const d=o.detail(val());msg.textContent="";field=null;box.hidden=!d;box.innerHTML="";
+   if(d){field=document.createElement(d.options?"select":"input");if(d.options){field.innerHTML=`<option value="">${d.ph}</option>`+d.options.map(x=>`<option>${x}</option>`).join("")}else{field.type="text";field.maxLength=80;field.placeholder=d.ph;field.autocomplete="off"}field.setAttribute("aria-label",d.ph);field.oninput=field.onchange=upd;box.appendChild(field);field.focus()}
+   upd()});
   go.onclick=async()=>{go.disabled=true;msg.className="mu";msg.textContent="Guardando…";
-   try{const r=await fetch("/api/org",{method:"POST",headers:{"Content-Type":"application/json",...auth},body:JSON.stringify({organization:val(),other:txt.value.trim()})});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"No se pudo guardar. Inténtalo de nuevo.");put(key,1);ov.remove();done()}
-   catch(e){msg.className="r";msg.textContent=e.message||"No se pudo guardar. Inténtalo de nuevo.";go.disabled=false}};
+   try{const r=await fetch(o.url,{method:"POST",headers:{"Content-Type":"application/json",...auth},body:JSON.stringify(o.body(val(),field?field.value.trim():""))});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"No se pudo guardar. Inténtalo de nuevo.");put(o.key,1);ov.remove();done()}
+   catch(e){msg.className="r";msg.textContent=e.message||"No se pudo guardar. Inténtalo de nuevo.";upd()}};
  });
+}
+async function hpOnboarding(session){
+ const uid=session?.user?.id,tok=session?.access_token;if(!uid||!tok)return;
+ const kO="hp_org_"+uid,kH="hp_how_"+uid;if(rd(kO,0)&&rd(kH,0))return;
+ const auth={Authorization:`Bearer ${tok}`};
+ let st;try{const r=await fetch("/api/org",{headers:auth,cache:"no-store"});if(!r.ok)return;st=await r.json()}catch(e){return}
+ if(!st||!st.ready)return;if(st.answered)put(kO,1);if(st.howAnswered)put(kH,1);
+ if(!st.answered)await hpAsk({title:"Tu organización",sub:"Universidad a la que perteneces",key:kO,url:"/api/org",opts:["UDG CUCOSTA","UTBB","Otra","Ninguna"],detail:v=>v==="Otra"?{ph:"¿Cuál?"}:null,body:(v,d)=>({organization:v,other:d})},auth);
+ if(st.howReady&&!st.howAnswered)await hpAsk({title:"¿Cómo conociste HistoPráctica?",key:kH,url:"/api/how-found",opts:["Redes sociales","Conozco al creador","Recomendación de un amigo","Búsqueda en Google","Publicidad"],detail:v=>v==="Redes sociales"?{ph:"¿En cuál red social?",options:["Instagram","Facebook","Threads","YouTube","TikTok"]}:v==="Conozco al creador"?{ph:"¿Cómo se llama el creador?"}:v==="Recomendación de un amigo"?{ph:"¿Quién te la recomendó?"}:null,body:(v,d)=>({method:v,detail:d})},auth);
 }
 /* Ciudad aproximada (según la IP, la calcula Vercel en el servidor; la IP no se guarda). Una vez por sesión del navegador. */
 function hpTrackGeo(session){
  try{const tok=session?.access_token,uid=session?.user?.id;if(!tok||!uid)return;const k="hp_geo_"+uid;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");
   fetch("/api/geo-track",{method:"POST",keepalive:true,headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{})}catch(e){}
 }
-/* Panel: ciudades de los usuarios (de mayor a menor), con lista desplegable de usuarios. */
-async function hpGeoAdmin(){
- const box=$("#admin-geo");if(!box)return;
- try{
-  const {data}=await SUPA.auth.getSession();const r=await fetch("/api/admin-geo",{headers:{Authorization:`Bearer ${data.session?.access_token||""}`},cache:"no-store"});
-  const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"Error");if(!$("#admin-geo"))return;
-  const rows=p.cities||[];
-  box.innerHTML=(rows.length?`<table class="admin-table"><thead><tr><th>Ciudad</th><th>Usuarios</th><th>Lista</th></tr></thead><tbody>${rows.map(c=>`<tr><td>${esc(c.city)}${c.country&&c.country!=="MX"?` <span class="mu">(${esc(c.country)})</span>`:""}</td><td><b>${c.count}</b></td><td><details class="hp-geo-det"><summary>Ver usuarios</summary><ul>${c.users.map(u=>`<li>${esc(u.name||u.email||"—")}${u.name&&u.email?` <span class="mu">· ${esc(u.email)}</span>`:""}</li>`).join("")}</ul></details></td></tr>`).join("")}</tbody></table>`:"Todavía no hay ciudades registradas.")+(p.withoutCity?`<p class="mu">${p.withoutCity} ${p.withoutCity===1?"usuario aún sin ciudad registrada":"usuarios aún sin ciudad registrada"} (se registra cuando vuelven a abrir la app).</p>`:"");
- }catch(e){const b=$("#admin-geo");if(b)b.textContent="No se pudieron cargar las ciudades: "+(e.message||"error de conexión")}
+/* Panel administrativo con pestañas: Resumen · Usuarios · Origen · Exámenes · Avisos */
+let HP_ADM_TAB="res";
+const hpFold=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+const hpOrgTxt=u=>u.org?(u.org==="Otra"?"Otra: "+(u.other||"—"):u.org):"";
+const hpHowTxt=u=>u.how?(u.detail?u.how+": "+u.detail:u.how):"";
+const hpNm=u=>u.name||u.email||"—";
+const hpBars=rows=>{const mx=Math.max(1,...rows.map(r=>r[1]));return rows.map(([l,n])=>`<div class="adm-bar"><span>${esc(l)}</span><span class="t"><i style="width:${Math.round(n/mx*100)}%"></i></span><b>${n}</b></div>`).join("")};
+const hpList=us=>`<ul>${us.map(([a,b])=>`<li>${esc(a)}${b?` <span class="mu">· ${esc(b)}</span>`:""}</li>`).join("")}</ul>`;
+function hpAdmOrigin(list,ok){
+ if(!ok)return`<div class="card">No se pudieron cargar estos datos. Comprueba que ejecutaste user-meta.sql en Supabase y que la API está desplegada.</div>`;
+ const us=list.filter(u=>u.role!=="admin"),by=(f,k)=>us.filter(u=>f(u)===k);
+ const g=new Map();us.forEach(u=>{if(!u.city)return;const k=hpFold(u.city)+"|"+u.country;let e=g.get(k);if(!e)g.set(k,e={city:u.city,country:u.country,us:[]});e.us.push(u)});
+ const cities=[...g.values()].sort((a,b)=>b.us.length-a.us.length||a.city.localeCompare(b.city,"es")),noCity=us.filter(u=>!u.city).length;
+ const OR=["UDG CUCOSTA","UTBB","Otra","Ninguna"],HW=["Redes sociales","Conozco al creador","Recomendación de un amigo","Búsqueda en Google","Publicidad"],NET=["Instagram","Facebook","Threads","YouTube","TikTok"];
+ const orRows=OR.map(k=>[k,by(u=>u.org,k).length]).concat([["Sin responder",us.filter(u=>!u.org).length]]),hwRows=HW.map(k=>[k,by(u=>u.how,k).length]).concat([["Sin responder",us.filter(u=>!u.how).length]]);
+ const otras=by(u=>u.org,"Otra"),redes=by(u=>u.how,"Redes sociales"),amigos=by(u=>u.how,"Recomendación de un amigo");
+ return`<div class="card"><h2>Ciudades</h2>${cities.length?`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Ciudad</th><th>Usuarios</th><th>Lista</th></tr></thead><tbody>${cities.map(c=>`<tr><td>${esc(c.city)}${c.country&&c.country!=="MX"?` <span class="mu">(${esc(c.country)})</span>`:""}</td><td><b>${c.us.length}</b></td><td><details class="hp-geo-det"><summary>Ver usuarios</summary>${hpList(c.us.map(u=>[hpNm(u),u.name?u.email:""]))}</details></td></tr>`).join("")}</tbody></table></div>`:"Todavía no hay ciudades registradas."}${noCity?`<p class="mu">${noCity} sin ciudad registrada aún (se registra cuando vuelven a abrir la app).</p>`:""}</div>
+ <div class="card"><h2>Organización</h2>${hpBars(orRows)}${otras.length?`<details class="hp-geo-det"><summary>Ver las «Otra»</summary>${hpList(otras.map(u=>[u.other||"—",hpNm(u)]))}</details>`:""}</div>
+ <div class="card"><h2>Cómo conocieron HistoPráctica</h2>${hpBars(hwRows)}${redes.length?`<details class="hp-geo-det"><summary>Redes sociales: cuál</summary>${hpBars(NET.map(k=>[k,redes.filter(u=>u.detail===k).length]))}</details>`:""}${amigos.length?`<details class="hp-geo-det"><summary>Recomendaciones de amigos</summary>${hpList(amigos.map(u=>[u.detail||"—","→ "+hpNm(u)]))}</details>`:""}</div>`;
 }
-async function adminView(){
- if(!isAdmin()){home();return}nav("i");app.innerHTML=head("Panel administrativo")+`<p class="mu">Consultas protegidas por Supabase RLS. El correo de cuenta nueva se envía por una función del servidor.</p><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="card" id="bz-admin"></div><div class="card"><h2 style="margin-top:0">Ciudades de los usuarios</h2><div id="admin-geo" class="admin-table-wrap">Cargando ciudades…</div></div><div class="card"><h2 style="margin-top:0">Usuarios</h2><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div><div class="card"><h2 style="margin-top:0">Exámenes recientes</h2><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div><div class="row"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p>`;
- $("#admin-refresh").onclick=()=>adminView();if(typeof hpBuzonAdminInit==="function")hpBuzonAdminInit();hpGeoAdmin();
+async function adminView(tab){
+ if(!isAdmin()){home();return}nav("i");if(typeof tab==="string")HP_ADM_TAB=tab;
+ const TABS=[["res","Resumen"],["usr","Usuarios"],["ori","Origen"],["exa","Exámenes"],["avi","Avisos"]];
+ app.innerHTML=head("Panel administrativo")+`<div class="adm-tabs" role="tablist">${TABS.map(([k,l])=>`<button type="button" role="tab" class="adm-tab" data-tab="${k}">${l}</button>`).join("")}</div>
+ <section class="adm-pane" data-pane="res"><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="row" style="margin-top:12px"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p></section>
+ <section class="adm-pane" data-pane="usr" hidden><div class="card"><input type="search" id="adm-q" placeholder="Buscar por nombre, correo, organización o ciudad…" aria-label="Buscar usuarios" style="width:100%;margin-bottom:10px"><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div></section>
+ <section class="adm-pane" data-pane="ori" hidden><div id="admin-origin"><div class="card">Cargando…</div></div></section>
+ <section class="adm-pane" data-pane="exa" hidden><div class="card"><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div></section>
+ <section class="adm-pane" data-pane="avi" hidden><div class="card" id="bz-admin"></div></section>`;
+ const show=k=>{HP_ADM_TAB=k;$$(".adm-tab").forEach(b=>{const on=b.dataset.tab===k;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});$$(".adm-pane").forEach(x=>x.hidden=x.dataset.pane!==k)};
+ $$(".adm-tab").forEach(b=>b.onclick=()=>show(b.dataset.tab));show(HP_ADM_TAB);
+ $("#admin-refresh").onclick=()=>adminView();if(typeof hpBuzonAdminInit==="function")hpBuzonAdminInit();
  $("#admin-retry-notifications").onclick=async()=>{const btn=$("#admin-retry-notifications"),status=$("#admin-retry-status");btn.disabled=true;status.textContent="Reintentando notificaciones…";try{const {data}=await SUPA.auth.getSession();const response=await fetch("/api/retry-notifications",{method:"POST",headers:{Authorization:`Bearer ${data.session?.access_token||""}`}});const result=await response.json();if(!response.ok)throw new Error(result.error||"Error");const summary=`Correos enviados: ${result.sent}. Fallidos: ${result.failed}.`;await adminView();const updatedStatus=$("#admin-retry-status");if(updatedStatus)updatedStatus.textContent=summary}catch(error){status.textContent="No se pudo reintentar: "+(error.message||"error")}finally{btn.disabled=false}};
  try{
-  const [userResult,examCount,attemptResult]=await Promise.all([
+  const tok=(await SUPA.auth.getSession()).data.session?.access_token||"";
+  const [userResult,examCount,attemptResult,meta]=await Promise.all([
    SUPA.from("profiles").select("id,email,display_name,role,created_at",{count:"exact"}).order("created_at",{ascending:false}).limit(250),
    SUPA.from("exam_attempts").select("id",{count:"exact",head:true}),
-   SUPA.from("exam_attempts").select("id,user_id,exam_title,total_questions,correct_answers,incorrect_answers,unanswered,score,duration_seconds,completed_at,notification_status").order("completed_at",{ascending:false}).limit(300)
+   SUPA.from("exam_attempts").select("id,user_id,exam_title,total_questions,correct_answers,incorrect_answers,unanswered,score,duration_seconds,completed_at,notification_status").order("completed_at",{ascending:false}).limit(300),
+   fetch("/api/admin-meta",{headers:{Authorization:`Bearer ${tok}`},cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null)
   ]);
   if(userResult.error)throw userResult.error;if(examCount.error)throw examCount.error;if(attemptResult.error)throw attemptResult.error;
   const users=userResult.data||[],attempts=attemptResult.data||[],userMap=new Map(users.map(u=>[u.id,u]));
+  const list=(meta?.users||users.map(u=>({id:u.id,email:u.email||"",name:u.display_name||"",role:u.role,created_at:u.created_at}))).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
   $("#admin-users-count").textContent=String(userResult.count??users.length);$("#admin-exams-count").textContent=String(examCount.count??0);
   $("#admin-correct-count").textContent=String(attempts.reduce((sum,a)=>sum+a.correct_answers,0));$("#admin-wrong-count").textContent=String(attempts.reduce((sum,a)=>sum+a.incorrect_answers,0));
-  $("#admin-users").innerHTML=users.length?`<table class="admin-table"><thead><tr><th>Correo</th><th>Nombre</th><th>Rol</th><th>Registro</th></tr></thead><tbody>${users.map(u=>`<tr><td>${esc(u.email||"—")}</td><td>${esc(u.display_name||"—")}</td><td>${esc(u.role)}</td><td>${esc(u.created_at?new Date(u.created_at).toLocaleString("es-MX"):"—")}</td></tr>`).join("")}</tbody></table>`:"No hay usuarios registrados.";
+  const drawUsers=()=>{const q=hpFold($("#adm-q").value),rows=list.filter(u=>!q||hpFold([u.name,u.email,hpOrgTxt(u),hpHowTxt(u),u.city].join(" ")).includes(q));
+   $("#admin-users").innerHTML=rows.length?`<table class="admin-table"><thead><tr><th>Nombre</th><th>Correo</th><th>Organización</th><th>Cómo nos conoció</th><th>Ciudad</th><th>Registro</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${esc(u.name||"—")}${u.role==="admin"?` <span class="mu">(admin)</span>`:""}</td><td>${esc(u.email||"—")}</td><td>${esc(hpOrgTxt(u)||"—")}</td><td>${esc(hpHowTxt(u)||"—")}</td><td>${esc(u.city||"—")}</td><td>${esc(u.created_at?new Date(u.created_at).toLocaleDateString("es-MX"):"—")}</td></tr>`).join("")}</tbody></table>`:"No hay usuarios que coincidan.";};
+  $("#adm-q").oninput=drawUsers;drawUsers();
+  $("#admin-origin").innerHTML=hpAdmOrigin(list,!!meta);
   $("#admin-exams").innerHTML=attempts.length?`<table class="admin-table"><thead><tr><th>Estudiante</th><th>Examen</th><th>Aciertos</th><th>Errores</th><th>Nota</th><th>Fecha</th></tr></thead><tbody>${attempts.map(a=>`<tr><td>${esc(userMap.get(a.user_id)?.email||a.user_id)}</td><td>${esc(a.exam_title)}</td><td>${a.correct_answers}/${a.total_questions}</td><td>${a.incorrect_answers}${a.unanswered?` + ${a.unanswered} omitidas`:""}</td><td>${a.score}%</td><td>${esc(new Date(a.completed_at).toLocaleString("es-MX"))}</td></tr>`).join("")}</tbody></table><p class="mu">Se muestran los últimos ${attempts.length} exámenes (máximo 300 en esta vista).</p>`:"Todavía no hay exámenes completados.";
  }catch(error){console.error("admin dashboard error",error);const box=$("#admin-users");if(box)box.textContent="No se pudieron cargar los datos: "+(error.message||"error de conexión")}
 }
