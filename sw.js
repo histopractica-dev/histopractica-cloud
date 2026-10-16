@@ -2,8 +2,8 @@
    - Navegación: red primero, con la última versión guardada como respaldo sin conexión.
    - Recursos estáticos (iconos, fuentes, librería): caché con actualización en segundo plano.
    - Datos (API propia, Supabase, Wikimedia) y peticiones que no son GET: siempre directo a la red, sin caché. */
-const VERSION = "hp-v4";
-const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/hp-motion.js?v=4", "/vendor/gsap.min.js", "/vendor/ScrollTrigger.min.js", "/vendor/DrawSVGPlugin.min.js", "/vendor/CustomEase.min.js", "/vendor/SplitText.min.js", "/vendor/Physics2DPlugin.min.js", "/vendor/CustomBounce.min.js", "/vendor/CustomWiggle.min.js", "/vendor/MotionPathPlugin.min.js", "/vendor/ScrollToPlugin.min.js"];
+const VERSION = "hp-v5";
+const SHELL = ["/", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/hp-motion.js?v=5", "/vendor/gsap.min.js", "/vendor/ScrollTrigger.min.js", "/vendor/DrawSVGPlugin.min.js", "/vendor/CustomEase.min.js", "/vendor/SplitText.min.js", "/vendor/Physics2DPlugin.min.js", "/vendor/CustomBounce.min.js", "/vendor/CustomWiggle.min.js", "/vendor/MotionPathPlugin.min.js", "/vendor/ScrollToPlugin.min.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
