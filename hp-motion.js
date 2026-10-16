@@ -41,7 +41,7 @@ var V={
  landing:function(){var h=document.documentElement,P=[".lp-title",".lp-fig",".lp-copy",".lp-bar"].map(function(s){return $(s)}).filter(Boolean);
   g.set(P,{opacity:0,y:26});h.classList.remove("hpm");draw(".lp-name .ic path,.lp-name .ic circle",1);
   g.to(P,{opacity:1,y:0,duration:.7,ease:EZ,stagger:.14,delay:.1,clearProps:"opacity,transform"});
-  split(".lp-copy h2",.5);g.fromTo(".lp-box",{clipPath:"circle(4% at 50% 50%)"},{clipPath:"circle(100% at 50% 50%)",duration:1.3,ease:"power3.inOut",delay:.25,clearProps:"clipPath"});
+  split(".lp-copy h2",.5);g.from(".lp-box",{clipPath:"inset(14% 14% 14% 14% round 22px)",duration:1.1,ease:EZ,delay:.2,clearProps:"clipPath"});
   var im=$("#lp-img");if(im)im.addEventListener("load",function(){g.fromTo(im,{scale:1.1,filter:"blur(8px)"},{scale:1,filter:"blur(0px)",duration:1.2,ease:EZ,clearProps:"filter,transform"})},{once:true})},
  load:function(){draw(".startup-loading path,.startup-loading circle",1.1)},
  auth:function(){draw(".auth-brand .ic path,.auth-brand .ic circle",.9);V.gen()},
@@ -51,7 +51,6 @@ var V={
     .from(".hb .c",{scale:0,duration:.9,ease:"back.out(1.6)",stagger:.1},.15)
     .from(".hb p,.hb-st span",{y:14,opacity:0,duration:.5,stagger:.07,clearProps:"transform,opacity"},.2)
     .from(".hm-sec>summary",{opacity:0,x:-10,duration:.4,stagger:.1,clearProps:"transform,opacity"},.3)
-    .from(".tc .rg2 .v",{strokeDashoffset:125.66,duration:1.2,ease:EZ,stagger:.05},.5)
     .from(".tc",{y:26,opacity:0,scale:.96,duration:.55,ease:"back.out(1.3)",stagger:.045,clearProps:"transform,opacity"},.3)
     .from(".hm-foot",{opacity:0,duration:.5},.7);
   split(".hb .hero",.2);counts(app);bars(app);
@@ -77,13 +76,7 @@ var V={
 document.addEventListener("click",function(e){var s=e.target.closest&&e.target.closest(".hm-sec>summary");if(!s||!ok())return;e.preventDefault();var d=s.parentNode,b=[].slice.call(d.children).filter(function(x){return x!==s});
  if(d.open)g.to(b,{opacity:0,y:-8,duration:.18,onComplete:function(){d.open=false;g.set(b,{clearProps:"all"})}});else{d.open=true;g.from(b,{opacity:0,y:-10,duration:.35,ease:EZ,clearProps:"all"})}});
 function kind(){return $("#landing")?"landing":$(".auth-wrap")?"auth":$(".startup-loading")?"load":$(".qv")?"quiz":$(".big")?"res":$("#perfil")?"prof":$("#rk")?"rank":$(".hb")?"home":"gen"}
-var PX=innerWidth/2,PY=innerHeight*.9,last=null,lastGhost=null;addEventListener("pointerdown",function(e){PX=e.clientX;PY=e.clientY},true);
-function iris(){var b=app.getBoundingClientRect(),x=PX-b.left,y=PY-b.top,R=Math.hypot(Math.max(x,b.width-x),Math.max(y,innerHeight-y))+40,a="px "+y+"px";
- g.fromTo(app,{clipPath:"circle(0px at "+x+a+")"},{clipPath:"circle("+R+"px at "+x+"px "+y+"px)",duration:.7,ease:"power3.inOut",clearProps:"clipPath"});
- var r=document.createElement("i");r.className="hp-lens";r.style.left=PX+"px";r.style.top=PY+"px";fx.appendChild(r);g.set(r,{xPercent:-50,yPercent:-50});
- g.fromTo(r,{width:0,height:0,opacity:1},{width:R*2,height:R*2,opacity:0,duration:.7,ease:"power3.inOut",onComplete:rm(r)});
- if(lastGhost){g.killTweensOf(lastGhost);g.to(lastGhost,{opacity:0,delay:.5,duration:.2,onComplete:rm(lastGhost)})}}
-function enter(){if(ctx)ctx.revert();ctx=null;if(!ok())return;var k=kind();if(k!=="load"){if(last&&last!==k&&last!=="load")iris();last=k}ctx=g.context(function(){(V[k]||V.gen)()},app)}
+function enter(){if(ctx)ctx.revert();ctx=null;if(!ok())return;ctx=g.context(function(){(V[kind()]||V.gen)()},app)}
 function pod(rk){if(rctx)rctx.revert();rctx=null;if(!ok()||!$(".pod,.rl",rk))return;rctx=g.context(function(){
  g.from($$(".pc",rk),{y:36,opacity:0,scale:.92,duration:.6,ease:"back.out(1.4)",stagger:.12,clearProps:"transform,opacity"});
  g.from($$(".md",rk),{scale:0,rotation:-90,duration:.6,ease:"back.out(2)",stagger:.12,delay:.2,clearProps:"transform"});list(rk);var me=$(".rr.me",rk);if(me&&W.ScrollToPlugin&&me.getBoundingClientRect().top>innerHeight)g.to(W,{scrollTo:{y:me,offsetY:150},duration:1,ease:EZ,delay:.9})},rk)}
@@ -94,7 +87,7 @@ function ghost(){if(!ok()||!app.firstElementChild||$(".startup-loading",app))ret
  var gh=document.createElement("div"),cs=getComputedStyle(app);gh.className="hp-ghost";gh.setAttribute("aria-hidden","true");gh.inert=true;
  gh.style.cssText="left:"+r.left+"px;top:"+r.top+"px;width:"+r.width+"px;height:"+Math.min(r.height,innerHeight-r.top)+"px;padding:"+cs.padding;
  gh.innerHTML=D.get.call(app);$$("[id]",gh).forEach(function(e){e.removeAttribute("id")});document.body.appendChild(gh);
- lastGhost=gh;g.to(gh,{opacity:0,duration:.22,ease:"none",onComplete:rm(gh)})}
+ g.to(gh,{opacity:0,duration:.22,ease:"none",onComplete:rm(gh)})}
 Object.defineProperty(app,"innerHTML",{configurable:true,get:function(){return D.get.call(this)},set:function(v){try{ghost()}catch(e){}D.set.call(this,v)}});
 
 new MutationObserver(function(ms){var view=false;
