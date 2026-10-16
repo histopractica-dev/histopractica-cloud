@@ -804,14 +804,15 @@ const fold = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g,
 exports.org = wrap(["GET", "POST"], async (event) => {
   const { user } = await authenticate(event, { needProfile: false });
   if (event.httpMethod === "GET") {
-    try {
-      const rows = await rest(`user_meta?user_id=eq.${enc(user.id)}&select=organization,organization_other&limit=1`);
-      const r = rows && rows[0];
-      return json(200, { ready: true, answered: !!(r && r.organization), organization: r ? r.organization : null, other: r ? r.organization_other : null });
-    } catch (e) {
-      console.error("org: no se pudo leer user_meta (¿ejecutaste user-meta.sql?):", e.message);
-      return json(200, { ready: false });
+    let rows, howReady = true;
+    try { rows = await rest(`user_meta?user_id=eq.${enc(user.id)}&select=organization,how_found&limit=1`); }
+    catch (e) {
+      howReady = false; // aún sin las columnas nuevas: se sigue pidiendo solo la organización
+      try { rows = await rest(`user_meta?user_id=eq.${enc(user.id)}&select=organization&limit=1`); }
+      catch (e2) { console.error("org: no se pudo leer user_meta (¿ejecutaste user-meta.sql?):", e2.message); return json(200, { ready: false }); }
     }
+    const r = rows && rows[0];
+    return json(200, { ready: true, answered: !!(r && r.organization), howReady, howAnswered: !!(r && r.how_found) });
   }
   const body = parseBody(event);
   const organization = ORGS.find((o) => o === body.organization);
@@ -839,35 +840,48 @@ exports.geo = wrap(["POST"], async (event) => {
   return json(200, { ok: true });
 });
 
-// GET (solo administrador) → ciudades ordenadas de mayor a menor con sus usuarios. Los administradores no se cuentan.
-exports.adminGeo = wrap(["GET"], async (event) => {
+// Formas de conocer HistoPráctica. «Conozco al creador» se valida aquí (sin mayúsculas, acentos ni signos).
+const SOCIALS = ["Instagram", "Facebook", "Threads", "YouTube", "TikTok"];
+const HOWS = ["Redes sociales", "Conozco al creador", "Recomendación de un amigo", "Búsqueda en Google", "Publicidad"];
+const nf = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+const GIVEN = ["luis", "luis fernando", "luis f", "luis fer"], SUR = ["sanchez", "cruz", "sanchez cruz"];
+const CREATOR = new Set([...GIVEN, ...GIVEN.flatMap((g) => SUR.map((x) => g + " " + x)), ...GIVEN.flatMap((g) => SUR.map((x) => x + " " + g))]);
+
+exports.how = wrap(["POST"], async (event) => {
+  const { user } = await authenticate(event, { needProfile: false });
+  const body = parseBody(event);
+  const method = HOWS.find((o) => o === body.method);
+  if (!method) return json(400, { error: "Elige una de las opciones." });
+  let detail = null;
+  if (method === "Redes sociales") {
+    detail = SOCIALS.find((x) => x === body.detail);
+    if (!detail) return json(400, { error: "Elige la red social." });
+  } else if (method === "Conozco al creador") {
+    detail = clean(body.detail, 80);
+    if (!CREATOR.has(nf(detail))) return json(400, { error: "No es correcto. Revisa cómo se llama el creador." });
+  } else if (method === "Recomendación de un amigo") {
+    detail = clean(body.detail, 80);
+    if (detail.length < 2) return json(400, { error: "Escribe quién te recomendó HistoPráctica." });
+  }
+  await rest("user_meta?on_conflict=user_id", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { user_id: user.id, how_found: method, how_found_detail: detail, how_answered_at: new Date().toISOString() } });
+  return json(200, { ok: true });
+});
+
+// GET (solo administrador) → todos los usuarios con organización, cómo conocieron la app y ciudad
+exports.adminMeta = wrap(["GET"], async (event) => {
   const { isAdmin } = await authenticate(event);
   if (!isAdmin) return json(403, { error: "Solo el administrador puede ver esto." });
   const [metas, profiles] = await Promise.all([
-    restAll("user_meta?select=user_id,city,country&order=user_id.asc"),
-    restAll("profiles?select=id,email,display_name,role&order=id.asc"),
+    restAll("user_meta?select=*&order=user_id.asc"),
+    restAll("profiles?select=id,email,display_name,role,created_at&order=id.asc"),
   ]);
-  const people = profiles.filter((p) => p.role !== "admin");
-  const byId = new Map(people.map((p) => [p.id, p]));
-  const groups = new Map();
-  let located = 0;
-  for (const m of metas) {
-    const p = byId.get(m.user_id);
-    if (!p || !m.city) continue;
-    located++;
-    const key = fold(m.city) + "|" + (m.country || "");
-    let g = groups.get(key);
-    if (!g) { g = { city: m.city, country: m.country || "", users: [] }; groups.set(key, g); }
-    g.users.push({ name: p.display_name || "", email: p.email || "" });
-  }
-  const cities = [...groups.values()].map((g) => ({ ...g, count: g.users.length, users: g.users.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, "es")) }))
-    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city, "es"));
-  return json(200, { cities, located, withoutCity: people.length - located, total: people.length });
+  const m = new Map(metas.map((x) => [x.user_id, x]));
+  return json(200, { users: profiles.map((p) => { const x = m.get(p.id) || {}; return { id: p.id, email: p.email || "", name: p.display_name || "", role: p.role, created_at: p.created_at, org: x.organization || "", other: x.organization_other || "", how: x.how_found || "", detail: x.how_found_detail || "", city: x.city || "", country: x.country || "" }; }) });
 });
 
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "admin-geo": __makeRequire("")("./user-meta").adminGeo };
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta };
 
 module.exports = async (req, res) => {
   try {
