@@ -790,7 +790,84 @@ exports.handler = wrap(["GET", "POST"], async (event) => {
 
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler };
+__defs["user-meta"] = function (module, exports, require) {
+// Organización (universidad) y ciudad aproximada de cada usuario. Tabla: user_meta (ver user-meta.sql).
+// La ciudad sale de las cabeceras que Vercel agrega a cada petición según la IP; la IP NO se guarda.
+const { wrap, json, authenticate, parseBody, rest, restAll, enc } = require("./_lib/supa");
+
+const ORGS = ["UDG CUCOSTA", "UTBB", "Otra", "Ninguna"];
+const clean = (v, n) => String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim().slice(0, n);
+const dec = (v) => { const s = Array.isArray(v) ? v[0] : v; if (!s) return ""; try { return decodeURIComponent(String(s)); } catch (e) { return String(s); } };
+const fold = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+// GET → { ready, answered, organization, other } · POST { organization, other } → guarda la respuesta
+exports.org = wrap(["GET", "POST"], async (event) => {
+  const { user } = await authenticate(event, { needProfile: false });
+  if (event.httpMethod === "GET") {
+    try {
+      const rows = await rest(`user_meta?user_id=eq.${enc(user.id)}&select=organization,organization_other&limit=1`);
+      const r = rows && rows[0];
+      return json(200, { ready: true, answered: !!(r && r.organization), organization: r ? r.organization : null, other: r ? r.organization_other : null });
+    } catch (e) {
+      console.error("org: no se pudo leer user_meta (¿ejecutaste user-meta.sql?):", e.message);
+      return json(200, { ready: false });
+    }
+  }
+  const body = parseBody(event);
+  const organization = ORGS.find((o) => o === body.organization);
+  if (!organization) return json(400, { error: "Elige una de las opciones." });
+  let other = null;
+  if (organization === "Otra") {
+    other = clean(body.other, 80);
+    if (other.length < 2) return json(400, { error: "Escribe el nombre de tu organización." });
+  }
+  await rest("user_meta?on_conflict=user_id", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { user_id: user.id, organization, organization_other: other, org_answered_at: new Date().toISOString() } });
+  return json(200, { ok: true });
+});
+
+// POST → guarda la ciudad aproximada del último ingreso (cabeceras x-vercel-ip-* de Vercel)
+exports.geo = wrap(["POST"], async (event) => {
+  const { user } = await authenticate(event, { needProfile: false });
+  const h = event.headers || {};
+  const city = clean(dec(h["x-vercel-ip-city"]), 80);
+  if (!city) return json(200, { ok: true, skipped: "sin ciudad" });
+  const region = clean(dec(h["x-vercel-ip-country-region"]), 20) || null;
+  const country = clean(dec(h["x-vercel-ip-country"]), 4).toUpperCase() || null;
+  try {
+    await rest("user_meta?on_conflict=user_id", { method: "POST", prefer: "resolution=merge-duplicates,return=minimal", body: { user_id: user.id, city, region, country, geo_updated_at: new Date().toISOString() } });
+  } catch (e) { console.error("geo-track:", e.message); return json(200, { ok: false }); }
+  return json(200, { ok: true });
+});
+
+// GET (solo administrador) → ciudades ordenadas de mayor a menor con sus usuarios. Los administradores no se cuentan.
+exports.adminGeo = wrap(["GET"], async (event) => {
+  const { isAdmin } = await authenticate(event);
+  if (!isAdmin) return json(403, { error: "Solo el administrador puede ver esto." });
+  const [metas, profiles] = await Promise.all([
+    restAll("user_meta?select=user_id,city,country&order=user_id.asc"),
+    restAll("profiles?select=id,email,display_name,role&order=id.asc"),
+  ]);
+  const people = profiles.filter((p) => p.role !== "admin");
+  const byId = new Map(people.map((p) => [p.id, p]));
+  const groups = new Map();
+  let located = 0;
+  for (const m of metas) {
+    const p = byId.get(m.user_id);
+    if (!p || !m.city) continue;
+    located++;
+    const key = fold(m.city) + "|" + (m.country || "");
+    let g = groups.get(key);
+    if (!g) { g = { city: m.city, country: m.country || "", users: [] }; groups.set(key, g); }
+    g.users.push({ name: p.display_name || "", email: p.email || "" });
+  }
+  const cities = [...groups.values()].map((g) => ({ ...g, count: g.users.length, users: g.users.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, "es")) }))
+    .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city, "es"));
+  return json(200, { cities, located, withoutCity: people.length - located, total: people.length });
+});
+
+};
+
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "admin-geo": __makeRequire("")("./user-meta").adminGeo };
 
 module.exports = async (req, res) => {
   try {
