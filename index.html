@@ -1473,7 +1473,7 @@ html .toast{animation:hpToast .55s var(--ez)}html .dlg{animation:hpDlg .4s var(-
 .hb-st{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .hb-st span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:#fff;color:var(--gx);font-weight:800;font-size:.85rem;box-shadow:0 3px 0 rgba(0,0,0,.14)}
 .rg{position:relative;width:min(210px,60vw);margin:4px auto 0}.rg svg{display:block;width:100%;transform:rotate(-90deg)}
-.rg circle{fill:none;stroke-width:13;stroke-linecap:round}.rg .t{stroke:var(--ln)}.rg .v{stroke:var(--g)}.rg.lo .v{stroke:var(--o)}
+.rg circle{fill:none;stroke-width:13;stroke-linecap:round}.rg .t{stroke:var(--ln)}.rg .v{stroke:var(--g);stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset 1s ease-out}.rg.y .v{stroke:var(--y)}.rg.r .v{stroke:var(--nd)}
 .rg strong{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.7rem;font-weight:800;color:var(--tx)}
 .big .pop{font-size:2.2rem!important}.tlb{height:6px;margin:-2px 0 8px}
 .hp-fx{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
@@ -2055,10 +2055,10 @@ async function fin(){
  if(S.finished)return;S.finished=true;
  const a=S.ans,ok=a.filter(x=>x.ok).length,u=new Set(a.map(x=>x.q.it.e.id)).size,bad=a.filter(x=>!x.ok);nav("i");{const st=ST();st.s=(st.s||0)+1;put("hp_st",st)}
  const by=f=>{const m={};a.forEach(x=>{const k=f(x);(m[k]=m[k]||[0,0])[1]++;if(x.ok)m[k][0]++});return Object.entries(m).map(([k,v])=>`<div class="tl"><span>${k}</span><b>${v[0]}/${v[1]} · ${acc(v[0],v[1])}%</b></div><span class="pb tlb"><i style="width:${acc(v[0],v[1])}%"></i></span>`).join("")};
- app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><div class="rg${acc(ok,a.length)<50?" lo":""}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="t" cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52" data-p="${acc(ok,a.length)}"/></svg><strong><span data-count="${acc(ok,a.length)}">${acc(ok,a.length)}</span>%</strong></div><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
+ app.innerHTML=`<div class="big"><div class="pop" style="font-size:3rem">${acc(ok,a.length)>=80?"🏆":acc(ok,a.length)>=50?"👏":"💪"}</div><div class="rg ${acc(ok,a.length)<60?"r":acc(ok,a.length)<70?"y":"g"}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="t" cx="60" cy="60" r="52"/><circle class="v" cx="60" cy="60" r="52" pathLength="100" data-fill="${acc(ok,a.length)}"${acc(ok,a.length)?"":" style=\"opacity:0\""}/></svg><strong><span data-count="${acc(ok,a.length)}">${acc(ok,a.length)}</span>%</strong></div><span class="mu">${ok} de ${a.length} · mejor racha 🔥 ${S.best} · ${u} imágenes</span></div>
  <div class="card"><div class="sub" style="margin-top:0">Por tema</div>${by(x=>T[x.q.it.e.tema])}<div class="sub">Por modalidad</div>${by(x=>MN[x.q.it.m])}</div>
  ${bad.length?`<div class="sub">Preguntas falladas (${bad.length})</div><div class="wrong-list">${bad.map(wrongQuestionCard).join("")}</div><button class="btn" id="rv">Repasar errores</button><br>`:""}<p class="mu" id="finish-status" role="status">Guardando el resultado y enviando notificación…</p><div id="sync-status">${syncStatus()}</div><button class="btn s" id="hm">Inicio</button>`;
- syncUI();
+ syncUI();{const v=$(".rg .v");if(v){const p=+v.dataset.fill||0;requestAnimationFrame(()=>requestAnimationFrame(()=>{v.style.strokeDashoffset=100-p}))}}
  $("#hm").onclick=home;if(bad.length)$("#rv").onclick=()=>run(Object.assign({},S.c,{cor:"i"}),{items:bad.map(x=>x.q.it),spare:[],short:false,avail:bad.length});saveFinishedExam()}
 
 const SRC_KEY="hp_src_refs";
