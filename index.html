@@ -1508,8 +1508,9 @@ html .lp-box{border-width:3px;box-shadow:0 5px 0 var(--ln)}
 @keyframes hpRing{0%{box-shadow:0 0 0 2px #000,0 0 0 0 rgba(255,225,77,.75)}100%{box-shadow:0 0 0 2px #000,0 0 0 18px rgba(255,225,77,0)}}
 @keyframes hpSpin{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.hp-fx,.hp-ghost{display:none}html.hpm #landing *{opacity:1!important}}
-.qv .img{max-height:max(150px,calc(100dvh - 470px))}
-.qv .img img{max-height:max(150px,calc(100dvh - 476px))}
+.qv .img{min-height:min(180px,var(--imgc,180px));max-height:var(--imgc,max(156px,calc(100dvh - 470px)))}
+.qv .img img{max-height:calc(var(--imgc,max(156px,calc(100dvh - 470px))) - 6px)}
+main:has(.qv){padding-bottom:0}
 </style>
 <script>try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("hpm");setTimeout(function(){document.documentElement.classList.remove("hpm")},2500)}}catch(e){}</script>
 <script defer src="/vendor/gsap.min.js"></script><script defer src="/vendor/CustomEase.min.js"></script><script defer src="/vendor/ScrollTrigger.min.js"></script><script defer src="/vendor/DrawSVGPlugin.min.js"></script><script defer src="/vendor/SplitText.min.js"></script><script defer src="/vendor/Physics2DPlugin.min.js"></script><script defer src="/vendor/CustomBounce.min.js"></script><script defer src="/vendor/CustomWiggle.min.js"></script><script defer src="/vendor/MotionPathPlugin.min.js"></script><script defer src="/vendor/ScrollToPlugin.min.js"></script><script defer src="/hp-motion.js?v=4"></script>
@@ -1983,6 +1984,12 @@ const adminAnswer=q=>{if(!isAdmin()||!q.src)return null;const v=q.src.m==="A"?q.
 
 const LOADER='<div class="startup-loading" role="status" aria-label="Cargando"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div>';
 const IMGS=new Map();
+function fitImg(){const im=document.getElementById("im"),sh=document.getElementById("sh"),og=document.getElementById("ops");if(!im||!sh||!og)return;
+ const root=document.documentElement,vh=Math.round(window.visualViewport?window.visualViewport.height:innerHeight);
+ root.style.setProperty("--imgc","0px");
+ const used=og.getBoundingClientRect().bottom+window.scrollY,free=vh-sh.offsetHeight-8-used;
+ root.style.setProperty("--imgc",Math.max(156,Math.floor(free+6))+"px")}
+addEventListener("resize",fitImg);addEventListener("orientationchange",fitImg);if(window.visualViewport)visualViewport.addEventListener("resize",fitImg);
 function loadImg(url){if(!url)return Promise.resolve(false);let h=IMGS.get(url);if(!h){h={i:new Image()};h.p=new Promise(res=>{h.i.decoding="async";h.i.onload=()=>{(h.i.decode?h.i.decode().catch(()=>{}):Promise.resolve()).then(()=>res(true))};h.i.onerror=()=>{IMGS.delete(url);res(false)};h.i.src=url});IMGS.set(url,h)}return h.p}
 function prep(slot){if(slot.question)return Promise.resolve(slot.question);if(!slot.promise)slot.promise=prepareQuestion(slot.it).then(q=>{slot.question=q;return q},err=>{slot.promise=null;throw err});return slot.promise}
 function warm(session,from){if(!session)return;const lite=navigator.connection?.saveData;for(let k=from;k<Math.min(from+3,session.q.length);k++){const slot=session.q[k];prep(slot).catch(()=>{});if(!lite||k===from)loadImg(slot.it.e.url)}}
@@ -2006,7 +2013,7 @@ async function show(){
  <h2>${q.txt}</h2><div class="img loading" id="im" title="Toca para ampliar" aria-busy="true"><div id="zw"><img id="ph" decoding="async" alt="Microfotografía histológica" src="${esc(q.it.e.url)}">${q.mk?(q.mk.w?`<span class="bx f" style="left:${q.mk.x-q.mk.w/2}%;top:${q.mk.y-q.mk.h/2}%;width:${q.mk.w}%;height:${q.mk.h}%"></span>`:`<span class="mk" style="left:${q.mk.x}%;top:${q.mk.y}%"></span>`):""}${(q.gz||[]).map(gzh).join("")}</div><button class="zb" id="zbtn" type="button" aria-pressed="false">${ic("zoom")}<span>Ampliar imagen</span></button></div>
  <div id="ops" class="og">${q.opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd>${esc(o)}</button>`).join("")}</div>
  <div class="sheet" id="sh"><div><button class="btn" id="ck" disabled>Comprobar</button></div></div></div>`;
- syncUI();
+ syncUI();fitImg();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fitImg);
  const photo=$("#ph"),image=$("#im"),ready=()=>{image.classList.remove("loading");image.setAttribute("aria-busy","false")};photo.onload=ready;if(photo.complete&&photo.naturalWidth)ready();
  requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=$(".bar i");if(b)b.style.width=100*S.i/n+"%"}));warm(session,index+1);
  let z=0,panX=0,panY=0,dragPan=null,wasDragged=false;
@@ -2039,7 +2046,7 @@ async function check(){
  {const c=$(".opt.ok");if(c)c.scrollIntoView({block:"nearest",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
  const sh=$("#sh");sh.className="sheet "+(ok?"ok":"no");S.done=1;
  sh.innerHTML=`<div><h3 class="${ok?"g":"r"}">${ok?`✅ Respuesta correcta <small class="xp">+10 XP</small>`:`❌ Respuesta incorrecta`}</h3><div class="fbt">${ok?"":`<p style="margin:0">Respuesta: <b>${esc(q.ans)}</b></p>`}${fbx(q.it.e)}</div><button class="btn ${ok?"":"w"}" id="nx" style="margin-top:12px">Continuar</button><button class="lnk" id="rpq" type="button">${ic("flag")} Reportar pregunta</button></div>`;
- $("#nx").onclick=()=>{$("#nx").disabled=true;S.done=0;S.i++;show()};$("#rpq").onclick=()=>reportModal(q.it.e.id,{tema:T[q.it.e.tema],modo:MN[q.it.m]});$("#nx").focus()}
+ $("#nx").onclick=()=>{$("#nx").disabled=true;S.done=0;S.i++;show()};$("#rpq").onclick=()=>reportModal(q.it.e.id,{tema:T[q.it.e.tema],modo:MN[q.it.m]});fitImg();$("#nx").focus()}
 function fbx(e){const u=e.fuenteUrl||(/^https/.test(e.url)?e.url:"");return `<p>${esc(e.rasgos||"")}</p><p class="mu">Fuente: ${u?`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(e.fuente)}</a>`:esc(e.fuente)}${e.autor?" · "+esc(e.autor):""} · ${esc(e.licencia)}</p>`}
 document.addEventListener("keydown",e=>{if(!S||!$("#ck")&&!$("#nx")||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
  if(/^[1-4]$/.test(e.key)&&$("#ck")){e.preventDefault();pick(+e.key-1)}else if(e.key==="Enter"&&!e.target.closest("button")){const b=$("#nx")||($("#ck")&&!$("#ck").disabled&&$("#ck"));if(b){e.preventDefault();b.click()}}});
