@@ -1507,7 +1507,7 @@ body{font-size:1rem}
 .lp-panel details p{color:var(--tx);font-size:1rem}
 .lp-panel summary{font-size:1rem}
 /* Portada: una sola pantalla con toda la información. Idea: el campo de un microscopio (la imagen vive dentro de una lente circular) */
-#landing{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;--m:clamp(1.25rem,3vw,3rem);--cap:6.5rem;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);background:#131820;color:#fff}
+#landing{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;--m:clamp(1.25rem,3vw,3rem);--cap:6.5rem;--lens:#58cc02;--lens-ink:#131820;--ring:#131820;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);background:#131820;color:#fff}
 .hl-copy{display:flex;flex-direction:column;justify-content:space-between;gap:calc(var(--m)*.8);padding:var(--m);min-width:0}
 .hl-mask{overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
 .hl-name{display:inline-flex;align-items:flex-end;gap:.05em;white-space:nowrap;margin:0;font-weight:800;line-height:.92;letter-spacing:-.045em;font-size:7vw}
@@ -1523,11 +1523,13 @@ body{font-size:1rem}
 #landing .soc>*,#landing .soc-c{background:#273343;color:#fff;border:0}
 .hl-foot .lp-credit{color:#c9d3de;font-weight:700;font-size:.9375rem;padding:0}
 .hl-foot .soc:empty,.hl-foot .lp-credit:empty{display:none}
-.hl-lens{position:relative;margin:0;background:#1cb0f6;container-type:size;min-height:0;overflow:hidden}
-html #landing .lp-box{position:absolute;inset:0 0 var(--cap) 0;margin:auto;--d:min(calc(100cqw - var(--m)*2),calc(100cqh - var(--cap) - var(--m)*1.5));width:var(--d);height:var(--d);border:clamp(6px,.7vw,12px) solid #58cc02;border-radius:50%;background:#131820;overflow:hidden;box-shadow:none}
+#landing :focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(hover:hover){#landing .soc-i:hover,#landing .soc-c:hover{background:#58cc02;color:#131820;text-decoration:none}}
+.hl-lens{position:relative;margin:0;background:var(--lens);container-type:size;min-height:0;overflow:hidden}
+html #landing .lp-box{position:absolute;inset:0 0 var(--cap) 0;margin:auto;--d:min(calc(100cqw - var(--m)*2),calc(100cqh - var(--cap) - var(--m)*1.5));width:var(--d);height:var(--d);border:clamp(6px,.7vw,12px) solid var(--ring);border-radius:50%;background:#131820;overflow:hidden;box-shadow:none}
 .lp-box>.ic{width:30%;max-height:none;color:#58cc02;opacity:.6}
 #lp-img{scale:1.12}
-html #landing .lp-fig figcaption{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);max-width:none;padding:0;border-radius:0;background:none;color:#131820;font-size:.8125rem;line-height:1.35;font-weight:700}
+html #landing .lp-fig figcaption{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);max-width:none;padding:0;border-radius:0;background:none;color:var(--lens-ink);font-size:.8125rem;line-height:1.35;font-weight:700}
 @media (max-width:899px){
  #landing{grid-template-columns:1fr;--cap:4.25rem;--m:1.1rem}
  .hl-lens{order:-1;height:29dvh}
