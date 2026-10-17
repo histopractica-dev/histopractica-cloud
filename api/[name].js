@@ -925,9 +925,32 @@ exports.backfillGeo = wrap(["POST"], async (event) => {
   return json(200, { filled: out.length, noIp, failed: todo.length - noIp - out.length });
 });
 
+const DM_CAP = 20000;
+exports.adminMessages = wrap(["GET"], async (event) => {
+  const { isAdmin } = await authenticate(event);
+  if (!isAdmin) return json(403, { error: "Solo el administrador puede ver esto." });
+  const [profiles, rows] = await Promise.all([
+    restAll("profiles?select=id,email,display_name,role&order=id.asc"),
+    (async () => {
+      const out = [], size = 1000;
+      for (let offset = 0; offset < DM_CAP; offset += size) {
+        const page = await rest(`direct_messages?select=id,sender_id,receiver_id,body,created_at&order=created_at.desc,id.desc&limit=${size}&offset=${offset}`);
+        out.push(...(page || []));
+        if (!page || page.length < size) break;
+      }
+      return out.reverse();
+    })(),
+  ]);
+  return json(200, {
+    truncated: rows.length >= DM_CAP,
+    users: profiles.map((p) => ({ id: p.id, name: p.display_name || "", email: p.email || "", role: p.role })),
+    messages: rows.map((m) => ({ id: m.id, from: m.sender_id, to: m.receiver_id, body: m.body, at: m.created_at })),
+  });
+});
+
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta, "admin-backfill-geo": __makeRequire("")("./user-meta").backfillGeo };
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta, "admin-backfill-geo": __makeRequire("")("./user-meta").backfillGeo, "admin-messages": __makeRequire("")("./user-meta").adminMessages };
 
 module.exports = async (req, res) => {
   try {
