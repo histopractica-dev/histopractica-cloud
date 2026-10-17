@@ -1474,25 +1474,22 @@ body:not(.hasnav) #nav{display:none}
 <script>try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("hpm");setTimeout(function(){document.documentElement.classList.remove("hpm")},2500)}}catch(e){}</script>
 <script defer src="/vendor/gsap.min.js"></script><script defer src="/vendor/CustomEase.min.js"></script><script defer src="/vendor/ScrollTrigger.min.js"></script><script defer src="/vendor/DrawSVGPlugin.min.js"></script><script defer src="/vendor/SplitText.min.js"></script><script defer src="/vendor/Physics2DPlugin.min.js"></script><script defer src="/vendor/CustomBounce.min.js"></script><script defer src="/vendor/CustomWiggle.min.js"></script><script defer src="/vendor/MotionPathPlugin.min.js"></script><script defer src="/vendor/ScrollToPlugin.min.js"></script><script defer src="/hp-motion.js?v=5"></script>
 <script id="hp-design-js">
-/* HistoPráctica · coreografía de la portada: una jugada principal (el nombre sube desde su máscara) + historia fijada con scroll */
-document.addEventListener("DOMContentLoaded",function(){var g=window.gsap,ST=window.ScrollTrigger,app=document.getElementById("app"),RM=matchMedia("(prefers-reduced-motion:reduce)"),ctx=null,tm=0;
-function fit(){var n=document.querySelector(".hl-name");if(!n)return;var w=n.parentNode.clientWidth;n.style.fontSize="100px";var k=n.getBoundingClientRect().width;if(k)n.style.fontSize=Math.min(100*w/k,420)+"px"}
-function build(){if(ctx){ctx.revert();ctx=null}var L=document.getElementById("landing");if(!L)return;fit();if(RM.matches||!g||!ST)return;
- ctx=g.context(function(){var q=function(s){return[].slice.call(L.querySelectorAll(s))};
+/* HistoPráctica · portada: el nombre sube desde su máscara, la lente se abre como un iris y la muestra se desplaza con el puntero */
+document.addEventListener("DOMContentLoaded",function(){var g=window.gsap,app=document.getElementById("app"),RM=matchMedia("(prefers-reduced-motion:reduce)"),ctx=null,tm=0;
+function fit(){var n=document.querySelector(".hl-name");if(!n)return;var w=n.parentNode.clientWidth;n.style.fontSize="100px";var k=n.getBoundingClientRect().width;if(k)n.style.fontSize=Math.min(100*w/k,260)+"px"}
+function build(){if(ctx){ctx.revert();ctx=null}var L=document.getElementById("landing");if(!L)return;fit();if(RM.matches||!g)return;
+ ctx=g.context(function(){
   g.from(".hl-name",{yPercent:110,duration:1.1,ease:"power4.out",delay:.1});
-  g.from(".hl-top > *",{opacity:0,y:14,duration:.7,ease:"power3.out",stagger:.1,delay:.75,clearProps:"all"});
-  g.to(".hl-name",{scale:.92,ease:"none",scrollTrigger:{trigger:".hl-hero",start:"top top",end:"bottom top",scrub:true}});
-  g.fromTo(".lp-box",{clipPath:"inset(0 0 100% 0)"},{clipPath:"inset(0 0 0% 0)",duration:1.1,ease:"power3.inOut",scrollTrigger:{trigger:".hl-view",start:"top 55%",once:true}});
-  g.fromTo("#lp-img,.lp-box>.ic",{scale:1.12},{scale:1.55,ease:"none",scrollTrigger:{trigger:".hl-steps",start:"top bottom",end:"bottom bottom",scrub:.5}});
-  q(".hl-step").forEach(function(s){ST.create({trigger:s,start:"top 60%",end:"bottom 60%",toggleClass:{targets:s,className:"on"}});
-   var h=s.querySelector("h2");g.set(h,{yPercent:105});ST.create({trigger:s,start:"top 80%",once:true,onEnter:function(){g.to(h,{yPercent:0,duration:.9,ease:"power4.out"})}})});
-  var sp=q(".hl-list span,.hl-end h2 span");g.set(sp,{yPercent:110});
-  ST.batch(sp,{start:"top 94%",once:true,onEnter:function(b){g.to(b,{yPercent:0,duration:.9,ease:"power4.out",stagger:.07,overwrite:true})}})},L);
- var im=document.getElementById("lp-img");if(im)im.addEventListener("load",function(){ST.refresh()},{once:true});ST.refresh()}
-function later(){clearTimeout(tm);tm=setTimeout(build,120)}
-new MutationObserver(later).observe(app,{childList:true});
-addEventListener("resize",function(){fit()});
-(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(function(){later()})})
+  g.from(".lp-box",{scale:0,duration:1.3,ease:"power4.out",delay:.15});
+  g.from("#lp-img,.lp-box>.ic",{scale:1.5,duration:1.6,ease:"power3.out",delay:.15});
+  g.from(".hl-tag,.hl-desc,.hl-act,.hl-foot",{opacity:0,y:18,duration:.8,ease:"power3.out",stagger:.1,delay:.45,clearProps:"all"});
+  var im=L.querySelector("#lp-img"),f=L.querySelector(".hl-lens");
+  if(im&&f&&matchMedia("(hover:hover) and (pointer:fine)").matches){var qx=g.quickTo(im,"xPercent",{duration:.9,ease:"power3.out"}),qy=g.quickTo(im,"yPercent",{duration:.9,ease:"power3.out"});
+   f.onpointermove=function(e){var r=f.getBoundingClientRect();qx(((e.clientX-r.left)/r.width-.5)*-7);qy(((e.clientY-r.top)/r.height-.5)*-7)}}
+ },L)}
+function later(){clearTimeout(tm);tm=setTimeout(build,100)}
+new MutationObserver(later).observe(app,{childList:true});addEventListener("resize",fit);
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(later)})
 </script>
 <style id="hp-design">
 /* HistoPráctica · rediseño "capítulos": el nombre como monumento, cada sección con su propio campo de color (solo paleta y Nunito originales) */
@@ -1506,59 +1503,49 @@ addEventListener("resize",function(){fit()});
 :focus-visible{outline:3px solid var(--b);outline-offset:3px}
 html,body{overflow-x:clip}
 body{font-size:1rem}
-.lp-fig figcaption{font-size:.875rem}
-.lp-panel details p{color:#131820;font-size:1rem}
-#landing{height:auto;overflow:visible;--m:clamp(1rem,2.4vw,2.25rem);color:#131820}
-#landing section{position:relative;padding:var(--m)}
+.lp-panel{color:var(--tx)}
+.lp-panel details p{color:var(--tx);font-size:1rem}
+.lp-panel summary{font-size:1rem}
+/* Portada: una sola pantalla con toda la información. Idea: el campo de un microscopio (la imagen vive dentro de una lente circular) */
+#landing{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;--m:clamp(1.25rem,3vw,3rem);--cap:6.5rem;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);background:#131820;color:#fff}
+.hl-copy{display:flex;flex-direction:column;justify-content:space-between;gap:calc(var(--m)*.8);padding:var(--m);min-width:0}
 .hl-mask{overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
-.hl-hero{min-height:100vh;min-height:100dvh;background:#131820;color:#fff;display:flex;flex-direction:column;justify-content:space-between;gap:var(--m);overflow:hidden}
-.hl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--m)}
-.hl-tag{margin:0;max-width:22ch;font-size:clamp(1.1rem,1.6vw,1.6rem);line-height:1.25;font-weight:700}
-.hl-hero .btn,.hl-end .btn{width:auto;display:inline-block;padding:.95em 2.2em;font-size:1rem}
-.hl-hero .btn{background:#58cc02;color:#131820}
-.hl-name{display:inline-flex;align-items:flex-end;gap:.05em;white-space:nowrap;margin:0;font-weight:800;line-height:.92;letter-spacing:-.045em;font-size:11vw;transform-origin:0 100%}
+.hl-name{display:inline-flex;align-items:flex-end;gap:.05em;white-space:nowrap;margin:0;font-weight:800;line-height:.92;letter-spacing:-.045em;font-size:7vw}
 .hl-name .ic{width:.78em;height:.78em;flex:none;color:#58cc02;margin-bottom:.05em}
 .hl-name em{color:#58cc02;font-style:normal}
-.hl-view{background:#1cb0f6;padding-block:calc(var(--m)*1.5) calc(var(--m)*3)}
-.hl-story{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--m)}
-.hl-view .lp-fig{grid-column:1/7;grid-row:1;position:sticky;top:var(--m);height:calc(100dvh - var(--m)*2);margin:0;z-index:2;min-height:0}
-html #landing .lp-box{position:absolute;inset:0;border:0;box-shadow:none;border-radius:var(--r-lg);background:#131820}
-.lp-box>.ic{color:#58cc02;opacity:.5}
-#lp-img{transform-origin:30% 40%}
-.hl-steps{grid-column:8/13;grid-row:1}
-.hl-step{min-height:85dvh;display:flex;flex-direction:column;justify-content:center;gap:1.2rem;opacity:.3;transition:opacity .35s ease}
-.hl-step.on{opacity:1}
-.hl-step:last-child{min-height:55dvh}
-.hl-step h2{margin:0;font-size:clamp(2.75rem,6.4vw,7rem);line-height:1;font-weight:800;letter-spacing:-.03em}
-.hl-step p{margin:0;max-width:34ch;font-size:clamp(1.125rem,1.4vw,1.4rem);line-height:1.4;font-weight:600}
-.hl-tis{background:#fff;padding-block:calc(var(--m)*2) calc(var(--m)*2)}
-.hl-tis>h2{margin:0 0 calc(var(--m)*1.5);max-width:20ch;font-size:clamp(1.3rem,2vw,2rem);line-height:1.15;font-weight:800;color:#4b4b4b}
-.hl-list{list-style:none;margin:0;padding:0}
-.hl-list li{overflow:hidden;margin-inline:calc(var(--m)*-1);padding:.06em var(--m) .1em;font-size:clamp(2.2rem,7.4vw,7rem);line-height:1.02;font-weight:800;letter-spacing:-.04em;transition:background-color .18s ease,padding-left .3s var(--ez)}
-.hl-list li span{display:block}
-@media (hover:hover){.hl-list li:hover{background:#58cc02;padding-left:calc(var(--m)*2.2)}}
-.hl-end{background:#58cc02;padding-block:calc(var(--m)*2.5) var(--m);display:flex;flex-direction:column;gap:calc(var(--m)*1.6)}
-.hl-end h2{margin:0;font-size:clamp(3rem,12vw,13rem);line-height:.9;font-weight:800;letter-spacing:-.05em}
-.hl-end .btn{background:#131820;color:#fff;font-size:clamp(1.1rem,1.8vw,1.5rem);align-self:flex-start}
-.hl-bar{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.5rem}
-.hl-bar .lp-faq>summary{background:#131820;color:#fff;border:0;border-radius:999px}
-.hl-bar .soc-c,.hl-bar .soc a,.hl-bar .soc button{border-color:#131820;color:#131820;background:transparent}
-.hl-bar .lp-credit{color:#131820;font-weight:700}
-@media (max-width:759px){
- .hl-view .lp-fig{grid-column:1/-1;height:44dvh;top:calc(var(--m)*.6)}
- .hl-steps{grid-column:1/-1;grid-row:1;padding-top:calc(44dvh + var(--m))}
- .hl-step{min-height:60dvh;justify-content:flex-start;padding-top:calc(var(--m)*1.4)}
- .hl-top .btn{padding:.8em 1.4em}
+.hl-body{display:flex;flex-direction:column;gap:1.1rem;max-width:38rem}
+.hl-tag{margin:0;font-size:clamp(1.5rem,2.5vw,2.6rem);line-height:1.12;font-weight:800;letter-spacing:-.02em}
+.hl-desc{margin:0;max-width:34rem;font-size:clamp(1.0625rem,1.3vw,1.25rem);line-height:1.5;font-weight:600;color:#c9d3de}
+.hl-act{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1rem;margin-top:.5rem}
+.hl-act .btn{width:auto;display:inline-block;padding:1em 2.6em;font-size:1.0625rem;background:#58cc02;color:#131820}
+.hl-act .lp-faq>summary{background:#273343;color:#fff;border:0;border-radius:999px;padding:.95em 1.4em;font-size:1rem}
+.hl-foot{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1.25rem}
+#landing .soc>*,#landing .soc-c{background:#273343;color:#fff;border:0}
+.hl-foot .lp-credit{color:#c9d3de;font-weight:700;font-size:.9375rem;padding:0}
+.hl-foot .soc:empty,.hl-foot .lp-credit:empty{display:none}
+.hl-lens{position:relative;margin:0;background:#1cb0f6;container-type:size;min-height:0;overflow:hidden}
+html #landing .lp-box{position:absolute;inset:0 0 var(--cap) 0;margin:auto;--d:min(calc(100cqw - var(--m)*2),calc(100cqh - var(--cap) - var(--m)*1.5));width:var(--d);height:var(--d);border:clamp(6px,.7vw,12px) solid #58cc02;border-radius:50%;background:#131820;overflow:hidden;box-shadow:none}
+.lp-box>.ic{width:30%;max-height:none;color:#58cc02;opacity:.6}
+#lp-img{scale:1.12}
+html #landing .lp-fig figcaption{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);max-width:none;padding:0;border-radius:0;background:none;color:#131820;font-size:.8125rem;line-height:1.35;font-weight:700}
+@media (max-width:899px){
+ #landing{grid-template-columns:1fr;--cap:4.25rem;--m:1.1rem}
+ .hl-lens{order:-1;height:29dvh}
+ .hl-copy{gap:.9rem}
+ .hl-body{gap:.8rem}
+ .hl-act{margin-top:0}
+ .hl-tag{font-size:1.25rem}
 }
-@media (prefers-reduced-motion:reduce){.hl-step{opacity:1;transition:none}.btn,.tc,.opt{transition:none}}
+@media (max-height:520px) and (min-width:900px){#landing{--cap:4rem}.hl-lens{min-height:420px}}
 </style>
 </head><body><main id="app" aria-busy="true"><div id="landing">
-<section class="hl-hero" aria-label="HistoPráctica"><div class="hl-top"><p class="hl-tag">Practica la identificación de tejidos histológicos con imágenes reales</p><button type="button" class="btn" data-enter>Entrar</button></div>
-<div class="hl-mask"><h1 class="hl-name lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></h1></div></section>
-<section class="hl-view" aria-label="Cómo funciona"><div class="hl-story"><figure class="lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
-<div class="hl-steps"><div class="hl-step"><div class="hl-mask"><h2>Observas.</h2></div><p>Un simulador de histología para estudiantes de Medicina: ves una imagen de microscopía real.</p></div><div class="hl-step"><div class="hl-mask"><h2>Eliges.</h2></div><p>Marcas tu respuesta entre varias opciones y la app te dice si acertaste.</p></div><div class="hl-step"><div class="hl-mask"><h2>Repites.</h2></div><p>Practicas una y otra vez hasta reconocer cada tejido y cada célula.</p></div></div></div></section>
-<section class="hl-tis" aria-label="Tejidos"><h2>Los tejidos que vas a practicar</h2><ul class="hl-list"><li><span>Epitelial</span></li><li><span>Conjuntivo propiamente dicho</span></li><li><span>Adiposo</span></li><li><span>Cartilaginoso</span></li><li><span>Óseo</span></li><li><span>Sanguíneo</span></li><li><span>Muscular</span></li><li><span>Nervioso</span></li></ul></section>
-<section class="hl-end" aria-label="Empezar"><div class="hl-mask"><h2><span style="display:block">Empieza a practicar.</span></h2></div><button type="button" class="btn" data-enter>Entrar</button><div class="hl-bar"><details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details><div class="soc" id="lp-soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica"></div><div class="lp-credit" id="lp-credit"></div></div></section>
+<section class="hl-copy" aria-label="HistoPráctica">
+<div class="hl-mask"><h1 class="hl-name lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></h1></div>
+<div class="hl-body"><p class="hl-tag">Practica la identificación de tejidos histológicos con imágenes reales.</p>
+<p class="hl-desc">Un simulador de histología para estudiantes de Medicina: observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula.</p>
+<div class="hl-act"><button type="button" class="btn" data-enter>Entrar</button><details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details></div></div>
+<div class="hl-foot"><div class="soc" id="lp-soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica"></div><div class="lp-credit" id="lp-credit"></div></div></section>
+<figure class="hl-lens lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
 </div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,division (solo nervioso: "Sistema nervioso central"|"Sistema nervioso periférico"),neurona (solo nervioso: "Neurona multipolar"|"Neurona bipolar"|…),url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
