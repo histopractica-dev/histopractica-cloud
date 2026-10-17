@@ -251,7 +251,7 @@ small.xp {
   text-transform:uppercase;
   background:var(--g);
   color:#fff;
-  box-shadow:none;
+  box-shadow:0 4px 0 var(--gd);
   cursor:pointer;
   text-align:center;
   transition:transform .08s,box-shadow .08s;
@@ -290,14 +290,14 @@ small.xp {
 
 .btn.w {
   background:var(--nd);
-  box-shadow:none;
+  box-shadow:0 4px 0 var(--ndd);
 }
 
 .btn.s[aria-pressed=true] {
   background:var(--bl);
   border-color:var(--b);
   color:var(--bt);
-  box-shadow:none;
+  box-shadow:0 2px 0 var(--b);
 }
 
 .btn.s:disabled {
@@ -409,7 +409,7 @@ input[type=number] {
   border-color:var(--b);
   background:var(--bl);
   color:var(--bt);
-  box-shadow:none;
+  box-shadow:0 2px 0 var(--b);
 }
 
 .ch:active span {
@@ -471,7 +471,7 @@ input[type=text],input:not([type]),select,textarea {
   color:var(--tx);
   font:inherit;
   font-weight:800;
-  box-shadow:none;
+  box-shadow:0 3px 0 var(--ln);
   cursor:pointer;
 }
 
@@ -773,19 +773,19 @@ input[type=text],input:not([type]),select,textarea {
 .opt.sel {
   border-color:var(--b);
   background:var(--bl);
-  box-shadow:none;
+  box-shadow:0 2px 0 var(--b);
 }
 
 .opt.ok {
   border-color:var(--g);
   background:var(--ok);
-  box-shadow:none;
+  box-shadow:0 2px 0 var(--g);
 }
 
 .opt.no {
   border-color:var(--nd);
   background:var(--no);
-  box-shadow:none;
+  box-shadow:0 2px 0 var(--nd);
 }
 
 .opt:disabled {
@@ -1251,7 +1251,7 @@ body.mo { overflow: hidden; }
 .pc{--m:#f2b705;display:grid;justify-items:center;gap:4px;min-width:0;padding:16px 10px;text-align:center;border:2px solid var(--m);border-radius:var(--r-lg);background:var(--pn);background:linear-gradient(180deg,color-mix(in srgb,var(--m) 24%,var(--pn)),var(--pn))}
 .pc.p1{grid-column:1/-1;justify-self:center;width:min(300px,100%);padding:20px 12px}
 .pc.silver{--m:#aeb8c4}.pc.bronze{--m:#cd7f32}
-.md{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--m);color:#1b1b1b;font-weight:800;font-size:1.1rem;box-shadow:none}
+.md{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--m);color:#1b1b1b;font-weight:800;font-size:1.1rem;box-shadow:0 3px 0 rgba(0,0,0,.25)}
 .pc.p1 .md{width:56px;height:56px;font-size:1.4rem}
 .pnm{font-weight:800;overflow-wrap:anywhere}
 .pp{color:var(--mu);font-weight:600;font-size:var(--fs-sm)}
@@ -1267,7 +1267,7 @@ body.mo { overflow: hidden; }
 
 /* Restauración del estilo clásico y emojis explícitos en todos los puntos indicados */
 .btn.s,.btn.sm,.auth-tabs .btn{ text-transform:uppercase; letter-spacing:.05em; font-weight:800; }
-.btn.s{ border:2px solid var(--ln); box-shadow:none; }
+.btn.s{ border:2px solid var(--ln); box-shadow:0 2px 0 var(--ln); }
 .btn.s:active{ transform:translateY(4px); box-shadow:none; }
 .tc,.tc.done,.tc.sug{ border:1px solid var(--ln); border-left:1px solid var(--ln); }
 .emoji-icon{ font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-style:normal; line-height:1.15; }
@@ -1471,84 +1471,124 @@ body:not(.hasnav) #nav{display:none}
   window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/speed-insights/script.js"></script>
+<style id="hp-design">
+/* HistoPráctica · capa de diseño y movimiento: mismos colores, Nunito y relieve de la marca; solo más acabado */
+:root{--ez:cubic-bezier(.22,1,.36,1);--gx:#4a9c00}
+html #app.hp-pop{animation:none}
+html .btn,html .opt,html .tc,html .ch span,html .ib,html #nav button,html .av,html .bz{transition:transform .2s var(--ez),box-shadow .2s var(--ez),border-color .18s,background-color .18s,color .18s,filter .18s}
+html .btn{box-shadow:0 5px 0 var(--gd)}html .btn:active:not(:disabled){transform:translateY(5px);box-shadow:0 0 0 var(--gd)}
+html .btn.s{box-shadow:0 3px 0 var(--ln)}html .btn.s:active{transform:translateY(3px);box-shadow:none}
+html .btn.w{box-shadow:0 5px 0 var(--ndd)}html .btn:disabled{box-shadow:none}
+html .tc,html .tc.done,html .tc.sug{border-width:2px;box-shadow:0 4px 0 var(--ln)}
+html .tc:active{transform:translateY(4px);box-shadow:0 0 0 var(--ln)}
+html .tc.done{border-color:var(--g);box-shadow:0 4px 0 var(--g)}
+html .tc .ti{transition:transform .35s var(--ez)}
+@media(hover:hover){html .tc:hover{transform:translateY(-3px);box-shadow:0 7px 0 var(--ln)}html .tc:hover .ti{transform:scale(1.1) rotate(-4deg)}html .tc.done:hover{box-shadow:0 7px 0 var(--g)}}
+html .opt{border-width:2px;box-shadow:0 3px 0 var(--ln)}html .opt:active:not(:disabled){transform:translateY(3px);box-shadow:none}
+html .opt.sel{box-shadow:0 3px 0 var(--b)}html .opt.sel kbd{background:var(--b);border-color:var(--b);color:#fff}
+html .opt.ok{box-shadow:0 3px 0 var(--g);animation:hpOk .55s var(--ez)}html .opt.no{box-shadow:0 3px 0 var(--nd);animation:hpNo .45s ease-in-out}
+html .ch input:checked+span{animation:hpChip .3s var(--ez)}
+html #nav button.on i{animation:hpNav .45s var(--ez)}
+html .bar i{transition:width .8s var(--ez)}html .pb i{border-radius:6px}
+html .sheet.ok,html .sheet.no{animation:hpUp .5s var(--ez)}
+html .img{border-width:3px;box-shadow:0 4px 0 var(--ln)}
+html .toast{animation:hpToast .55s var(--ez)}html .dlg{animation:hpDlg .4s var(--ez)}
+.mk,.bx.f{animation:hpRing 1.4s ease-out 3 .5s}
+/* Banda verde de marca (inicio): misma superficie, círculos claros y relieve que los posts */
+.hb{position:relative;overflow:hidden;margin:6px 0 18px;padding:22px 20px 20px;border-radius:var(--r-lg);background:#58cc02;color:#fff;box-shadow:0 5px 0 var(--gd)}
+.hb .c{position:absolute;border-radius:50%;background:rgba(255,255,255,.16);pointer-events:none}
+.hb .hero{position:relative;margin:0 0 4px;color:#fff;font-size:clamp(1.7rem,6.6vw,2.4rem);line-height:1.1}
+.hb p{position:relative;margin:0;color:#fff;font-weight:800}
+.hb-st{position:relative;display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.hb-st span{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;background:#fff;color:var(--gx);font-weight:800;font-size:.85rem;box-shadow:0 3px 0 rgba(0,0,0,.14)}
+/* Resultados: anillo de puntaje */
+.rg{position:relative;width:min(210px,60vw);margin:4px auto 0}.rg svg{display:block;width:100%;transform:rotate(-90deg)}
+.rg circle{fill:none;stroke-width:13;stroke-linecap:round}.rg .t{stroke:var(--ln)}.rg .v{stroke:var(--g)}.rg.lo .v{stroke:var(--o)}
+.rg strong{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.7rem;font-weight:800;color:var(--tx)}
+.big .pop{font-size:2.2rem!important}.tlb{height:6px;margin:-2px 0 8px}
+/* Efectos y salida de vista */
+.hp-fx{position:fixed;inset:0;z-index:90;pointer-events:none;overflow:hidden}
+.hp-fx i{position:absolute;border-radius:50%;margin:-4px 0 0 -4px}.hp-fx i.cf{left:0;top:0;width:8px;height:12px;border-radius:2px;margin:0}
+.hp-xp{position:absolute;font-weight:800;font-size:1.4rem;color:var(--o)}
+.hp-pill2{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:0;right:0;margin:auto;width:max-content;max-width:90%;padding:8px 16px;border-radius:99px;background:var(--o);color:#1b1b1b;font-weight:800;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.hp-ghost{position:fixed;z-index:15;pointer-events:none;overflow:hidden}
+.btn:disabled#auth-submit::after{content:"";display:inline-block;width:.9em;height:.9em;margin-left:.6em;vertical-align:-.1em;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:hpSpin .7s linear infinite}
+html.hpm #landing .lp-title,html.hpm #landing .lp-fig,html.hpm #landing .lp-copy,html.hpm #landing .lp-bar{opacity:0}
+.hb.sm{padding:18px 18px 16px;margin:6px 0 16px}.hb.sm .hero{font-size:clamp(1.5rem,6vw,2rem)}.hb.sm p{margin-top:4px;font-size:.95rem}
+.hb.bl{background:#1cb0f6;box-shadow:0 5px 0 #1899d6}.hb.or{background:#ff9600;box-shadow:0 5px 0 #d97f00}
+.hb-e{position:relative;display:block;font-size:1.9rem;line-height:1;margin-bottom:6px;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.pf{position:relative;overflow:hidden;border:0!important;background:#58cc02!important;color:#fff;box-shadow:0 5px 0 var(--gd)}.pf .mu,.pf b{color:#fff}
+.pf .av{border:3px solid #fff;background:#fff;color:var(--gx)}.pf .btn.s{background:#fff;color:var(--gx);border-color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.14)}
+#perfil .tgrid>.card{border-width:2px;box-shadow:0 4px 0 var(--ln)}#perfil .tgrid>.card b{color:var(--gt)}
+html .ab{border-width:2px;box-shadow:0 4px 0 var(--ln)}html .ab:not(.lock){border-color:var(--c);box-shadow:0 4px 0 var(--c)}
+html .card{border-width:2px;box-shadow:0 3px 0 var(--ln)}html .rr{border-width:2px;box-shadow:0 3px 0 var(--ln)}html .rr.me{box-shadow:0 3px 0 var(--b)}
+html .pc{box-shadow:0 5px 0 var(--m)}html .hm-sec>summary{font-size:1.1rem}
+html .wrong-q{box-shadow:0 4px 0 var(--ln)}html .qv .xt{padding:2px 0}html .sheet{border-top-width:3px}
+html .auth-brand{padding:14px;border-radius:var(--r-lg);background:#58cc02;color:#fff;box-shadow:0 5px 0 var(--gd)}html .auth-brand .ic,html .auth-brand em{color:#fff}
+html .auth-wrap .card{border-width:2px;box-shadow:0 4px 0 var(--ln)}
+html input:focus,html textarea:focus,html select:focus{outline:0;border-color:var(--b);box-shadow:0 3px 0 var(--b)}
+html .hp-msg{border-width:2px}html .gd,html .faq{border-width:2px;box-shadow:0 3px 0 var(--ln)}
+html .lp-box{border-width:3px;box-shadow:0 5px 0 var(--ln)}
+@keyframes hpOk{0%{transform:scale(.96)}50%{transform:scale(1.035)}100%{transform:scale(1)}}
+@keyframes hpNo{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+@keyframes hpChip{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes hpNav{0%{transform:scale(.7)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes hpUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes hpToast{from{transform:translateY(-26px) scale(.92);opacity:0}}
+@keyframes hpDlg{from{transform:translateY(24px) scale(.96);opacity:0}}
+@keyframes hpRing{0%{box-shadow:0 0 0 2px #000,0 0 0 0 rgba(255,225,77,.75)}100%{box-shadow:0 0 0 2px #000,0 0 0 18px rgba(255,225,77,0)}}
+@keyframes hpSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.hp-fx,.hp-ghost{display:none}html.hpm #landing *{opacity:1!important}}
+</style>
 <script>try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("hpm");setTimeout(function(){document.documentElement.classList.remove("hpm")},2500)}}catch(e){}</script>
-<script defer src="/vendor/gsap.min.js"></script><script defer src="/vendor/CustomEase.min.js"></script><script defer src="/vendor/ScrollTrigger.min.js"></script><script defer src="/vendor/DrawSVGPlugin.min.js"></script><script defer src="/vendor/SplitText.min.js"></script><script defer src="/vendor/Physics2DPlugin.min.js"></script><script defer src="/vendor/CustomBounce.min.js"></script><script defer src="/vendor/CustomWiggle.min.js"></script><script defer src="/vendor/MotionPathPlugin.min.js"></script><script defer src="/vendor/ScrollToPlugin.min.js"></script><script defer src="/hp-motion.js?v=5"></script>
+<script defer src="/vendor/gsap.min.js"></script><script defer src="/vendor/CustomEase.min.js"></script><script defer src="/vendor/ScrollTrigger.min.js"></script><script defer src="/vendor/DrawSVGPlugin.min.js"></script><script defer src="/vendor/SplitText.min.js"></script><script defer src="/vendor/Physics2DPlugin.min.js"></script><script defer src="/vendor/CustomBounce.min.js"></script><script defer src="/vendor/CustomWiggle.min.js"></script><script defer src="/vendor/MotionPathPlugin.min.js"></script><script defer src="/vendor/ScrollToPlugin.min.js"></script><script defer src="/hp-motion.js?v=4"></script>
 <script id="hp-design-js">
-/* HistoPráctica · portada: el nombre sube desde su máscara, la lente se abre como un iris y la muestra se desplaza con el puntero */
-document.addEventListener("DOMContentLoaded",function(){var g=window.gsap,app=document.getElementById("app"),RM=matchMedia("(prefers-reduced-motion:reduce)"),ctx=null,tm=0;
-function fit(){var n=document.querySelector(".hl-name");if(!n)return;var w=n.parentNode.clientWidth;n.style.fontSize="100px";var k=n.getBoundingClientRect().width;if(k)n.style.fontSize=Math.min(100*w/k,260)+"px"}
-function build(){if(ctx){ctx.revert();ctx=null}var L=document.getElementById("landing");if(!L)return;fit();if(RM.matches||!g)return;
- ctx=g.context(function(){
-  g.from(".hl-name",{yPercent:110,duration:1.1,ease:"power4.out",delay:.1});
-  g.from(".lp-box",{scale:0,duration:1.3,ease:"power4.out",delay:.15});
-  g.from("#lp-img,.lp-box>.ic",{scale:1.5,duration:1.6,ease:"power3.out",delay:.15});
-  g.from(".hl-tag,.hl-desc,.hl-act,.hl-foot",{opacity:0,y:18,duration:.8,ease:"power3.out",stagger:.1,delay:.45,clearProps:"all"});
-  var im=L.querySelector("#lp-img"),f=L.querySelector(".hl-lens");
-  if(im&&f&&matchMedia("(hover:hover) and (pointer:fine)").matches){var qx=g.quickTo(im,"xPercent",{duration:.9,ease:"power3.out"}),qy=g.quickTo(im,"yPercent",{duration:.9,ease:"power3.out"});
-   f.onpointermove=function(e){var r=f.getBoundingClientRect();qx(((e.clientX-r.left)/r.width-.5)*-7);qy(((e.clientY-r.top)/r.height-.5)*-7)}}
- },L)}
-function later(){clearTimeout(tm);tm=setTimeout(build,100)}
-new MutationObserver(later).observe(app,{childList:true});addEventListener("resize",fit);
-(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(later)})
+/* HistoPráctica · coreografía de scroll y microinteracciones (sobre hp-motion.js; no toca la lógica de la app) */
+document.addEventListener("DOMContentLoaded",function(){var g=window.gsap,ST=window.ScrollTrigger;if(!g||!ST)return;
+var app=document.getElementById("app"),mm=null,tm=0,fine=matchMedia("(hover:hover) and (pointer:fine)").matches;
+var bar=document.createElement("div");bar.className="hp-pg";bar.setAttribute("aria-hidden","true");document.body.appendChild(bar);
+g.to(bar,{scaleX:1,ease:"none",scrollTrigger:{start:0,end:"max",scrub:.3}});
+function build(){if(mm){mm.revert();mm=null}var L=document.getElementById("landing");if(!L)return;
+ mm=g.matchMedia();
+ mm.add({d:"(min-width:760px) and (prefers-reduced-motion:no-preference)",m:"(max-width:759px) and (prefers-reduced-motion:no-preference)"},function(c){var D=c.conditions.d,
+  t=L.querySelector(".lp-title"),f=L.querySelector(".lp-fig"),b=L.querySelector(".lp-box"),im=L.querySelector("#lp-img"),cp=L.querySelector(".lp-copy");if(!t||!f||!b)return;
+  g.to(t,{yPercent:-14,opacity:.2,scale:.96,ease:"none",scrollTrigger:{trigger:t,start:"top top",end:"bottom top",scrub:true}});
+  var tl=g.timeline({defaults:{ease:"none"},scrollTrigger:{trigger:f,start:D?"top 75%":"top 85%",end:D?"center 30%":"center 45%",scrub:.6}});
+  tl.fromTo(b,{clipPath:"inset(10% 7% 10% 7% round 28px)"},{clipPath:"inset(0% 0% 0% 0% round 14px)"},0);
+  if(im)tl.fromTo(im,{scale:1.2,yPercent:6},{scale:1,yPercent:0},0);
+  if(cp)g.fromTo(cp,{y:40},{y:0,ease:"none",scrollTrigger:{trigger:cp,start:"top 100%",end:"top 60%",scrub:true}});
+  if(D)g.to(f,{yPercent:-4,ease:"none",scrollTrigger:{trigger:f,start:"center center",end:"bottom top",scrub:true}});
+  ST.refresh()})}
+new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(build,1600)}).observe(app,{childList:true});tm=setTimeout(build,1600);
+if(!fine)return;
+app.addEventListener("pointermove",function(e){var b=e.target.closest&&e.target.closest(".lp-box"),s=e.target.closest&&e.target.closest(".tc,.card");
+ if(b){var r=b.getBoundingClientRect();b.style.setProperty("--mx",e.clientX-r.left+"px");b.style.setProperty("--my",e.clientY-r.top+"px");b.classList.add("lens")}
+ var q=e.target.closest&&e.target.closest(".btn:not([disabled])");
+ if(q&&!matchMedia("(prefers-reduced-motion:reduce)").matches){var k=q.getBoundingClientRect();g.to(q,{x:(e.clientX-k.left-k.width/2)*.12,y:(e.clientY-k.top-k.height/2)*.18,duration:.35,ease:"power3.out",overwrite:"auto"});q._mg=1}});
+app.addEventListener("pointerout",function(e){var b=e.target.closest&&e.target.closest(".lp-box");if(b&&!b.contains(e.relatedTarget))b.classList.remove("lens");
+ var q=e.target.closest&&e.target.closest(".btn");if(q&&q._mg&&!q.contains(e.relatedTarget)){q._mg=0;g.to(q,{x:0,y:0,duration:.6,ease:"elastic.out(1,.45)",clearProps:"x,y"})}})})
 </script>
 <style id="hp-design">
-/* HistoPráctica · rediseño "capítulos": el nombre como monumento, cada sección con su propio campo de color (solo paleta y Nunito originales) */
-:root{--r-sm:14px;--r-md:22px;--r-lg:32px;--shadow:none;--sh-1:none;--ez:cubic-bezier(.22,1,.36,1)}
-.btn{box-shadow:none;border-radius:999px;transition:transform .14s var(--ez),background-color .18s ease,filter .18s ease}
-.btn:active{transform:scale(.97);box-shadow:none}
-.card{border:0;background:var(--sf);border-radius:var(--r-lg)}
-.tc,.opt{border:2px solid transparent;background:var(--sf);box-shadow:none;transition:border-color .15s,background-color .18s,transform .14s var(--ez)}
-.tc:active,.opt:active:not(:disabled){transform:scale(.985);box-shadow:none}
-.hero,h1{letter-spacing:-.035em}
-:focus-visible{outline:3px solid var(--b);outline-offset:3px}
-html,body{overflow-x:clip}
-body{font-size:1rem}
-.lp-panel{color:var(--tx)}
-.lp-panel details p{color:var(--tx);font-size:1rem}
-.lp-panel summary{font-size:1rem}
-/* Portada: una sola pantalla con toda la información. Idea: el campo de un microscopio (la imagen vive dentro de una lente circular) */
-#landing{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;--m:clamp(1.25rem,3vw,3rem);--cap:6.5rem;--lens:#58cc02;--lens-ink:#131820;--ring:#131820;display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);background:#131820;color:#fff}
-.hl-copy{display:flex;flex-direction:column;justify-content:space-between;gap:calc(var(--m)*.8);padding:var(--m);min-width:0}
-.hl-mask{overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
-.hl-name{display:inline-flex;align-items:flex-end;gap:.05em;white-space:nowrap;margin:0;font-weight:800;line-height:.92;letter-spacing:-.045em;font-size:7vw}
-.hl-name .ic{width:.78em;height:.78em;flex:none;color:#58cc02;margin-bottom:.05em}
-.hl-name em{color:#58cc02;font-style:normal}
-.hl-body{display:flex;flex-direction:column;gap:1.1rem;max-width:38rem}
-.hl-tag{margin:0;font-size:clamp(1.5rem,2.5vw,2.6rem);line-height:1.12;font-weight:800;letter-spacing:-.02em}
-.hl-desc{margin:0;max-width:34rem;font-size:clamp(1.0625rem,1.3vw,1.25rem);line-height:1.5;font-weight:600;color:#c9d3de}
-.hl-act{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1rem;margin-top:.5rem}
-.hl-act .btn{width:auto;display:inline-block;padding:1em 2.6em;font-size:1.0625rem;background:#58cc02;color:#131820}
-.hl-act .lp-faq>summary{background:#273343;color:#fff;border:0;border-radius:999px;padding:.95em 1.4em;font-size:1rem}
-.hl-foot{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1.25rem}
-#landing .soc>*,#landing .soc-c{background:#273343;color:#fff;border:0}
-.hl-foot .lp-credit{color:#c9d3de;font-weight:700;font-size:.9375rem;padding:0}
-.hl-foot .soc:empty,.hl-foot .lp-credit:empty{display:none}
-#landing :focus-visible{outline:3px solid #fff;outline-offset:3px}
-@media(hover:hover){#landing .soc-i:hover,#landing .soc-c:hover{background:#58cc02;color:#131820;text-decoration:none}}
-.hl-lens{position:relative;margin:0;background:var(--lens);container-type:size;min-height:0;overflow:hidden}
-html #landing .lp-box{position:absolute;inset:0 0 var(--cap) 0;margin:auto;--d:min(calc(100cqw - var(--m)*2),calc(100cqh - var(--cap) - var(--m)*1.5));width:var(--d);height:var(--d);border:clamp(6px,.7vw,12px) solid var(--ring);border-radius:50%;background:#131820;overflow:hidden;box-shadow:none}
-.lp-box>.ic{width:30%;max-height:none;color:#58cc02;opacity:.6}
-#lp-img{scale:1.12}
-html #landing .lp-fig figcaption{position:absolute;left:var(--m);right:var(--m);bottom:var(--m);max-width:none;padding:0;border-radius:0;background:none;color:var(--lens-ink);font-size:.8125rem;line-height:1.35;font-weight:700}
-@media (max-width:899px){
- #landing{grid-template-columns:1fr;--cap:4.25rem;--m:1.1rem}
- .hl-lens{order:-1;height:29dvh}
- .hl-copy{gap:.9rem}
- .hl-body{gap:.8rem}
- .hl-act{margin-top:0}
- .hl-tag{font-size:1.25rem}
-}
-@media (max-height:520px) and (min-width:900px){#landing{--cap:4rem}.hl-lens{min-height:420px}}
+/* HistoPráctica · capa de diseño "campo de microscopio" (solo usa la paleta y la tipografía originales) */
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;pointer-events:none;background:radial-gradient(48vmax 40vmax at 10% -6%,color-mix(in srgb,var(--g) 15%,transparent),transparent 62%),radial-gradient(44vmax 38vmax at 104% 22%,color-mix(in srgb,var(--b) 13%,transparent),transparent 64%),radial-gradient(40vmax 34vmax at 40% 112%,color-mix(in srgb,var(--y) 8%,transparent),transparent 66%);animation:hpDrift 26s ease-in-out infinite alternate}
+@keyframes hpDrift{to{transform:translate3d(2.5%,2%,0) scale(1.06)}}
+.hp-pg{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--g),var(--b));pointer-events:none}
+.lp-box{position:relative;overflow:hidden;--mx:50%;--my:50%}
+.lp-box::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(circle 120px at var(--mx) var(--my),transparent 0 55%,rgba(8,14,22,.42) 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.lp-box.lens::after{opacity:1}
+.lp-title .lp-tag{display:block}
+.tc,.card,.btn{transition:translate .35s var(--ez),box-shadow .35s var(--ez)}
+@media (hover:hover){.tc:hover,.card:hover{translate:0 -4px}}
+.btn:active{translate:0 2px}
+:focus-visible{outline:3px solid var(--b);outline-offset:3px;border-radius:12px}
+@media (prefers-reduced-motion:reduce){body::before{animation:none}.hp-pg{display:none}.tc,.card,.btn{transition:none}}
 </style>
-</head><body><main id="app" aria-busy="true"><div id="landing">
-<section class="hl-copy" aria-label="HistoPráctica">
-<div class="hl-mask"><h1 class="hl-name lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></h1></div>
-<div class="hl-body"><p class="hl-tag">Practica la identificación de tejidos histológicos con imágenes reales.</p>
-<p class="hl-desc">Un simulador de histología para estudiantes de Medicina: observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula.</p>
-<div class="hl-act"><button type="button" class="btn" data-enter>Entrar</button><details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details></div></div>
-<div class="hl-foot"><div class="soc" id="lp-soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica"></div><div class="lp-credit" id="lp-credit"></div></div></section>
-<figure class="hl-lens lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
-</div></main><nav id="nav"></nav>
+</head><body><main id="app" aria-busy="true"><div id="landing"><div class="lp-wrap">
+<h1 class="lp-title"><span class="lp-name"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><span>Histo<em>Práctica</em></span></span><span class="lp-tag">Practica la identificación de tejidos histológicos con imágenes reales</span></h1>
+<figure class="lp-fig" id="lp-fig"><div class="lp-box"><svg class="ic" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg><img id="lp-img" alt="" width="1200" height="900" hidden decoding="async"></div><figcaption id="lp-cap">Imagen de muestra del banco de HistoPráctica.</figcaption></figure>
+<section class="lp-copy"><h2 class="lp-lab">¿Qué es HistoPráctica?</h2><p>Un simulador de histología para estudiantes de Medicina: observas una imagen de microscopía, eliges tu respuesta y repites hasta reconocer cada tejido y cada célula.</p><button type="button" class="btn" data-enter>Entrar</button></section>
+<div class="lp-bar"><details class="lp-faq"><summary>Preguntas frecuentes</summary><div class="lp-panel"><button type="button" class="lp-close" aria-label="Cerrar">×</button><h2>Preguntas frecuentes</h2><details><summary>¿Qué es HistoPráctica y para quién es?</summary><p>Es una herramienta de práctica de histología pensada sobre todo para estudiantes de Medicina. Se basa en observar imágenes de cortes histológicos e identificar tejidos, células y estructuras.</p></details><details><summary>¿Cómo entro?</summary><p>Pulsa «Entrar». Si ya tienes una sesión abierta, pasas directo a tu pantalla principal; si no, llegas a la pantalla de acceso para iniciar sesión o crear tu cuenta.</p></details><details><summary>¿Necesito una cuenta?</summary><p>Sí. Con tu cuenta se guarda tu progreso. Puedes crearla desde la pantalla de acceso.</p></details><details><summary>¿Cómo funcionan las preguntas?</summary><p>Ves una imagen y eliges la respuesta entre varias opciones. Según el modo de práctica, identificas el tejido, una célula o una estructura marcada.</p></details><details><summary>¿Qué tejidos puedo practicar?</summary><p>Tejido epitelial, conjuntivo propiamente dicho, adiposo, cartilaginoso, óseo, sanguíneo, muscular y nervioso.</p></details><details><summary>¿Reemplaza al libro de texto o a las prácticas de laboratorio?</summary><p>No. Es un complemento para entrenar la observación y reforzar lo que ya estudias.</p></details><details><summary>¿Puedo usarla en el teléfono?</summary><p>Sí. La página se adapta a teléfonos, tabletas y computadoras.</p></details></div></details><div class="soc" id="lp-soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica"></div><div class="lp-credit" id="lp-credit"></div></div>
+</div></div></main><nav id="nav"></nav>
 <!-- BANCO: entradas con verificada:true. Esquema: {id,tema,subtipo,division (solo nervioso: "Sistema nervioso central"|"Sistema nervioso periférico"),neurona (solo nervioso: "Neurona multipolar"|"Neurona bipolar"|…),url,fuente,autor,licencia,rasgos,verificada:true,celulas:[{n,x,y,w,h}],estructuras:[{n,x,y,w,h}],guias:[{x,y,w,h}]} -->
 <script type="application/json" id="bank">[]</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/hp-config.js"></script>
