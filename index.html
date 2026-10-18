@@ -2323,11 +2323,11 @@ async function enterApp(session){
  ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();hpTrackGeo(session);home();await hpOnboarding(session);if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
 }
 async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
-let LANDING_ACTIVE=!/(^|[#&])access_token=/.test(location.hash)&&!new URLSearchParams(location.search).has("code")&&!/(^|[#&])error=/.test(location.hash)&&new URLSearchParams(location.hash.slice(1)).get("type")!=="recovery",BOOT_ERR="",BOOT=Promise.resolve();
+let LANDING_ACTIVE=!/(^|[#&])access_token=/.test(location.hash)&&!new URLSearchParams(location.search).has("code")&&!/(^|[#&])error=/.test(location.hash)&&!new URLSearchParams(location.search).has("token_hash")&&new URLSearchParams(location.hash.slice(1)).get("type")!=="recovery",BOOT_ERR="",BOOT=Promise.resolve();
 if(!LANDING_ACTIVE)app.innerHTML=LOADER;
 function bootFail(msg){if(LANDING_ACTIVE)BOOT_ERR=msg;else authView("login",msg)}
 async function bootAuth(){
- const viaLink=/(^|[#&])access_token=/.test(location.hash)||new URLSearchParams(location.search).has("code");
+ const viaLink=/(^|[#&])access_token=/.test(location.hash)||new URLSearchParams(location.search).has("code")||new URLSearchParams(location.search).has("token_hash");
  let config=window.HP_CONFIG||{};
  if(!config.supabaseUrl||config.supabaseUrl.includes("REEMPLAZA_")||!config.supabaseAnonKey||config.supabaseAnonKey.includes("REEMPLAZA_")){
   try{const response=await fetch("/api/public-config",{cache:"no-store"});const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo cargar la configuración pública de Supabase.");config=payload}
@@ -2336,6 +2336,10 @@ async function bootAuth(){
  if(!window.supabase?.createClient){bootFail("No se pudo cargar el cliente de Supabase. Comprueba tu conexión a internet e inténtalo de nuevo.");return}
  SUPA=window.supabase.createClient(config.supabaseUrl,config.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
  SUPA.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_OUT"){CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];if(!LANDING_ACTIVE)authView("login")}if(event==="PASSWORD_RECOVERY")authView("update")});
+ {const qs=new URLSearchParams(location.search),th=qs.get("token_hash");
+  if(th){const ty=qs.get("type")||"email";const {error:vErr}=await SUPA.auth.verifyOtp({token_hash:th,type:ty});history.replaceState(null,"",location.pathname);
+   if(vErr){authView("login","El enlace expiró o ya se usó. Inicia sesión; si aún no verificas tu cuenta, regístrate de nuevo.");return}
+   if(ty==="recovery"){authView("update");return}}}
  if(new URLSearchParams(location.hash.slice(1)).get("type")==="recovery"){authView("update");return}
  if(LANDING_ACTIVE)return;
  const {data,error}=await SUPA.auth.getSession();if(error)throw error;if(data.session){if(viaLink)notifyLogin(data.session,"enlace de correo");try{await enterApp(data.session)}catch(e){authView("login",e.message)}}else authView("login");
