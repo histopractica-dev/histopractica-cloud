@@ -1359,6 +1359,7 @@ button,input,select,textarea{max-width:100%;touch-action:manipulation}
 .hm-sec>summary::after{content:"";width:9px;height:9px;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(45deg);transition:transform .2s;margin-right:6px;opacity:.6}
 .hm-sec[open]>summary::after{transform:rotate(-135deg)}
 .hm-sec>summary:focus-visible{outline:3px solid var(--b);outline-offset:2px;border-radius:8px}
+.hm-soon{margin:12px 2px 0;padding:11px 14px;border-radius:14px;background:rgba(88,204,2,.12);color:inherit;font-weight:700;font-size:.9rem;line-height:1.35;text-align:center}
 </style>
 <style id="hp-landing">
 main:has(#landing){max-width:none;padding:0}
@@ -1794,7 +1795,7 @@ function home(){nav("i");
  ${(()=>{const r=SYNC_READY,st=Object.entries(T).map(([k,v])=>({k,v,...stats([k])})),act=st.filter(x=>x.qn),low=r&&act.length>1?act.reduce((p,c)=>c.pct<p.pct?c:p):null,lowK=low&&act.some(x=>x.pct>low.pct)?low.k:null;
  const card=(key,attr,col,em,name,desc,qn,done,pct,extra)=>{const fin=r&&qn>0&&done===qn;return `<button class="tc${fin?" done":""}" style="--c:${col}" ${attr}="${key}"><span class="ti">${em}</span><span class="tx"><b>${name}${fin?`<span class="bdg">${ic("check")} Completado</span>`:""}${extra||""}</b><small>${desc}</small><span class="pb" role="progressbar" aria-label="Preguntas contestadas de ${name}" aria-valuemin="0" aria-valuemax="100" ${r?`aria-valuenow="${pct}"`:'aria-busy="true"'}><i style="width:${r?pct:0}%"></i></span><small>${r?`<span data-count="${pct}">${pct}</span>% contestadas · ${done}/${qn} preguntas`:SYNC_ERROR?"Progreso sin sincronizar":SK}</small></span></button>`};
  const tis=`<div class="tgrid">${st.map(({k,v,qn,done,pct})=>card(k,"data-t",COL[k],EM[k],v,DESC[k],qn,done,pct,k===lowK?'<span class="bdg b">Menor avance</span>':"")).join("")}</div>`;
- const orgs=`<div class="tgrid">${Object.entries(ORG).map(([k,o])=>{const x=stats([k]);return card(k,"data-o",o.col,o.em,o.n,o.desc,x.qn,x.done,x.pct)}).join("")}</div>`;
+ const orgs=`<div class="tgrid">${Object.entries(ORG).map(([k,o])=>{const x=stats([k]);return card(k,"data-o",o.col,o.em,o.n,o.desc,x.qn,x.done,x.pct)}).join("")}</div><p class="hm-soon">🚀 Por ahora solo hay piel. ¡Cada semana sumamos más órganos y más preguntas de tejidos!</p>`;
  return sec("t","Tejidos",tis)+sec("o","Órganos",orgs)})()}<div class="hm-foot"><div id="sync-status">${syncStatus()}</div><div class="hm-soc">${typeof hpSocialHome==="function"?hpSocialHome():""}</div></div>
 `;
  syncUI();
