@@ -950,7 +950,18 @@ exports.adminMessages = wrap(["GET"], async (event) => {
 
 };
 
-const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta, "admin-backfill-geo": __makeRequire("")("./user-meta").backfillGeo, "admin-messages": __makeRequire("")("./user-meta").adminMessages };
+__defs["offline-pack"] = function (module, exports, require) {
+// GET /api/offline-pack → banco completo (con respuestas) para usar sin conexión. Solo usuarios con sesión.
+const { wrap, json, authenticate, restAll } = require("./_lib/supa");
+exports.handler = wrap(["GET"], async (event) => {
+  await authenticate(event);
+  const select = "id,theme,subtype,division,neuron,image_path,external_image_url,source,source_url,author,license,traits,verified,published,cells,structures,guides";
+  const rows = await restAll(`questions?select=${select}&published=eq.true&verified=eq.true&order=created_at.asc,id.asc`);
+  return json(200, { questions: rows.map((r) => ({ ...r, has_subtype: !!r.subtype, has_division: !!r.division, has_neuron: !!r.neuron })), at: Date.now() });
+});
+};
+
+const __routes = { "public-config": __makeRequire("")("./public-config").handler, "bank": __makeRequire("")("./bank").handler, "question-detail": __makeRequire("")("./question-detail").handler, "progress": __makeRequire("")("./progress").handler, "rank-stats": __makeRequire("")("./rank-stats").handler, "finish-exam": __makeRequire("")("./finish-exam").handler, "retry-notifications": __makeRequire("")("./retry-notifications").handler, "login-notify": __makeRequire("")("./login-notify").handler, "image-guard": __makeRequire("")("./image-guard").handler, "image-watchdog": __makeRequire("")("./image-watchdog").handler, "org": __makeRequire("")("./user-meta").org, "geo-track": __makeRequire("")("./user-meta").geo, "how-found": __makeRequire("")("./user-meta").how, "admin-meta": __makeRequire("")("./user-meta").adminMeta, "admin-backfill-geo": __makeRequire("")("./user-meta").backfillGeo, "admin-messages": __makeRequire("")("./user-meta").adminMessages, "offline-pack": __makeRequire("")("./offline-pack").handler };
 
 module.exports = async (req, res) => {
   try {
