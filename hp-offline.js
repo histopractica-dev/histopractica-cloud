@@ -132,7 +132,7 @@
   function css() {
     if ($("#hp-off-css")) return;
     var s = document.createElement("style"); s.id = "hp-off-css";
-    s.textContent = "#hp-off-fab{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;width:44px;height:44px;border-radius:50%;border:2px solid var(--ln,#e5e5e5);background:var(--card,#fff);color:inherit;font-size:20px;cursor:pointer;box-shadow:0 2px 0 var(--ln,#e5e5e5)}#hp-off-fab[hidden]{display:none}#hp-off-fab i{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff9600;color:#fff;font:800 11px/18px Nunito,sans-serif;font-style:normal;text-align:center}#hp-off-bar{position:fixed;left:0;right:0;top:0;z-index:60;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 6px;background:#ff9600;color:#fff;font:700 13px/1.3 Nunito,sans-serif;text-align:center}.hp-off-pb{height:10px;border-radius:5px;background:var(--ln,#e5e5e5);overflow:hidden;margin:10px 0}.hp-off-pb b{display:block;height:100%;width:0;background:#58cc02;transition:width .2s}";
+    s.textContent = "#hp-off-fab{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;width:44px;height:44px;border-radius:50%;border:2px solid var(--ln,#e5e5e5);background:var(--card,#fff);color:inherit;font-size:20px;cursor:pointer;box-shadow:0 2px 0 var(--ln,#e5e5e5)}#hp-off-fab[hidden]{display:none}#hp-off-fab i{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff9600;color:#fff;font:800 11px/18px Nunito,sans-serif;font-style:normal;text-align:center}#hp-off-bar{position:fixed;left:0;right:0;top:0;z-index:60;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 6px;background:#ff9600;color:#fff;font:700 13px/1.3 Nunito,sans-serif;text-align:center}.hp-off-pb{height:10px;border-radius:5px;background:var(--ln,#e5e5e5);overflow:hidden;margin:10px 0}.hp-off-pb b{display:block;height:100%;width:0;background:#58cc02;transition:width .2s}@media(max-width:899px){body.hasnav #hp-off-fab{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}";
     document.head.appendChild(s)
   }
   function fab() {
@@ -151,12 +151,14 @@
     if (!bar) { bar = document.createElement("div"); bar.id = "hp-off-bar"; bar.setAttribute("role", "status"); document.body.appendChild(bar) }
     bar.textContent = msg
   }
+  function packInfo(pack, est) { return pack ? "✅ Contenido descargado: <b>" + pack.rows.length + "</b> preguntas y <b>" + pack.images + "</b> imágenes" + (pack.failed ? " (" + pack.failed + " no se pudieron bajar)" : "") + ". Actualizado el " + new Date(pack.at).toLocaleDateString("es") + est + "." : "Aún no has descargado el contenido para usar sin conexión." }
+  async function usage() { try { var e = await navigator.storage.estimate(); return " · uso en este dispositivo: " + Math.round((e.usage || 0) / 1048576) + " MB" } catch (x) { return "" } }
   async function panel() {
     var pack = await loadPack(), n = pending(), est = "";
     try { var e = await navigator.storage.estimate(); est = " · uso en este dispositivo: " + Math.round((e.usage || 0) / 1048576) + " MB" } catch (x) { }
     var inst = isApp() ? "<p>✅ La app ya está instalada en este dispositivo.</p>" : deferred ? '<button class="btn" id="hp-i" type="button">Instalar la app</button>' : isIOS() ? "<p>En Safari toca <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.</p>" : "<p>Abre el menú del navegador y elige <b>Instalar app</b> (o <b>Añadir a pantalla de inicio</b>).</p>";
     var logged = typeof CURRENT_USER !== "undefined" && CURRENT_USER && !MODE;
-    var pk = pack ? "<p>✅ Contenido descargado: <b>" + pack.rows.length + "</b> preguntas y <b>" + pack.images + "</b> imágenes" + (pack.failed ? " (" + pack.failed + " no se pudieron bajar)" : "") + ". Actualizado el " + new Date(pack.at).toLocaleDateString("es") + est + ".</p>" : "<p>Aún no has descargado el contenido para usar sin conexión.</p>";
+    var pk = '<p id="hp-pk">' + packInfo(pack, est) + "</p>";
     modal('<h2 style="margin-top:0;font-size:1.25rem">Instalar y usar sin conexión</h2>' + inst + pk + (n ? "<p>🔄 Respuestas pendientes de enviar: <b>" + n + "</b></p>" : "") + '<div class="hp-off-pb" hidden><b id="hp-pb"></b></div><p class="mu" id="hp-om"></p>' + (logged ? '<button class="btn" id="hp-d" type="button">' + (pack ? "Actualizar contenido" : "Descargar para usar sin conexión") + "</button>" : '<p class="mu">' + (MODE ? "Estás sin conexión." : "Inicia sesión para descargar el contenido.") + "</p>") + '<p class="mu">La descarga usa datos móviles; conviene hacerla con Wi-Fi. Para entrar sin internet debes haber iniciado sesión antes en este dispositivo.</p>');
     var i = $("#hp-i"); if (i) i.onclick = async function () { deferred.prompt(); await deferred.userChoice; deferred = null; fab() };
     var d = $("#hp-d"); if (d) d.onclick = async function () {
@@ -164,7 +166,7 @@
       var pb = $(".hp-off-pb"), bar = $("#hp-pb"), m = $("#hp-om"); pb.hidden = false; m.textContent = "Descargando…";
       try {
         var r = await download(function (a, t) { bar.style.width = (t ? Math.round(100 * a / t) : 100) + "%"; m.textContent = "Descargando imágenes " + a + " de " + t + "…" });
-        await loadPack(); m.textContent = "Listo: " + r.rows.length + " preguntas disponibles sin conexión." + (r.failed ? " " + r.failed + " imágenes no se pudieron bajar; vuelve a pulsar para reintentar." : "")
+        await loadPack(); var pkEl = $("#hp-pk"); if (pkEl && PACK) pkEl.innerHTML = packInfo(PACK, await usage()); d.textContent = "Actualizar contenido"; m.textContent = "Listo: " + r.rows.length + " preguntas disponibles sin conexión." + (r.failed ? " " + r.failed + " imágenes no se pudieron bajar; vuelve a pulsar para reintentar." : "")
       } catch (e) { m.textContent = (e && e.message) || "No se pudo completar la descarga." }
       busy = false; d.disabled = false
     }

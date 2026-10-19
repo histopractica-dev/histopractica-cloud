@@ -1,9 +1,9 @@
-/* HistoPráctica – service worker (v5, sin conexión)
+/* HistoPráctica – service worker (v6, sin conexión)
    - Navegación: red primero (máx. 4 s) y, si falla, la última versión guardada.
    - Estáticos (iconos, scripts, fuentes, librería): caché con actualización en segundo plano.
    - Imágenes de preguntas: se leen de la caché "hp-img", que llena el botón «Usar sin conexión» de la app.
    - Datos (API propia, Supabase, Wikimedia API) y peticiones que no son GET: directo a la red, sin caché. */
-const VERSION = "hp-v5", IMG = "hp-img";
+const VERSION = "hp-v6", IMG = "hp-img";
 const SHELL = ["/", "/manifest.webmanifest", "/hp-config.js", "/hp-social.js", "/hp-offline.js", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/hp-motion.js?v=4", "/vendor/gsap.min.js", "/vendor/ScrollTrigger.min.js", "/vendor/DrawSVGPlugin.min.js", "/vendor/CustomEase.min.js", "/vendor/SplitText.min.js", "/vendor/Physics2DPlugin.min.js", "/vendor/CustomBounce.min.js", "/vendor/CustomWiggle.min.js", "/vendor/MotionPathPlugin.min.js", "/vendor/ScrollToPlugin.min.js"];
 const EXTRA = ["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2", "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"];
 
