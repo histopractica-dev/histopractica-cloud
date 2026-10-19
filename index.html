@@ -1610,7 +1610,7 @@ function loadBank(){
  let b=[];try{b=JSON.parse($("#bank").textContent)}catch(e){}BANK=[...new Map(b.concat(LOCAL).filter(validE).map(e=>[e.id,migrateE(e)])).values()]
 }
 function isAdmin(){return CURRENT_PROFILE?.role==="admin"}
-async function imageUrlForRow(row){if(row.image_path){const {data}=SUPA.storage.from("histology-images").getPublicUrl(row.image_path);return data.publicUrl}return row.external_image_url||""}
+async function imageUrlForRow(row){if(row.__url)return row.__url;if(row.image_path){const {data}=SUPA.storage.from("histology-images").getPublicUrl(row.image_path);return data.publicUrl}return row.external_image_url||""}
 async function refreshRemoteBank(){
  const {data:sessionData,error:sessionError}=await SUPA.auth.getSession();
  if(sessionError)throw sessionError;
@@ -1619,17 +1619,20 @@ async function refreshRemoteBank(){
  const response=await fetch("/api/bank",{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
  const payload=await response.json().catch(()=>({}));
  if(!response.ok)throw new Error(payload.error||"No se pudo cargar el banco.");
- REMOTE_BANK=await Promise.all((payload.questions||[]).map(async row=>({
+ REMOTE_BANK=await rowsToBank(payload.questions||[],isAdmin());
+ loadBank();
+}
+async function rowsToBank(rows,full){
+ return await Promise.all(rows.map(async row=>({
   id:row.id,tema:row.theme,
-  subtipo:isAdmin()?(row.subtype||undefined):(row.has_subtype?"Tipo de tejido":undefined),
-  division:isAdmin()?(row.division||undefined):(row.has_division?"Sistema nervioso":undefined),
-  neurona:isAdmin()?(row.neuron||undefined):(row.has_neuron?"Neurona":undefined),
+  subtipo:full?(row.subtype||undefined):(row.has_subtype?"Tipo de tejido":undefined),
+  division:full?(row.division||undefined):(row.has_division?"Sistema nervioso":undefined),
+  neurona:full?(row.neuron||undefined):(row.has_neuron?"Neurona":undefined),
   url:await imageUrlForRow(row),_image_path:row.image_path||null,
   fuente:row.source,fuenteUrl:row.source_url||undefined,autor:row.author||undefined,licencia:row.license,
   organo:/^\[piel\]/.test(row.traits||"")?"piel":undefined,rasgos:(row.traits||"").replace(/^\[piel\]\s?/,""),verificada:row.verified===true,publicada:row.published===true,published:row.published===true,
   celulas:row.cells||[],estructuras:row.structures||[],guias:row.guides||[]
- })));
- loadBank();
+ })))
 }
 async function guardRequest(body){
  const {data}=await SUPA.auth.getSession();const token=data.session?.access_token;if(!token)throw new Error("Tu sesión expiró. Inicia sesión de nuevo.");
@@ -1733,7 +1736,7 @@ async function progressRequest(method="GET",record){
  const options={method,credentials:"same-origin",headers:{Authorization:`Bearer ${token}`}};
  if(method==="POST"){options.headers["Content-Type"]="application/json";options.body=JSON.stringify(record)}
  const response=await fetch("/api/progress",options);const payload=await response.json().catch(()=>({}));if(!response.ok)throw new Error(payload.error||"No se pudo sincronizar");
- if(method==="GET"&&(!Array.isArray(payload.keys)||!payload.stats))throw new Error("Respuesta de progreso no válida");return payload;
+ if(method==="GET"&&(!Array.isArray(payload.keys)||!payload.stats))throw new Error("Respuesta de progreso no válida");if(method==="GET"&&window.hpOffline)hpOffline.saveProgress(payload);return payload;
 }
 function syncStatus(){return `<p class="mu" role="status">${SYNC_ERROR?"No se pudo sincronizar. Reintenta cuando tengas conexión.":!SYNC_READY?"Cargando progreso de tu cuenta…":PENDING.size?"Guardando respuestas en tu cuenta…":"Progreso sincronizado con tu cuenta."}</p>${SYNC_ERROR?'<button class="btn sm s" id="sync-retry">Reintentar sincronización</button>':""}`}
 function syncUI(){checkAch();const box=$("#sync-status");if(box){box.innerHTML=syncStatus();const retry=$("#sync-retry");if(retry)retry.onclick=async()=>{retry.disabled=true;await syncProgress();if($("#go")&&$('[name="scope"]'))$('[name="scope"]').dispatchEvent(new Event("change"));if($("#rs"))perfilView()}}}
@@ -1975,12 +1978,12 @@ async function prepareQuestionRemote(item){
  return generated;
 }
 async function prepareQuestion(item){
- try{return await prepareQuestionRemote(item)}
+ try{if(!navigator.onLine&&window.hpOffline)throw new Error("sin conexión");return await prepareQuestionRemote(item)}
  catch(error){
-  if(isAdmin()){const g=question(item);if(typeof g.ans==="string"&&g.ans.trim()&&g.opts.includes(g.ans)){console.warn("Admin: pregunta preparada en local",error);g.src=item;return g}}
+  if(isAdmin()||(window.hpOffline&&hpOffline.on())){const g=question(isAdmin()?item:hpOffline.full(item));if(typeof g.ans==="string"&&g.ans.trim()&&g.opts.includes(g.ans)){console.warn("Pregunta preparada en local",error);g.src=g.it;return g}}
   throw error}
 }
-const adminAnswer=q=>{if(!isAdmin()||!q.src)return null;const v=q.src.m==="A"?q.src.e.subtipo:q.src.m==="D"?q.src.e.division:q.src.m==="E"?q.src.e.neurona:q.src.t&&q.src.t.n;return typeof v==="string"&&v.trim()?v:null};
+const adminAnswer=q=>{if(!(isAdmin()||(window.hpOffline&&hpOffline.on()))||!q.src)return null;const v=q.src.m==="A"?q.src.e.subtipo:q.src.m==="D"?q.src.e.division:q.src.m==="E"?q.src.e.neurona:q.src.t&&q.src.t.n;return typeof v==="string"&&v.trim()?v:null};
 
 const LOADER='<div class="startup-loading" role="status" aria-label="Cargando"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m25 8 13 7-12 22-13-7z"/><path d="m29 10 3-5 7 4-3 5M19 34l-3 6 6 3 3-6M34 24c12 0 20 8 20 18s-8 17-20 17H10M13 47h23M31 47v12M49 59h9"/><circle cx="36" cy="29" r="4"/></svg></div>';
 const IMGS=new Map();
@@ -2033,8 +2036,8 @@ async function check(){
  try{
   const record={answerId:q.answerId||(q.answerId=crypto.randomUUID()),key:itKey(q.it),questionId:q.it.e.id,mode:q.it.m,selected:String(pk),theme:q.it.e.tema,target:q.it.t?{x:q.it.t.x,y:q.it.t.y,w:q.it.t.w,h:q.it.t.h}:null};
   let verification;$("#vf-err")?.remove();
-  try{verification=await progressRequest("POST",record)}
-  catch(error){const known=adminAnswer(q);if(known==null)throw error;console.warn("Admin: verificación local (el servidor no la aceptó)",error);verification={isCorrect:String(pk).trim().toLowerCase()===known.trim().toLowerCase(),expected:known}}
+  try{if(!navigator.onLine&&window.hpOffline&&adminAnswer(q)!=null)throw new Error("sin conexión");verification=await progressRequest("POST",record)}
+  catch(error){const known=adminAnswer(q);if(known==null)throw error;console.warn("Admin: verificación local (el servidor no la aceptó)",error);verification={isCorrect:String(pk).trim().toLowerCase()===known.trim().toLowerCase(),expected:known};if(!isAdmin()&&window.hpOffline)hpOffline.queue(record)}
   if(typeof verification.isCorrect!=="boolean"||typeof verification.expected!=="string")throw new Error("La verificación del servidor no devolvió un resultado válido.");
   ok=verification.isCorrect;q.ans=verification.expected;
   if(q.it.m==="A")q.it.e.subtipo=verification.expected;else if(q.it.m==="D")q.it.e.division=verification.expected;else if(q.it.m==="E")q.it.e.neurona=verification.expected;else if(q.it.t)q.it.t.n=verification.expected;
@@ -2318,11 +2321,11 @@ async function enterApp(session){
  let profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle();
  if(profileResult.error)throw new Error("No se pudo consultar tu perfil. Comprueba que ejecutaste la migración SQL de HistoPráctica.");
  if(!profileResult.data){const {error}=await SUPA.from("profiles").insert({id:CURRENT_USER.id,email:CURRENT_USER.email||null,display_name:CURRENT_USER.user_metadata?.display_name||null});if(error&&error.code!=="23505")throw new Error("No se pudo crear tu perfil. Comprueba la migración y las políticas RLS.");profileResult=await SUPA.from("profiles").select("id,email,display_name,role,created_at").eq("id",CURRENT_USER.id).maybeSingle()}
- if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;
+ if(!profileResult.data)throw new Error("Tu perfil aún no está disponible. Cierra sesión y vuelve a entrar.");CURRENT_PROFILE=profileResult.data;if(window.hpOffline){hpOffline.saveUser(session.user,CURRENT_PROFILE);hpOffline.afterLogin()}
  try{await refreshRemoteBank()}catch(error){throw new Error("No se pudo cargar el banco de Supabase. Verifica la migración SQL, las políticas RLS y el bucket histology-images. Detalle: "+(error.message||"error"))}
  ANSWERED=new Set();PENDING.clear();SYNC_READY=false;SYNC_ERROR=false;REMOTE_STATS=null;REMOTE_ERRORS=null;await syncProgress();hpTrackGeo(session);home();await hpOnboarding(session);if(!rd("hp_tut_"+CURRENT_USER.id,0))tutorial();
 }
-async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
+async function signOut(){if(!SUPA)return;try{await syncProgress()}catch{}await SUPA.auth.signOut();if(window.hpOffline)await hpOffline.clearUser();CURRENT_USER=null;CURRENT_PROFILE=null;REMOTE_BANK=[];BANK=[];ANSWERED.clear();PENDING.clear();REMOTE_STATS=null;REMOTE_ERRORS=null;SYNC_READY=false;authView("login","Sesión cerrada.")}
 let LANDING_ACTIVE=!/(^|[#&])access_token=/.test(location.hash)&&!new URLSearchParams(location.search).has("code")&&!/(^|[#&])error=/.test(location.hash)&&!new URLSearchParams(location.search).has("token_hash")&&new URLSearchParams(location.hash.slice(1)).get("type")!=="recovery",BOOT_ERR="",BOOT=Promise.resolve();
 if(!LANDING_ACTIVE)app.innerHTML=LOADER;
 function bootFail(msg){if(LANDING_ACTIVE)BOOT_ERR=msg;else authView("login",msg)}
@@ -2342,7 +2345,8 @@ async function bootAuth(){
    if(ty==="recovery"){authView("update");return}}}
  if(new URLSearchParams(location.hash.slice(1)).get("type")==="recovery"){authView("update");return}
  if(LANDING_ACTIVE)return;
- const {data,error}=await SUPA.auth.getSession();if(error)throw error;if(data.session){if(viaLink)notifyLogin(data.session,"enlace de correo");try{await enterApp(data.session)}catch(e){authView("login",e.message)}}else authView("login");
+ if(!navigator.onLine&&window.hpOffline&&await hpOffline.boot())return;
+ const {data,error}=await SUPA.auth.getSession();if(error)throw error;if(data.session){if(viaLink)notifyLogin(data.session,"enlace de correo");try{await enterApp(data.session)}catch(e){if(!(window.hpOffline&&await hpOffline.boot()))authView("login",e.message)}}else authView("login");
 }
 async function notifyLogin(session,method){
  try{if(!session?.access_token)return;const r=await fetch("/api/login-notify",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json",Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({method})});if(!r.ok)console.warn("login-notify:",r.status,await r.text().catch(()=>""))}
@@ -2353,6 +2357,7 @@ async function saveFinishedExam(){
  const setMessage=(text,retry=false)=>{if(!$("#finish-status"))return;$("#finish-status").innerHTML=esc(text)+(retry?' <button class="btn sm s" id="retry-finish" type="button">Reintentar</button>':"");if(retry&&$("#retry-finish"))$("#retry-finish").onclick=()=>saveFinishedExam()};
  setMessage("Guardando el resultado y enviando notificación…");
  try{
+  if(!navigator.onLine&&window.hpOffline){hpOffline.queueExam(S);setMessage("Sin conexión: el resultado se enviará al reconectar.");return}
   const {data}=await SUPA.auth.getSession();const token=data.session?.access_token;if(!token)throw new Error("La sesión expiró. Inicia sesión de nuevo.");
   const details=S.ans.map(x=>({question_id:x.q.it.e.id,mode:x.q.it.m,theme:x.q.it.e.tema,target:x.q.it.t||null,selected:x.pick,prompt:x.q.txt}));
   const response=await fetch("/api/finish-exam",{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({attemptId:S.attemptId,title:"Práctica de histología",mode:"practice",themes:S.c?.temas||[],startedAt:S.startedAt,durationSeconds:Math.floor((Date.now()-S.startTimeMs)/1000),details})});
@@ -2451,11 +2456,12 @@ async function landingEnter(){
  $$("[data-enter]").forEach(b=>b.disabled=true);
  try{
   await BOOT;LANDING_ACTIVE=false;
+  if(!navigator.onLine&&window.hpOffline&&await hpOffline.boot())return;
   if(BOOT_ERR||!SUPA){authView("login",BOOT_ERR||"No se pudo iniciar la aplicación. Revisa la configuración y la conexión.");return}
   const {data,error}=await SUPA.auth.getSession();
   if(error||!data.session){authView("login");return}
   app.innerHTML=LOADER;
-  try{await enterApp(data.session)}catch(e){authView("login",e.message)}
+  try{await enterApp(data.session)}catch(e){if(!(window.hpOffline&&await hpOffline.boot()))authView("login",e.message)}
  }catch(e){console.error(e);LANDING_ACTIVE=false;authView("login",e.message||"No se pudo comprobar la sesión.")}
 }
 document.addEventListener("click",e=>{if(LANDING_ACTIVE&&e.target.closest&&e.target.closest("[data-enter]"))landingEnter()});
@@ -2862,4 +2868,5 @@ window.hpDmInit=async function(){
 };
 })();
 </script>
+<script src="/hp-offline.js"></script>
 </body></html>
