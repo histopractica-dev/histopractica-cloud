@@ -1172,6 +1172,13 @@ body.mo { overflow: hidden; }
 .hp-orgov { position: fixed; inset: 0; z-index: 61; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, .55); animation: qfade .2s ease-out; }
 .hp-org-opts { display: grid; gap: 10px; margin: 16px 0 10px; }
 .hp-org-other { margin: 0 0 10px; }
+.hp-uni{position:relative;margin:16px 0 10px}
+.hp-uni input{width:100%}
+.hp-uni-list{display:grid;gap:6px;margin:8px 0 0;max-height:min(40dvh,280px);overflow:auto}
+.hp-uni-list button{text-align:left;font:inherit;color:var(--tx);background:var(--pn);border:2px solid var(--ln);border-radius:var(--r-sm);padding:10px 12px;min-height:var(--h-md);cursor:pointer}
+.hp-uni-list button small{display:block;color:var(--mu,#8a94a3)}
+.hp-uni-list button:hover,.hp-uni-list button[aria-selected=true]{border-color:#58CC02}
+.hp-uni-none{width:100%;margin-top:8px}
 .hp-geo-det summary { cursor: pointer; font-weight: 700; color: var(--bt); }
 .hp-geo-det ul { margin: 8px 0 2px; padding-left: 18px; }
 .hp-geo-det li { margin: 3px 0; overflow-wrap: anywhere; }
@@ -1440,6 +1447,15 @@ body:not(.hasnav) #nav{display:none}
 .soc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .soc-lab{font-weight:800;font-size:var(--fs-sm)}
 .soc-set .soc-c{margin-top:2px}
+.lp-credit{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 8px}
+.soc-d{border:0;background:none;padding:0 12px;font-family:inherit;cursor:pointer}
+.hm-soc{flex-wrap:wrap}
+.hm-soc .soc-d{padding:0}
+.don{text-align:center}
+.don h2{margin:0 0 8px}
+.don p{margin:0 0 18px;color:var(--mu)}
+.don .btn+.btn{margin-top:10px}
+.don a.btn{text-decoration:none}
 </style>
 <script>
   window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
@@ -1535,24 +1551,28 @@ main:has(.qv){padding-bottom:0}
  };
  function svg(d){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+d+'</svg>'}
  function url(v){v=String(v||"").trim();return /^https:\/\/[^\s"'<>]+$/i.test(v)?v.replace(/&/g,"&amp;"):""}
+ function donateUrl(){var c=window.HP_SOCIAL||{};return url(c.donate===undefined?"https://ko-fi.com/histopractica":c.donate)}
+ window.hpDonateUrl=donateUrl;
+ var HEART='<path d="M19 14c1.5-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>';
+ window.hpHeartSvg=function(){return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+HEART+'</svg>'};
  function esc(t){return String(t).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
  function parts(){
   var c=window.HP_SOCIAL||{},icons="",k,u;
   for(k in P){u=url(c[k]);if(u)icons+='<a class="soc-i" href="'+u+'" target="_blank" rel="noopener noreferrer" aria-label="'+P[k].n+' oficial de HistoPráctica (se abre en una pestaña nueva)" title="'+P[k].n+'">'+svg(P[k].d)+'</a>'}
   u=url(c.creator);
   var lab=esc(c.creatorLabel||"Conoce al creador");
-  return{icons:icons,creator:u?'<a class="soc-c" href="'+u+'" target="_blank" rel="noopener noreferrer" aria-label="'+lab+': Instagram del creador (se abre en una pestaña nueva)">'+svg(P.instagram.d)+'<span>'+lab+'</span></a>':""}
+  return{icons:icons,donate:donateUrl()?'<button type="button" class="soc-c soc-d" data-donate aria-haspopup="dialog">'+svg(HEART)+'<span>Apoyar la página</span></button>':"",creator:u?'<a class="soc-c" href="'+u+'" target="_blank" rel="noopener noreferrer" aria-label="'+lab+': Instagram del creador (se abre en una pestaña nueva)">'+svg(P.instagram.d)+'<span>'+lab+'</span></a>':""}
  }
  window.hpSocialHome=function(){
-  var p=parts();if(!p.icons&&!p.creator)return"";
-  return(p.icons?'<span class="soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica">'+p.icons+'</span>':"")+p.creator
+  var p=parts();if(!p.icons&&!p.creator&&!p.donate)return"";
+  return(p.icons?'<span class="soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica">'+p.icons+'</span>':"")+p.creator+p.donate
  };
  window.hpSocialBlock=function(){
   var p=parts();if(!p.icons&&!p.creator)return"";
   return'<div class="soc-set">'+(p.icons?'<div class="soc-row"><span class="soc-lab">Síguenos</span><span class="soc" role="group" aria-label="Redes sociales oficiales de HistoPráctica">'+p.icons+'</span></div>':"")+p.creator+'</div>'
  };
  var a=document.getElementById("lp-soc"),b=document.getElementById("lp-credit"),p=parts();
- if(a)a.innerHTML=p.icons;if(b)b.innerHTML=p.creator;
+ if(a)a.innerHTML=p.icons;if(b)b.innerHTML=p.creator+p.donate;
 })();
 </script>
 <script>
@@ -1935,7 +1955,9 @@ async function rankView(){
 const TUT=[["🎯","Elige un tejido","En Inicio toca un tejido y pulsa «Empezar a practicar». Cada tarjeta muestra cuántas preguntas has contestado."],["👀","Responde y aprende","Observa la imagen, elige una opción y pulsa «Comprobar». Verás «Respuesta correcta» o «Respuesta incorrecta» y la explicación."],["👤","Sigue tu avance","En tu perfil (el círculo de la parte superior) están tus estadísticas, logros y ajustes. La pestaña Ranking compara la racha actual, la racha máxima y los XP de los estudiantes."]];
 function tutorial(i=0){const key="hp_tut_"+(CURRENT_USER?.id||""),end=()=>{put(key,1);$(".modal")?.remove()},[emoji,t,d]=TUT[i];modal(`<div class="obi emoji-icon" aria-hidden="true">${emoji}</div><div class="stp" role="img" aria-label="Paso ${i+1} de ${TUT.length}">${TUT.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><h2 style="text-align:center;margin-top:0">${t}</h2><p style="text-align:center">${d}</p><div class="row" style="justify-content:space-between;margin-top:16px"><button class="btn s sm" id="t-p" ${i?"":"disabled"}>Anterior</button><button class="btn s sm" id="t-s">Omitir</button><button class="btn sm" id="t-n">${i<TUT.length-1?"Siguiente":"Terminar"}</button></div>`);$("#t-p").onclick=()=>tutorial(i-1);$("#t-s").onclick=end;$("#t-n").onclick=()=>i<TUT.length-1?tutorial(i+1):end()}
 function helpModal(){modal(`<h2 style="margin-top:0">Ayuda</h2>${[["Cómo elegir tejidos","En Inicio toca una tarjeta de tejido; en «Practicar» puedes combinar varios."],["Cómo responder","Elige una opción y pulsa «Comprobar». Puedes ampliar la imagen con «Ampliar imagen»."],["Cómo interpretar el progreso","El porcentaje es de preguntas contestadas (acertadas o no), no de aciertos."],["Perfil, logros y clasificación","Tu perfil reúne estadísticas, logros y ajustes. En Ranking puedes comparar racha actual, racha máxima y XP."],["Cómo reportar una pregunta","Tras comprobar una respuesta, usa «Reportar pregunta»."]].map(([q,a])=>`<details class="faq"><summary>${q}</summary><p>${a}</p></details>`).join("")}<button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
-function privacyModal(){modal(`<div class="legal"><h2 style="margin-top:0;font-size:1.25rem">Política de privacidad</h2><p>HistoPráctica guarda solo lo necesario para que puedas estudiar y llevar tu progreso.</p><ul><li>Cuenta: tu correo, tu contraseña (la gestiona Supabase Auth) y, si lo indicas, tu nombre.</li><li>Progreso: tus respuestas, XP, errores y prácticas se guardan en tu cuenta.</li><li>Organización, ciudad y cómo nos conociste: tu universidad y cómo conociste la app (las eliges tú) y tu ciudad aproximada según tu conexión; no guardamos tu dirección IP.</li><li>Avisos: al crear tu cuenta se envía un correo de aviso al administrador de la app.</li><li>Ranking: los demás estudiantes ven el nombre de tu perfil, tu foto si añades una y tus puntos.</li><li>Reportes: al reportar una pregunta, el administrador recibe tu correo, la pregunta, el motivo y tu comentario.</li><li>En tu navegador se guardan el tema, el tutorial y una copia de tus estadísticas.</li></ul></div><button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
+function donateModal(){const u=typeof hpDonateUrl==="function"?hpDonateUrl():"";if(!u)return;const m=modal(`<div class="don"><div class="obi" aria-hidden="true">${hpHeartSvg()}</div><h2>Apoya a HistoPráctica</h2><p>Las donaciones son voluntarias y se usan únicamente para mantener la página en línea y funcionando.</p><a class="btn" href="${u}" target="_blank" rel="noopener noreferrer">Donar en Ko-fi</a><button class="btn s" id="don-x" type="button">Cerrar</button></div>`);m.querySelector("#don-x").onclick=()=>m.remove();m.querySelector("a.btn").focus()}
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("[data-donate]"))donateModal()});
+function privacyModal(){modal(`<div class="legal"><h2 style="margin-top:0;font-size:1.25rem">Política de privacidad</h2><p>HistoPráctica guarda solo lo necesario para que puedas estudiar y llevar tu progreso.</p><ul><li>Cuenta: tu correo, tu contraseña (la gestiona Supabase Auth) y, si lo indicas, tu nombre.</li><li>Progreso: tus respuestas, XP, errores y prácticas se guardan en tu cuenta.</li><li>Institución educativa, ciudad y cómo nos conociste: tu institución y cómo conociste la app (las eliges tú) y tu ciudad aproximada según tu conexión; no guardamos tu dirección IP.</li><li>Avisos: al crear tu cuenta se envía un correo de aviso al administrador de la app.</li><li>Ranking: los demás estudiantes ven el nombre de tu perfil, tu foto si añades una y tus puntos.</li><li>Reportes: al reportar una pregunta, el administrador recibe tu correo, la pregunta, el motivo y tu comentario.</li><li>En tu navegador se guardan el tema, el tutorial y una copia de tus estadísticas.</li></ul></div><button class="btn s sm" id="m-x" style="margin-top:12px">Cerrar</button>`);$("#m-x").onclick=()=>$(".modal").remove()}
 const RPT=new Set();
 function suggestionModal(){
  const m=modal(`<h2 style="margin-top:0">Buzón de sugerencias 💡</h2><p class="mu">¿Cómo podemos mejorar HistoPráctica? Tus ideas llegarán al equipo.</p><label class="mu" for="sg-kind">Tipo de sugerencia</label><select id="sg-kind"><option>Mejora de la aplicación</option><option>Nuevas funciones</option><option>Contenido de histología</option><option>Diseño y accesibilidad</option><option>Otro</option></select><label class="mu" for="sg-text" style="display:block;margin-top:10px">Tu sugerencia</label><textarea id="sg-text" rows="5" maxlength="2000" placeholder="Cuéntanos tu idea…" required></textarea><p id="sg-m" role="status" class="mu"></p><div class="row"><button class="btn s sm" id="sg-no">Cancelar</button><button class="btn sm" id="sg-go">Enviar sugerencia</button></div>`);
@@ -2376,11 +2398,41 @@ function hpAsk(o,auth){
   const upd=()=>{go.disabled=!val()||!!(field&&(field.tagName==="SELECT"?!field.value:field.value.trim().length<2))};
   ov.querySelectorAll("input[name=hp-q]").forEach(i=>i.onchange=()=>{
    const d=o.detail(val());msg.textContent="";field=null;box.hidden=!d;box.innerHTML="";
-   if(d){field=document.createElement(d.options?"select":"input");if(d.options){field.innerHTML=`<option value="">${d.ph}</option>`+d.options.map(x=>`<option>${x}</option>`).join("")}else{field.type="text";field.maxLength=80;field.placeholder=d.ph;field.autocomplete="off"}field.setAttribute("aria-label",d.ph);field.oninput=field.onchange=upd;box.appendChild(field);field.focus()}
+   if(d){field=document.createElement(d.options?"select":"input");if(d.options){field.innerHTML=`<option value="">${d.ph}</option>`+d.options.map(x=>`<option>${x}</option>`).join("")}else{field.type="text";field.maxLength=80;field.placeholder=d.ph;field.autocomplete="off"}field.setAttribute("aria-label",d.ph);field.oninput=field.onchange=upd;box.appendChild(field);
+   if(d.friend){field.autocomplete="off";const L=document.createElement("div");L.className="hp-uni-list";L.setAttribute("role","listbox");box.appendChild(L);let T=0,C=null;
+    field.oninput=()=>{delete field.dataset.fid;upd();clearTimeout(T);const t=field.value.trim();L.innerHTML="";if(t.length<2)return;
+     T=setTimeout(async()=>{try{C&&C.abort();C=new AbortController();const r=await fetch("/api/friends?q="+encodeURIComponent(t),{headers:auth,signal:C.signal});if(!r.ok)return;const p=await r.json();if(field.value.trim()!==t)return;
+      L.innerHTML=(p.results||[]).map(x=>`<button type="button" role="option" data-id="${x.id}">${esc(x.name)}</button>`).join("");
+      L.querySelectorAll("button").forEach(b=>b.onclick=()=>{field.value=b.textContent;field.dataset.fid=b.dataset.id;L.innerHTML="";upd()})}catch(e){}},250)}}
+   field.focus()}
    upd()});
   go.onclick=async()=>{go.disabled=true;msg.className="mu";msg.textContent="Guardando…";
-   try{const r=await fetch(o.url,{method:"POST",headers:{"Content-Type":"application/json",...auth},body:JSON.stringify(o.body(val(),field?field.value.trim():""))});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"No se pudo guardar. Inténtalo de nuevo.");put(o.key,1);ov.remove();done()}
+   try{const r=await fetch(o.url,{method:"POST",headers:{"Content-Type":"application/json",...auth},body:JSON.stringify(o.body(val(),field?field.value.trim():"",field))});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"No se pudo guardar. Inténtalo de nuevo.");put(o.key,1);ov.remove();done()}
    catch(e){msg.className="r";msg.textContent=e.message||"No se pudo guardar. Inténtalo de nuevo.";upd()}};
+ });
+}
+const HP_UNIS="Universidad de Guadalajara, Centro Universitario de la Costa (UDG CUCOSTA)|Universidad Tecnológica de Bahía de Banderas (UTBB)|Universidad de Guadalajara, Centro Universitario de Ciencias de la Salud (UDG CUCS)|Universidad de Guadalajara (UDG)|Universidad Nacional Autónoma de México (UNAM)|Instituto Politécnico Nacional (IPN)|Universidad Autónoma Metropolitana (UAM)|Instituto Tecnológico y de Estudios Superiores de Monterrey (ITESM)|Universidad Autónoma de Nuevo León (UANL)|Benemérita Universidad Autónoma de Puebla (BUAP)|Universidad Veracruzana (UV)|Universidad Autónoma de Baja California (UABC)|Universidad Autónoma de Sinaloa (UAS)|Universidad Autónoma de Chihuahua (UACH)|Universidad Autónoma de Yucatán (UADY)|Universidad Autónoma de San Luis Potosí (UASLP)|Universidad Autónoma de Querétaro (UAQ)|Universidad Autónoma del Estado de México (UAEMéx)|Universidad Autónoma de Coahuila (UAdeC)|Universidad Autónoma de Zacatecas (UAZ)|Universidad Autónoma de Guerrero (UAGro)|Universidad Autónoma de Tamaulipas (UAT)|Universidad Autónoma de Aguascalientes (UAA)|Universidad Autónoma de Nayarit (UAN)|Universidad Autónoma de Baja California Sur (UABCS)|Universidad Autónoma de Campeche (UACAM)|Universidad Autónoma de Chiapas (UNACH)|Universidad Autónoma de Ciudad Juárez (UACJ)|Universidad Autónoma del Carmen (UNACAR)|Universidad Autónoma de Tlaxcala (UATx)|Universidad Autónoma de Occidente (UAdeO)|Universidad Autónoma de Guadalajara (UAG)|Universidad Michoacana de San Nicolás de Hidalgo (UMSNH)|Universidad de Colima (UCOL)|Universidad de Sonora (UNISON)|Universidad de Guanajuato (UG)|Universidad Juárez Autónoma de Tabasco (UJAT)|Universidad Juárez del Estado de Durango (UJED)|Universidad Autónoma Benito Juárez de Oaxaca (UABJO)|Universidad Autónoma del Estado de Hidalgo (UAEH)|Universidad Autónoma del Estado de Morelos (UAEM)|Universidad para el Bienestar Benito Juárez García (UBBJ)|Universidad Anáhuac|Universidad Iberoamericana (IBERO)|Universidad La Salle (ULSA)|Universidad Panamericana (UP)|Universidad del Valle de México (UVM)|Universidad Tecnológica de México (UNITEC)|Universidad de Monterrey (UDEM)|Universidad de las Américas Puebla (UDLAP)|Universidad Politécnica de Nayarit (UPN)|Universidad Tecnológica de Jalisco (UTJ)|Tecnológico Nacional de México (TecNM)|El Colegio de México (COLMEX)|CETYS Universidad (CETYS)|Universidad de Buenos Aires (UBA)|Universidad Nacional de Córdoba (UNC)|Universidad Nacional de La Plata (UNLP)|Universidad Nacional del Litoral (UNL)|Universidad Nacional de La Rioja (UNLaR)|Universidad Juan Agustín Maza (UMaza)|Instituto Universitario de Ciencias de la Salud, Fundación H. A. Barceló|Universidad de Chile (UChile)|Pontificia Universidad Católica de Chile (UC)|Universidad de Santiago de Chile (USACH)|Universidad de Concepción (UdeC)|Universidad Arturo Prat (UNAP)|Universidad de Tarapacá (UTA)|Universidad Nacional de Colombia (UNAL)|Universidad de los Andes (Uniandes)|Universidad de Antioquia (UdeA)|Pontificia Universidad Javeriana (PUJ)|Universidad del Rosario (UR)|Universidad Colegio Mayor de Cundinamarca (UCMC)|Universidad de Ciencias Aplicadas y Ambientales (UDCA)|Universidad Nacional Mayor de San Marcos (UNMSM)|Pontificia Universidad Católica del Perú (PUCP)|Universidad Peruana Cayetano Heredia (UPCH)|Universidad Científica del Sur (UCSUR)|Universidad Privada Norbert Wiener (UPNW)|Universidad Central del Ecuador (UCE)|Universidad San Francisco de Quito (USFQ)|Universidad Metropolitana del Ecuador (UMET)|Universidad Central de Venezuela (UCV)|Universidad Centroccidental Lisandro Alvarado (UCLA)|Universidad Católica Santa Rosa (UCSAR)|Universidad Politécnica Territorial de Mérida «Kléber Ramírez» (UPTM)|Universidad de la República (UdelaR)|Universidad Mayor de San Andrés (UMSA)|Universidad de Costa Rica (UCR)|Universidad de Ciencias Médicas (UCIMED)|Universidad de Panamá (UP)|Universidad de San Carlos de Guatemala (USAC)|Universidad Galileo (UG)|Universidad de El Salvador (UES)|Universidad Nacional Autónoma de Honduras (UNAH)|Universidad Nacional Autónoma de Nicaragua (UNAN)|Universidad de La Habana (UH)|Universidad de Puerto Rico (UPR)|Universidad Autónoma de Santo Domingo (UASD)|Universidade de São Paulo (USP)|Universidade Estadual de Campinas (Unicamp)|Universidade Federal do Rio de Janeiro (UFRJ)|Universidad de Barcelona (UB)|Universidad Complutense de Madrid (UCM)|Universidad Autónoma de Madrid (UAM)|Universidad de Salamanca (USAL)|Universidad de Navarra (UNAV)|Universitat Pompeu Fabra (UPF)|Universitat de València (UV)|Universidad de Sevilla (US)|Universidad de Granada (UGR)|Universidad del País Vasco (UPV/EHU)|Harvard University|Stanford University|Massachusetts Institute of Technology (MIT)|Johns Hopkins University (JHU)|University of California, Los Angeles (UCLA)|University of California, San Diego (UCSD)|University of Texas at Austin (UT Austin)|University of Miami (UM)|Yale University|Columbia University|University of Toronto (UofT)|McGill University|University of Oxford|University of Cambridge".split("|");
+function hpAskSchool(o,auth){
+ return new Promise(done=>{
+  const ov=document.createElement("div");ov.className="hp-orgov";
+  ov.innerHTML=`<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="org-t"><h2 id="org-t" style="margin-top:0;text-align:center">Tu institución educativa</h2><p class="mu" style="text-align:center;margin:0">Busca tu universidad o escuela</p><div class="hp-uni"><input type="search" id="uni-q" placeholder="Escribe el nombre de tu institución…" aria-label="Buscar institución educativa" autocomplete="off" maxlength="120" role="combobox" aria-expanded="true" aria-controls="uni-l"><div class="hp-uni-list" id="uni-l" role="listbox"></div><button class="btn s sm hp-uni-none" id="uni-none" type="button">Ninguna / no estudio actualmente</button></div><p id="org-m" class="mu" role="status" style="min-height:1.2em;margin:0 0 8px"></p><button class="btn" id="org-go" type="button" style="width:100%" disabled>Continuar</button></div>`;
+  document.body.appendChild(ov);
+  const q=ov.querySelector("#uni-q"),list=ov.querySelector("#uni-l"),go=ov.querySelector("#org-go"),msg=ov.querySelector("#org-m"),none=ov.querySelector("#uni-none");
+  let chosen="",remote=[],tm=0,ctl=null;
+  const pick=v=>{chosen=v;q.value=v==="Ninguna"?"":v;go.disabled=!v;draw()};
+  const draw=()=>{const t=hpFold(q.value),loc=HP_UNIS.filter(x=>!t||hpFold(x).includes(t)).slice(0,t?8:4).map(n=>({name:n}));
+   const seen=new Set(loc.map(x=>hpFold(x.name))),all=loc.concat(remote.filter(x=>!seen.has(hpFold(x.name)))).slice(0,10),raw=q.value.trim();
+   const exact=all.some(x=>hpFold(x.name)===t);
+   list.innerHTML=all.map((x,i)=>`<button type="button" role="option" aria-selected="${x.name===chosen}" data-i="${i}">${esc(x.name)}${x.country?`<small>${esc(x.country)}</small>`:""}</button>`).join("")+(raw.length>=2&&!exact?`<button type="button" role="option" data-own="1">Usar «${esc(raw)}»</button>`:"");
+   list.querySelectorAll("button").forEach(b=>b.onclick=()=>pick(b.dataset.own?raw:all[+b.dataset.i].name))};
+  q.oninput=()=>{chosen="";go.disabled=true;draw();clearTimeout(tm);const t=q.value.trim();remote=[];if(t.length<3)return;
+   tm=setTimeout(async()=>{try{ctl&&ctl.abort();ctl=new AbortController();const r=await fetch("/api/universities?q="+encodeURIComponent(t),{headers:auth,signal:ctl.signal});if(!r.ok)return;const p=await r.json();if(q.value.trim()===t){remote=p.results||[];draw()}}catch(e){}},250)};
+  none.onclick=()=>pick("Ninguna");
+  go.onclick=async()=>{go.disabled=true;msg.className="mu";msg.textContent="Guardando…";
+   const body={organization:chosen.slice(0,120)};
+   try{const r=await fetch("/api/org",{method:"POST",headers:{"Content-Type":"application/json",...auth},body:JSON.stringify(body)});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"No se pudo guardar. Inténtalo de nuevo.");put(o.key,1);ov.remove();done()}
+   catch(e){msg.className="r";msg.textContent=e.message||"No se pudo guardar. Inténtalo de nuevo.";go.disabled=!chosen}};
+  draw();q.focus();
  });
 }
 async function hpOnboarding(session){
@@ -2389,11 +2441,13 @@ async function hpOnboarding(session){
  const auth={Authorization:`Bearer ${tok}`};
  let st;try{const r=await fetch("/api/org",{headers:auth,cache:"no-store"});if(!r.ok)return;st=await r.json()}catch(e){return}
  if(!st||!st.ready)return;if(st.answered)put(kO,1);if(st.howAnswered)put(kH,1);
- if(!st.answered)await hpAsk({title:"Tu organización",sub:"Universidad a la que perteneces",key:kO,url:"/api/org",opts:["UDG CUCOSTA","UTBB","Otra","Ninguna"],detail:v=>v==="Otra"?{ph:"¿Cuál?"}:null,body:(v,d)=>({organization:v,other:d})},auth);
- if(st.howReady&&!st.howAnswered)await hpAsk({title:"¿Cómo conociste HistoPráctica?",key:kH,url:"/api/how-found",opts:["Redes sociales","Conozco al creador","Recomendación de un amigo","Búsqueda en Google","Publicidad"],detail:v=>v==="Redes sociales"?{ph:"¿En cuál red social?",options:["Instagram","Facebook","Threads","YouTube","TikTok"]}:v==="Conozco al creador"?{ph:"¿Cómo se llama el creador?"}:v==="Recomendación de un amigo"?{ph:"¿Quién te la recomendó?"}:null,body:(v,d)=>({method:v,detail:d})},auth);
+ if(!st.answered)await hpAskSchool({key:kO},auth);
+ if(st.howReady&&!st.howAnswered)await hpAsk({title:"¿Cómo conociste HistoPráctica?",key:kH,url:"/api/how-found",opts:["Redes sociales","Conozco al creador","Recomendación de un amigo","Búsqueda en Google","Publicidad"],detail:v=>v==="Redes sociales"?{ph:"¿En cuál red social?",options:["Instagram","Facebook","Threads","YouTube","TikTok"]}:v==="Conozco al creador"?{ph:"¿Cómo se llama el creador?"}:v==="Recomendación de un amigo"?{ph:"Busca a tu amigo por su nombre",friend:true}:null,body:(v,d,f)=>({method:v,detail:d,friend_id:(f&&f.dataset&&f.dataset.fid)||undefined})},auth);
 }
+(function(){try{const r=new URLSearchParams(location.search).get("ref");if(r&&/^[a-z0-9_-]{1,40}$/i.test(r)&&!localStorage.getItem("hp_ref"))localStorage.setItem("hp_ref",r.toLowerCase())}catch(e){}})();
 function hpTrackGeo(session){
  try{const tok=session?.access_token,uid=session?.user?.id;if(!tok||!uid)return;const k="hp_geo_"+uid;if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");
+  const rf=localStorage.getItem("hp_ref"),kr="hp_refsent_"+uid;if(rf&&!localStorage.getItem(kr))fetch("/api/ref",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json",Authorization:`Bearer ${tok}`},body:JSON.stringify({ref:rf})}).then(r=>{if(r.ok)localStorage.setItem(kr,"1")}).catch(()=>{});
   fetch("/api/geo-track",{method:"POST",keepalive:true,headers:{Authorization:`Bearer ${tok}`}}).catch(()=>{})}catch(e){}
 }
 let HP_ADM_TAB="res";
@@ -2409,18 +2463,26 @@ function hpAdmOrigin(list,ok){
  const g=new Map();us.forEach(u=>{if(!u.city)return;const k=hpFold(u.city)+"|"+u.country;let e=g.get(k);if(!e)g.set(k,e={city:u.city,country:u.country,us:[]});e.us.push(u)});
  const cities=[...g.values()].sort((a,b)=>b.us.length-a.us.length||a.city.localeCompare(b.city,"es")),noCity=us.filter(u=>!u.city).length;
  const OR=["UDG CUCOSTA","UTBB","Otra","Ninguna"],HW=["Redes sociales","Conozco al creador","Recomendación de un amigo","Búsqueda en Google","Publicidad"],NET=["Instagram","Facebook","Threads","YouTube","TikTok"];
- const orRows=OR.map(k=>[k,by(u=>u.org,k).length]).concat([["Sin responder",us.filter(u=>!u.org).length]]),hwRows=HW.map(k=>[k,by(u=>u.how,k).length]).concat([["Sin responder",us.filter(u=>!u.how).length]]);
+ const orn=u=>u.org==="Otra"?(u.other||"Otra"):u.org,og0=new Map();us.forEach(u=>{if(!u.org)return;const n=String(orn(u)).trim(),k=hpFold(n),e=og0.get(k);e?e[1]++:og0.set(k,[n,1])});
+ const orRows=[...og0.values()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es")).concat(us.some(u=>!u.org)?[["Sin responder",us.filter(u=>!u.org).length]]:[]),hwRows=HW.map(k=>[k,by(u=>u.how,k).length]).concat([["Sin responder",us.filter(u=>!u.how).length]]);
  const otras=by(u=>u.org,"Otra"),redes=by(u=>u.how,"Redes sociales"),amigos=by(u=>u.how,"Recomendación de un amigo");
+ const og=new Map();otras.forEach(u=>{const n=String(u.other||"—").trim(),k=hpFold(n),e=og.get(k);e?e[1]++:og.set(k,[n,1])});const otraRows=[...og.values()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"es"));
+ const rf=new Map();us.forEach(u=>{if(u.ref)rf.set(u.ref,(rf.get(u.ref)||0)+1)});
+ const refRows=[...rf].sort((a,b)=>b[1]-a[1]).concat(us.some(u=>!u.ref)?[["Sin enlace",us.filter(u=>!u.ref).length]]:[]);
+ const nmById=new Map(list.map(u=>[u.id,hpNm(u)])),fr=new Map();us.forEach(u=>{if(u.friend_id)fr.set(u.friend_id,(fr.get(u.friend_id)||0)+1)});
+ const frRows=[...fr].sort((a,b)=>b[1]-a[1]).slice(0,10).map(([id,n])=>[nmById.get(id)||"—",n]);
  return`<div class="card"><h2>Ciudades</h2>${cities.length?`<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Ciudad</th><th>Usuarios</th><th>Lista</th></tr></thead><tbody>${cities.map(c=>`<tr><td>${esc(c.city)}${c.country&&c.country!=="MX"?` <span class="mu">(${esc(c.country)})</span>`:""}</td><td><b>${c.us.length}</b></td><td><details class="hp-geo-det"><summary>Ver usuarios</summary>${hpList(c.us.map(u=>[hpNm(u),u.name?u.email:""]))}</details></td></tr>`).join("")}</tbody></table></div>`:"Todavía no hay ciudades registradas."}${noCity?`<p class="mu">${noCity} sin ciudad registrada aún (se registra cuando vuelven a abrir la app).</p><div class="row"><button class="btn s sm" id="geo-fill" type="button">Completar con la IP del registro</button></div><p class="mu" id="geo-fill-m" role="status"></p>`:""}</div>
- <div class="card"><h2>Organización</h2>${hpBars(orRows)}${otras.length?`<details class="hp-geo-det"><summary>Ver las «Otra»</summary>${hpList(otras.map(u=>[u.other||"—",hpNm(u)]))}</details>`:""}</div>
- <div class="card"><h2>Cómo conocieron HistoPráctica</h2>${hpBars(hwRows)}${redes.length?`<details class="hp-geo-det"><summary>Redes sociales: cuál</summary>${hpBars(NET.map(k=>[k,redes.filter(u=>u.detail===k).length]))}</details>`:""}${amigos.length?`<details class="hp-geo-det"><summary>Recomendaciones de amigos</summary>${hpList(amigos.map(u=>[u.detail||"—","→ "+hpNm(u)]))}</details>`:""}</div>`;
+ <div class="card"><h2>Institución educativa</h2>${hpBars(orRows)}</div>
+ <div class="card"><h2>Cómo conocieron HistoPráctica</h2>${hpBars(hwRows)}${redes.length?`<details class="hp-geo-det"><summary>Redes sociales: cuál</summary>${hpBars(NET.map(k=>[k,redes.filter(u=>u.detail===k).length]))}</details>`:""}${amigos.length?`<details class="hp-geo-det"><summary>Recomendaciones de amigos</summary>${hpList(amigos.map(u=>[u.detail||"—","→ "+hpNm(u)]))}</details>`:""}</div>
+ <div class="card"><h2>Enlace de origen</h2>${refRows.length?hpBars(refRows):"Aún no hay registros con enlace etiquetado."}</div>
+ <div class="card"><h2>Quién recomienda más</h2>${frRows.length?hpBars(frRows):"Aún no hay amigos elegidos."}</div>`;
 }
 async function adminView(tab){
  if(!isAdmin()){home();return}nav("i");if(typeof tab==="string")HP_ADM_TAB=tab;
  const TABS=[["res","Resumen"],["usr","Usuarios"],["ori","Origen"],["exa","Exámenes"],["avi","Avisos"],["msg","Mensajes"]];
  app.innerHTML=head("Panel administrativo")+`<div class="adm-tabs" role="tablist">${TABS.map(([k,l])=>`<button type="button" role="tab" class="adm-tab" data-tab="${k}">${l}</button>`).join("")}</div>
  <section class="adm-pane" data-pane="res"><div class="tgrid"><div class="card"><div class="mu">Usuarios registrados</div><b id="admin-users-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Exámenes guardados</div><b id="admin-exams-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Correctas en resultados recientes</div><b id="admin-correct-count" style="font-size:2rem">…</b></div><div class="card"><div class="mu">Incorrectas en resultados recientes</div><b id="admin-wrong-count" style="font-size:2rem">…</b></div></div><div class="row" style="margin-top:12px"><button class="btn s" id="admin-refresh">Actualizar datos</button><button class="btn" id="admin-retry-notifications">Reintentar correos fallidos</button></div><p id="admin-retry-status" class="mu" role="status"></p></section>
- <section class="adm-pane" data-pane="usr" hidden><div class="card"><input type="search" id="adm-q" placeholder="Buscar por nombre, correo, organización o ciudad…" aria-label="Buscar usuarios" style="width:100%;margin-bottom:10px"><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div></section>
+ <section class="adm-pane" data-pane="usr" hidden><div class="card"><input type="search" id="adm-q" placeholder="Buscar por nombre, correo, institución o ciudad…" aria-label="Buscar usuarios" style="width:100%;margin-bottom:10px"><div id="admin-users" class="admin-table-wrap">Cargando usuarios…</div></div></section>
  <section class="adm-pane" data-pane="ori" hidden><div id="admin-origin"><div class="card">Cargando…</div></div></section>
  <section class="adm-pane" data-pane="exa" hidden><div class="card"><div id="admin-exams" class="admin-table-wrap">Cargando exámenes…</div></div></section>
  <section class="adm-pane" data-pane="avi" hidden><div class="card" id="bz-admin"></div></section>
@@ -2442,8 +2504,8 @@ async function adminView(tab){
   const list=(meta?.users||users.map(u=>({id:u.id,email:u.email||"",name:u.display_name||"",role:u.role,created_at:u.created_at}))).slice().sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
   $("#admin-users-count").textContent=String(userResult.count??users.length);$("#admin-exams-count").textContent=String(examCount.count??0);
   $("#admin-correct-count").textContent=String(attempts.reduce((sum,a)=>sum+a.correct_answers,0));$("#admin-wrong-count").textContent=String(attempts.reduce((sum,a)=>sum+a.incorrect_answers,0));
-  const drawUsers=()=>{const q=hpFold($("#adm-q").value),rows=list.filter(u=>!q||hpFold([u.name,u.email,hpOrgTxt(u),hpHowTxt(u),u.city].join(" ")).includes(q));
-   $("#admin-users").innerHTML=rows.length?`<table class="admin-table"><thead><tr><th>Nombre</th><th>Correo</th><th>Organización</th><th>Cómo nos conoció</th><th>Ciudad</th><th>Registro</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${esc(u.name||"—")}${u.role==="admin"?` <span class="mu">(admin)</span>`:""}</td><td>${esc(u.email||"—")}</td><td>${esc(hpOrgTxt(u)||"—")}</td><td>${esc(hpHowTxt(u)||"—")}</td><td>${esc(u.city||"—")}</td><td>${esc(u.created_at?new Date(u.created_at).toLocaleDateString("es-MX"):"—")}</td></tr>`).join("")}</tbody></table>`:"No hay usuarios que coincidan.";};
+  const drawUsers=()=>{const q=hpFold($("#adm-q").value),rows=list.filter(u=>!q||hpFold([u.name,u.email,hpOrgTxt(u),hpHowTxt(u),u.ref,u.city].join(" ")).includes(q));
+   $("#admin-users").innerHTML=rows.length?`<table class="admin-table"><thead><tr><th>Nombre</th><th>Correo</th><th>Institución</th><th>Cómo nos conoció</th><th>Enlace</th><th>Ciudad</th><th>Registro</th></tr></thead><tbody>${rows.map(u=>`<tr><td>${esc(u.name||"—")}${u.role==="admin"?` <span class="mu">(admin)</span>`:""}</td><td>${esc(u.email||"—")}</td><td>${esc(hpOrgTxt(u)||"—")}</td><td>${esc(hpHowTxt(u)||"—")}</td><td>${esc(u.ref||"—")}</td><td>${esc(u.city||"—")}</td><td>${esc(u.created_at?new Date(u.created_at).toLocaleDateString("es-MX"):"—")}</td></tr>`).join("")}</tbody></table>`:"No hay usuarios que coincidan.";};
   $("#adm-q").oninput=drawUsers;drawUsers();
   $("#admin-origin").innerHTML=hpAdmOrigin(list,!!meta);
   const gf=$("#geo-fill");if(gf)gf.onclick=async()=>{gf.disabled=true;const m=$("#geo-fill-m");m.textContent="Buscando ciudades…";try{const r=await fetch("/api/admin-backfill-geo",{method:"POST",headers:{Authorization:`Bearer ${tok}`}});const p=await r.json().catch(()=>({}));if(!r.ok)throw new Error(p.error||"Error");await adminView("ori");const n=$("#geo-fill-m");if(n)n.textContent=`Ciudades agregadas: ${p.filled}. Sin IP guardada: ${p.noIp}. Sin resultado: ${p.failed}.`}catch(e){m.textContent="No se pudo completar: "+(e.message||"error");gf.disabled=false}};
