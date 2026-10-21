@@ -132,7 +132,7 @@
   function css() {
     if ($("#hp-off-css")) return;
     var s = document.createElement("style"); s.id = "hp-off-css";
-    s.textContent = "#hp-off-fab{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;width:44px;height:44px;border-radius:50%;border:2px solid var(--ln,#e5e5e5);background:var(--card,#fff);color:inherit;font-size:20px;cursor:pointer;box-shadow:0 2px 0 var(--ln,#e5e5e5)}#hp-off-fab[hidden]{display:none}#hp-off-fab i{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff9600;color:#fff;font:800 11px/18px Nunito,sans-serif;font-style:normal;text-align:center}#hp-off-bar{position:fixed;left:0;right:0;top:0;z-index:60;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 6px;background:#ff9600;color:#fff;font:700 13px/1.3 Nunito,sans-serif;text-align:center}.hp-off-pb{height:10px;border-radius:5px;background:var(--ln,#e5e5e5);overflow:hidden;margin:10px 0}.hp-off-pb b{display:block;height:100%;width:0;background:#58cc02;transition:width .2s}@media(max-width:899px){body.hasnav #hp-off-fab{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}";
+    s.textContent = "#hp-off-fab{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:40;width:44px;height:44px;border-radius:50%;border:2px solid var(--ln,#e5e5e5);background:var(--card,#fff);color:inherit;font-size:20px;cursor:pointer;box-shadow:0 2px 0 var(--ln,#e5e5e5)}#hp-off-fab[hidden],body:not(.hasnav) #hp-off-fab{display:none}#hp-off-fab{font-family:\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Noto Color Emoji\",sans-serif;font-variant-emoji:emoji;line-height:1;padding:0}#hp-off-fab i{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#ff9600;color:#fff;font:800 11px/18px Nunito,sans-serif;font-style:normal;text-align:center}#hp-off-bar{position:fixed;left:0;right:0;top:0;z-index:60;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 6px;background:#ff9600;color:#fff;font:700 13px/1.3 Nunito,sans-serif;text-align:center}.hp-off-pb{height:10px;border-radius:5px;background:var(--ln,#e5e5e5);overflow:hidden;margin:10px 0}.hp-off-pb b{display:block;height:100%;width:0;background:#58cc02;transition:width .2s}@media(max-width:899px){body.hasnav #hp-off-fab{bottom:calc(80px + env(safe-area-inset-bottom,0px))}}";
     document.head.appendChild(s)
   }
   function fab() {
@@ -140,7 +140,7 @@
     var b = $("#hp-off-fab");
     if (!b) { b = document.createElement("button"); b.id = "hp-off-fab"; b.type = "button"; b.setAttribute("aria-label", "Instalar y usar sin conexión"); b.onclick = panel; document.body.appendChild(b) }
     var n = pending();
-    b.innerHTML = "📲" + (n ? "<i>" + n + "</i>" : "");
+    b.innerHTML = "📲\uFE0F" + (n ? "<i>" + n + "</i>" : "");
     b.hidden = !(typeof CURRENT_USER !== "undefined" && CURRENT_USER) && !deferred
   }
   function toast() {
